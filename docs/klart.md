@@ -37,7 +37,7 @@ Klart/
 └── .conflicts/
 ```
 
-Git sync from the design is shown as "coming with the desktop app" — it isn't possible from a browser.
+- **GitHub sync** (Settings → Sync → GitHub): works in every browser, including phones, and in the desktop app. See [GitHub sync](#github-sync).
 
 ## Notifications
 
@@ -51,6 +51,7 @@ Git sync from the design is shown as "coming with the desktop app" — it isn't 
 | --------------------------------------------------------- | ----------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
 | Folder sync (OneDrive, iCloud Drive, Dropbox, any folder) | File System Access API, Chrome/Edge only (`BrowserFolderBackend`) | Native file commands, every OS (`DesktopFolderBackend` → `folder.rs`); writes are atomic (temp file + rename) |
 | Git sync                                                  | —                                                                 | `git.rs`, using the installed `git` and the user's SSH keys / credential helper                               |
+| GitHub sync                                               | GitHub REST API (`GitHubBackend`)                                 | Same as the browser                                                                                           |
 | Notifications                                             | Web Notifications / service worker                                | Native, via `tauri-plugin-notification` (`system.rs`)                                                         |
 
 `FolderSync` only talks to the `FolderBackend` interface, so both platforms share the sync logic.
@@ -65,4 +66,16 @@ The data folder is a local clone. Settings → Sync → Git repository either cl
 
 It runs when the app opens, every 5 minutes, 30 seconds after the last local change, and on "Sync now". After a merge that brought changes, the folder is re-read immediately. `GIT_TERMINAL_PROMPT=0` makes git fail instead of waiting for a password; the error shows in Settings. Without `user.email` configured, commits use `Klart <klart@localhost>`.
 
-Not yet built: the online OneDrive API (for computers without the OneDrive app, and a future phone app), built-in Git with "Sign in with GitHub", and the design's desktop-only items (menu-bar mode, open at login, notification actions).
+### GitHub sync
+
+For phones and browsers without folder access. The user enters a GitHub username, a repository and a fine-grained personal access token (GitHub's API doesn't accept passwords) limited to that repository with Contents: Read and write. Only private repositories are accepted, and the token can't be read-only. The connection, token included, is kept in `localStorage` (`klart-github-connection`) on that device only.
+
+`GitHubBackend` implements `FolderBackend` over an in-memory snapshot of the default branch, so `FolderSync` runs unchanged:
+
+- `refresh()` checks the branch (an `If-None-Match` request; unchanged costs nothing against the rate limit), and on a new commit loads its tree and downloads changed files, 6 at a time. A file's git blob sha stands in for `lastModified`.
+- Writes and removals are staged in memory. `commit()` pushes them as one commit through the Git Data API (tree → commit → fast-forward the branch). An empty repository gets its first file through the contents API.
+- When another device pushed first, the branch update is rejected: the sync refreshes, drops staged files that changed remotely, pulls (merging by `updatedAt`, losers to `.conflicts/`), pushes and commits again, up to 3 times.
+
+It syncs when the app opens, every minute while visible, 5 seconds after the last change, when the app is hidden with unpushed changes, and on "Sync now". Device check-ins (`devices/*/device.json`) happen every 30 minutes instead of every minute, to keep commits down. A GitHub-synced device and a desktop Git clone can share the same repository.
+
+Not yet built: the online OneDrive API (for computers without the OneDrive app), "Sign in with GitHub" (GitHub's OAuth endpoints don't allow browser calls, so it needs a small server), and the design's desktop-only items (menu-bar mode, open at login, notification actions).

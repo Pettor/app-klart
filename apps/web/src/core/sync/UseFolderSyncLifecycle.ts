@@ -6,11 +6,13 @@ import { queryFolderPermission } from "./FileSystemAccess";
 import type { FolderBackend } from "./FolderBackend";
 import { loadFolderHandle } from "./FolderHandleStore";
 import { FolderSync } from "./FolderSync";
+import { GitHubBackend, GitHubError } from "./GitHubBackend";
 import type { SyncConnection, SyncStatus } from "./SyncAtoms";
 import {
   desktopConnectionAtom,
   folderPermissionAtom,
   gitAvailableAtom,
+  githubConnectionAtom,
   PLATFORM_DEVICE_NAMES,
   syncConnectionAtom,
   syncDevicesAtom,
@@ -29,6 +31,19 @@ const DEVICE_TOUCH_INTERVAL_MS = 60_000;
 /** Git: pull this often, and commit and push this long after the last change. */
 const GIT_PULL_INTERVAL_MS = 5 * 60_000;
 const GIT_COMMIT_DELAY_MS = 30_000;
+/**
+ * GitHub: check for new commits this often while the app is visible (an
+ * unchanged branch costs one request that doesn't count against the rate
+ * limit), and push this long after the last change. Device check-ins are
+ * rarer so they don't add a commit every minute.
+ */
+const GITHUB_PULL_INTERVAL_MS = 60_000;
+const GITHUB_COMMIT_DELAY_MS = 5_000;
+const GITHUB_DEVICE_TOUCH_INTERVAL_MS = 30 * 60_000;
+const GITHUB_SYNC_ATTEMPTS = 3;
+
+/** Where local commits go: the desktop app's Git clone, or GitHub's API. */
+type Remote = { kind: "git"; root: string } | { kind: "github"; backend: GitHubBackend };
 
 /**
  * Applies what a pull changed (`pulled` vs `base`) on top of `current`, so
@@ -59,9 +74,21 @@ function describe(error: unknown): string {
 }
 
 function createBackend(connection: SyncConnection): FolderBackend {
-  return connection.kind === "browser-folder"
-    ? new BrowserFolderBackend(connection.handle)
-    : new DesktopFolderBackend(connection.path);
+  switch (connection.kind) {
+    case "browser-folder":
+      return new BrowserFolderBackend(connection.handle);
+    case "github":
+      return new GitHubBackend(connection);
+    default:
+      return new DesktopFolderBackend(connection.path);
+  }
+}
+
+function methodOf(connection: SyncConnection): SyncStatus["method"] {
+  if (connection.kind === "desktop-git") {
+    return "git";
+  }
+  return connection.kind === "github" ? "github" : "folder";
 }
 
 /** Keeps the connected data folder (and its Git remote) and the app in sync. Mount once, near the app root. */
@@ -72,6 +99,7 @@ export function useFolderSyncLifecycle(): void {
   const { deviceName } = settings;
   const [connection, setConnection] = useAtom(syncConnectionAtom);
   const storedDesktopConnection = useAtomValue(desktopConnectionAtom);
+  const storedGitHubConnection = useAtomValue(githubConnectionAtom);
   const [permission, setPermission] = useAtom(folderPermissionAtom);
   const setStatus = useSetAtom(syncStatusAtom);
   const setDevices = useSetAtom(syncDevicesAtom);
@@ -79,8 +107,9 @@ export function useFolderSyncLifecycle(): void {
   const syncRequest = useAtomValue(syncRequestAtom);
 
   const engineRef = useRef<FolderSync | null>(null);
-  const gitRootRef = useRef<string | null>(null);
+  const remoteRef = useRef<Remote | null>(null);
   const gitTimerRef = useRef<number | undefined>(undefined);
+  const lastRemoteSyncRef = useRef(0);
   const queueRef = useRef<Promise<void>>(Promise.resolve());
   const lastTouchRef = useRef(0);
   // Queued jobs run later; they read the latest values from here rather than what was current when queued.
@@ -92,6 +121,10 @@ export function useFolderSyncLifecycle(): void {
 
   // Restore the folder chosen in an earlier session.
   const restore = useEffectEvent((isCancelled: () => boolean): void => {
+    if (storedGitHubConnection) {
+      setConnection(storedGitHubConnection);
+      return;
+    }
     if (isDesktop()) {
       if (storedDesktopConnection) {
         desktop
@@ -166,12 +199,38 @@ export function useFolderSyncLifecycle(): void {
       setData((latest) => rebase(base, result.data, latest));
       latestRef.current = { ...latestRef.current, data: rebase(base, result.data, latestRef.current.data) };
     }
-    if (Date.now() - lastTouchRef.current > DEVICE_TOUCH_INTERVAL_MS && document.hasFocus()) {
+    const touchInterval =
+      remoteRef.current?.kind === "github" ? GITHUB_DEVICE_TOUCH_INTERVAL_MS : DEVICE_TOUCH_INTERVAL_MS;
+    if (Date.now() - lastTouchRef.current > touchInterval && document.hasFocus()) {
       lastTouchRef.current = Date.now();
       await engine.touchDevice(toUtcTimestamp(new Date()));
       setDevices(await engine.listDevices());
     }
     updateStatus(() => ({ state: "synced", error: undefined, lastSyncedAt: toUtcTimestamp(new Date()) }));
+  }
+
+  async function pushNow(engine: FolderSync): Promise<number> {
+    const { data: current, today: date, settings: options } = latestRef.current;
+    const written = await engine.push(current, { today: date, options: options.agentFiles });
+    updateStatus(() => ({ state: "synced", error: undefined, lastSyncedAt: toUtcTimestamp(new Date()) }));
+    return written;
+  }
+
+  /** Brings in GitHub's newest commit, merges it, and pushes local changes as one commit; retries when beaten to it. */
+  async function githubSyncNow(engine: FolderSync, backend: GitHubBackend): Promise<void> {
+    for (let attempt = 1; ; attempt += 1) {
+      await backend.refresh();
+      await pullNow(engine);
+      await pushNow(engine);
+      try {
+        await backend.commit(`klart: update from ${latestRef.current.settings.deviceName}`);
+        return;
+      } catch (error) {
+        if (!(error instanceof GitHubError && error.kind === "conflict") || attempt >= GITHUB_SYNC_ATTEMPTS) {
+          throw error;
+        }
+      }
+    }
   }
 
   const pull = useEffectEvent((): void => {
@@ -181,12 +240,31 @@ export function useFolderSyncLifecycle(): void {
   const gitSync = useEffectEvent((): void => {
     window.clearTimeout(gitTimerRef.current);
     enqueue(async (engine) => {
-      const root = gitRootRef.current;
-      if (!root) {
+      const remote = remoteRef.current;
+      if (!remote) {
+        return;
+      }
+      lastRemoteSyncRef.current = Date.now();
+      if (remote.kind === "github") {
+        try {
+          await githubSyncNow(engine, remote.backend);
+          updateStatus((current) => ({
+            git: {
+              ...current.git,
+              branch: remote.backend.currentBranch ?? undefined,
+              lastSyncedAt: toUtcTimestamp(new Date()),
+              error: undefined,
+              errorKind: undefined,
+            },
+          }));
+        } catch (error) {
+          const errorKind = error instanceof GitHubError ? error.kind : undefined;
+          updateStatus((current) => ({ git: { ...current.git, error: describe(error), errorKind } }));
+        }
         return;
       }
       try {
-        const result = await desktop.gitSync(root);
+        const result = await desktop.gitSync(remote.root);
         updateStatus((current) => ({
           git: {
             ...current.git,
@@ -206,27 +284,27 @@ export function useFolderSyncLifecycle(): void {
 
   const push = useEffectEvent((): void => {
     enqueue(async (engine) => {
-      const { data: current, today: date, settings: options } = latestRef.current;
-      const written = await engine.push(current, { today: date, options: options.agentFiles });
-      updateStatus(() => ({ state: "synced", error: undefined, lastSyncedAt: toUtcTimestamp(new Date()) }));
-      if (written > 0 && gitRootRef.current) {
+      const written = await pushNow(engine);
+      const remote = remoteRef.current;
+      if (written > 0 && remote) {
         window.clearTimeout(gitTimerRef.current);
-        gitTimerRef.current = window.setTimeout(gitSync, GIT_COMMIT_DELAY_MS);
+        const delay = remote.kind === "github" ? GITHUB_COMMIT_DELAY_MS : GIT_COMMIT_DELAY_MS;
+        gitTimerRef.current = window.setTimeout(gitSync, delay);
       }
     });
   });
 
   // Start or stop the engine when the folder, its permission or the device name changes.
   useEffect(() => {
-    gitRootRef.current = null;
+    remoteRef.current = null;
     if (!connection) {
       engineRef.current = null;
       setStatus({ state: "local", method: "local" });
       return;
     }
-    const method = connection.kind === "desktop-git" ? "git" : "folder";
+    const method = methodOf(connection);
     const backend = createBackend(connection);
-    const location = connection.kind === "browser-folder" ? undefined : connection.path;
+    const location = connection.kind === "browser-folder" || connection.kind === "github" ? undefined : connection.path;
     if (connection.kind === "browser-folder" && permission !== "granted") {
       engineRef.current = null;
       setStatus({ state: "needs-permission", method, folderName: backend.name });
@@ -238,8 +316,21 @@ export function useFolderSyncLifecycle(): void {
     setStatus({ state: "syncing", method, folderName: backend.name, location });
 
     let gitTimer: number | undefined;
-    if (connection.kind === "desktop-git") {
-      gitRootRef.current = connection.path;
+    if (connection.kind === "github" && backend instanceof GitHubBackend) {
+      remoteRef.current = { kind: "github", backend };
+      setStatus((current) => ({
+        ...current,
+        git: { remoteUrl: `github.com/${connection.owner}/${connection.repo}` },
+      }));
+      // Pull GitHub's newest commit before reading the snapshot.
+      gitSync();
+      gitTimer = window.setInterval(() => {
+        if (document.visibilityState === "visible") {
+          gitSync();
+        }
+      }, GITHUB_PULL_INTERVAL_MS);
+    } else if (connection.kind === "desktop-git") {
+      remoteRef.current = { kind: "git", root: connection.path };
       desktop
         .gitInfo(connection.path)
         .then((info) =>
@@ -262,14 +353,31 @@ export function useFolderSyncLifecycle(): void {
       }
     }
 
+    // GitHub on a phone: sync when the app comes back, and push pending changes before it's put away.
+    function syncGitHubOnVisibility(): void {
+      const remote = remoteRef.current;
+      if (remote?.kind !== "github") {
+        return;
+      }
+      if (document.visibilityState === "hidden") {
+        if (remote.backend.hasChanges) {
+          gitSync();
+        }
+      } else if (Date.now() - lastRemoteSyncRef.current > GITHUB_COMMIT_DELAY_MS) {
+        gitSync();
+      }
+    }
+
     const timer = window.setInterval(pullWhenVisible, PULL_INTERVAL_MS);
     window.addEventListener("focus", pullWhenVisible);
+    document.addEventListener("visibilitychange", syncGitHubOnVisibility);
     return () => {
       window.clearInterval(timer);
       window.clearInterval(gitTimer);
       window.removeEventListener("focus", pullWhenVisible);
+      document.removeEventListener("visibilitychange", syncGitHubOnVisibility);
       engineRef.current = null;
-      gitRootRef.current = null;
+      remoteRef.current = null;
     };
   }, [connection, permission, deviceName, setStatus]);
 
@@ -284,7 +392,7 @@ export function useFolderSyncLifecycle(): void {
     if (syncRequest > 0) {
       pull();
       push();
-      if (gitRootRef.current) {
+      if (remoteRef.current) {
         gitSync();
       }
     }

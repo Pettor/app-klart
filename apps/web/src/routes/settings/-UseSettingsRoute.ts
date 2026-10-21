@@ -7,11 +7,13 @@ import { getContextNotifications } from "~/core/notifications/NotificationSettin
 import { useNotifications } from "~/core/notifications/UseNotifications";
 import type { SettingsSectionId } from "~/core/settings/SettingsSection";
 import { toDeviceId } from "~/core/sync/FolderSync";
+import { GitHubError } from "~/core/sync/GitHubBackend";
 import { LLMS_TXT } from "~/core/sync/LlmsTxt";
-import type { GitConnectResult } from "~/core/sync/UseFolderSync";
+import type { GitConnectResult, GitHubConnectResult, GitHubCredentials } from "~/core/sync/UseFolderSync";
 import { useFolderSync } from "~/core/sync/UseFolderSync";
 import { klartDataAtom } from "~/core/tasks/KlartAtoms";
 import { useKlartActions } from "~/core/tasks/UseKlartActions";
+import { githubErrorText } from "~/views/settings/SettingsGitHubMessages";
 import type { SettingsViewProps } from "~/views/settings/SettingsView";
 
 export function useSettingsRoute(section?: SettingsSectionId): SettingsViewProps {
@@ -64,6 +66,58 @@ export function useSettingsRoute(section?: SettingsSectionId): SettingsViewProps
     );
   }
 
+  function reportGitHub(result: GitHubConnectResult): boolean {
+    if (result === "public") {
+      toast.warning(
+        intl.formatMessage({
+          description: "SettingsRoute - toast when the GitHub repository is public",
+          defaultMessage: "That repository is public",
+          id: "D+n4EK",
+        }),
+        {
+          description: intl.formatMessage({
+            description: "SettingsRoute - hint when the GitHub repository is public",
+            defaultMessage: "Anyone could read your tasks. Make the repository private on GitHub, then connect again.",
+            id: "ujNiF+",
+          }),
+        }
+      );
+    } else if (result === "read-only") {
+      toast.warning(
+        intl.formatMessage({
+          description: "SettingsRoute - toast when the token can't write to the repository",
+          defaultMessage: "The token can only read this repository",
+          id: "ZSWTr2",
+        }),
+        {
+          description: intl.formatMessage({
+            description: "SettingsRoute - hint when the token can't write to the repository",
+            defaultMessage: "Edit the token on GitHub and set Contents to Read and write.",
+            id: "u4Dzlc",
+          }),
+        }
+      );
+    }
+    return result === "connected";
+  }
+
+  function reportGitHubError(error: unknown): boolean {
+    const detail = error instanceof Error ? error.message : String(error);
+    toast.danger(
+      intl.formatMessage({
+        description: "SettingsRoute - toast when connecting a GitHub repository fails",
+        defaultMessage: "Couldn't connect to GitHub",
+        id: "ygAuyn",
+      }),
+      { description: (error instanceof GitHubError && githubErrorText(intl, error.kind)) || detail }
+    );
+    return false;
+  }
+
+  function connectGitHub(credentials: GitHubCredentials): Promise<boolean> {
+    return sync.connectGitHub(credentials).then(reportGitHub, reportGitHubError);
+  }
+
   const openCounts = new Map<string, number>();
   for (const task of Object.values(data.tasks)) {
     if (task.status === "open") {
@@ -92,6 +146,7 @@ export function useSettingsRoute(section?: SettingsSectionId): SettingsViewProps
       onConnect: () => void sync.connect().catch(reportError),
       onConnectGit: () => void sync.connectGit().then(reportGit).catch(reportGitError),
       onCloneGit: (url) => void sync.cloneGit(url).then(reportGit).catch(reportGitError),
+      onConnectGitHub: connectGitHub,
       onReconnect: () => void sync.reconnect().catch(reportError),
       onDisconnect: () => void sync.disconnect(),
       onSyncNow: sync.syncNow,

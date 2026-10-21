@@ -3,10 +3,12 @@ import { CheckIcon, ExclamationTriangleIcon } from "@heroicons/react/20/solid";
 import { Alert, Button, Description, Input, Label, Radio, RadioGroup, TextField } from "@heroui/react";
 import clsx from "clsx";
 import { FormattedRelativeTime, useIntl } from "react-intl";
+import { SettingsGitHubPanel } from "./SettingsGitHubPanel";
 import { SettingsGitPanel } from "./SettingsGitPanel";
 import { SettingsPanel, SettingsSectionShell } from "./SettingsSectionShell";
 import type { DeviceInfo } from "~/core/sync/FolderSync";
 import type { SyncMethod, SyncStatus } from "~/core/sync/SyncAtoms";
+import type { GitHubCredentials } from "~/core/sync/UseFolderSync";
 
 export interface SettingsSyncSectionProps {
   status: SyncStatus;
@@ -21,6 +23,8 @@ export interface SettingsSyncSectionProps {
   onConnect: () => void;
   onConnectGit: () => void;
   onCloneGit: (url: string) => void;
+  /** Resolves `true` once connected. */
+  onConnectGitHub: (credentials: GitHubCredentials) => Promise<boolean>;
   onReconnect: () => void;
   onDisconnect: () => void;
   onSyncNow: () => void;
@@ -54,6 +58,7 @@ export function SettingsSyncSection({
   onConnect,
   onConnectGit,
   onCloneGit,
+  onConnectGitHub,
   onReconnect,
   onDisconnect,
   onSyncNow,
@@ -61,12 +66,12 @@ export function SettingsSyncSection({
   now = Date.now(),
 }: SettingsSyncSectionProps): ReactElement {
   const intl = useIntl();
-  // Choosing Git only reveals its setup; the method changes once a clone is connected.
+  // Choosing Git or GitHub only reveals its setup; the method changes once a repository is connected.
   const [pending, setPending] = useState<SyncMethod | null>(null);
   const method: SyncMethod = pending ?? status.method;
 
   function handleMethod(value: string): void {
-    setPending(value === "git" ? "git" : null);
+    setPending(value === "git" || value === "github" ? value : null);
     if (value === "folder" && status.method !== "folder") {
       onConnect();
     } else if (value === "local" && status.method !== "local") {
@@ -119,6 +124,19 @@ export function SettingsSyncSection({
       isDisabled: !isGitSupported,
     },
     {
+      value: "github",
+      title: intl.formatMessage({
+        description: "SettingsSync - method title",
+        defaultMessage: "GitHub",
+        id: "GZ3jvy",
+      }),
+      body: intl.formatMessage({
+        description: "SettingsSync - GitHub method description",
+        defaultMessage: "A private GitHub repo, straight from the app. Works on phones and in any browser.",
+        id: "cylmo2",
+      }),
+    },
+    {
       value: "local",
       title: isDesktop
         ? intl.formatMessage({
@@ -154,7 +172,7 @@ export function SettingsSyncSection({
         id: "zSCLup",
       })}
     >
-      {!isSupported && (
+      {!isSupported && status.method !== "github" && (
         <Alert status="warning">
           <Alert.Indicator />
           <Alert.Content>
@@ -168,8 +186,9 @@ export function SettingsSyncSection({
             <Alert.Description>
               {intl.formatMessage({
                 description: "SettingsSync - warning body when the browser can't access folders",
-                defaultMessage: "This browser can't open folders, so your tasks are kept in this browser only.",
-                id: "XmMvr8",
+                defaultMessage:
+                  "This browser can't open folders. Sync through GitHub instead, or keep your tasks here.",
+                id: "glqBhJ",
               })}
             </Alert.Description>
           </Alert.Content>
@@ -290,6 +309,21 @@ export function SettingsSyncSection({
           status={status}
           onConnectGit={onConnectGit}
           onCloneGit={onCloneGit}
+          onSyncNow={onSyncNow}
+          now={now}
+        />
+      )}
+
+      {method === "github" && (
+        <SettingsGitHubPanel
+          status={status}
+          onConnectGitHub={async (credentials) => {
+            const connected = await onConnectGitHub(credentials);
+            if (connected) {
+              setPending(null);
+            }
+            return connected;
+          }}
           onSyncNow={onSyncNow}
           now={now}
         />
