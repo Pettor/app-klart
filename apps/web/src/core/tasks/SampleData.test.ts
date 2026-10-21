@@ -50,7 +50,7 @@ describe("createSampleData", () => {
 describe("withoutSampleData", () => {
   it("keeps real tasks, their days and the sample contexts they use", () => {
     const sample = createSampleData(NOW);
-    const parsed = parseQuickAdd("#club real board task", {
+    const parsed = parseQuickAdd("#club real club task", {
       today: TODAY,
       contexts: sample.contexts,
       currentContext: "all",

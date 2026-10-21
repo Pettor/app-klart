@@ -82,9 +82,9 @@ const SAMPLE_TASKS: SampleTask[] = [
   },
   {
     id: "b1",
-    title: "Klubb: kolla boklistan",
+    title: "Välj nästa bok till träffen",
     context: "sample-club",
-    tags: ["klubb"],
+    tags: ["hobby"],
     today: "agent",
     created: 2,
   },
@@ -133,7 +133,7 @@ const SAMPLE_TASKS: SampleTask[] = [
   { id: "w4", title: "Send expense report for September", context: "work", tags: ["admin"], due: -9, created: 30 },
   {
     id: "b2",
-    title: "Läs anteckningarna från träffen",
+    title: "Skicka ut anteckningarna från träffen",
     context: "sample-club",
     tags: ["klubb"],
     due: -45,

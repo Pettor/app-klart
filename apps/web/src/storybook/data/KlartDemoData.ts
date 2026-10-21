@@ -50,7 +50,7 @@ const DEMO_TASKS: DemoTask[] = [
   { id: "p8", title: "Byt batterier i fjärrkontrollen", context: "personal", tags: ["hem"], inToday: true },
   { id: "p10", title: "Betala elräkning", context: "personal", tags: ["ekonomi"], inToday: true, done: true },
   { id: "b1", title: "Anteckningar från träffen", context: "club", tags: ["klubb"], due: "2026-10-23" },
-  { id: "b2", title: "Klubb: kolla boklistan", context: "club", tags: ["klubb"], inToday: true },
+  { id: "b2", title: "Välj nästa bok", context: "club", tags: ["hobby"], inToday: true },
   {
     id: "w1",
     title: "Review sync PR for gateway client",
