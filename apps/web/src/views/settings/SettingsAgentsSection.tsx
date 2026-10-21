@@ -17,6 +17,7 @@ const SYNTAX: { token: string; id: string }[] = [
   { token: "@2026-07-08", id: "due" },
   { token: "^09:00", id: "remind" },
   { token: "!", id: "important" },
+  { token: "www.fz.se", id: "link" },
 ];
 
 const FOLDER_TREE = `Klart/
@@ -62,8 +63,13 @@ export function SettingsAgentsSection({ options, onChange, llmsTxt }: SettingsAg
     }),
     important: intl.formatMessage({
       description: "SettingsAgents - syntax table: important marker",
-      defaultMessage: "Important (star). Everything else is the title.",
-      id: "r5pkGI",
+      defaultMessage: "Important (star).",
+      id: "Qe5dMD",
+    }),
+    link: intl.formatMessage({
+      description: "SettingsAgents - syntax table: link tokens",
+      defaultMessage: "Link to the task's source. Also https://… URLs. Everything else is the title.",
+      id: "yPrRSh",
     }),
   };
 

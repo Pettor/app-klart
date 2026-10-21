@@ -77,6 +77,16 @@ describe("parseQuickAdd", () => {
     expect(parsed.links).toEqual(["https://github.com/acme/pr/1", "http://example.com"]);
   });
 
+  it("takes www. addresses as https links", () => {
+    const parsed = parse("Läs www.fz.se nyheter https://www.fz.se www.example.com/a?b=1");
+    expect(parsed.title).toBe("Läs nyheter");
+    expect(parsed.links).toEqual(["https://www.fz.se", "https://www.example.com/a?b=1"]);
+  });
+
+  it("keeps words that only look like www. in the title", () => {
+    expect(parse("Fix www. and www.local").links).toEqual([]);
+  });
+
   it("keeps non-web URLs in the title", () => {
     expect(parse("Run javascript:alert(1) ftp://host").links).toEqual([]);
   });

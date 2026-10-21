@@ -139,6 +139,42 @@ describe("FolderSync", () => {
     expect(root.read("LLMS.txt")).toBe(LLMS_TXT);
   });
 
+  it("updates an LLMS.txt written by an older version, and leaves a current one alone", async () => {
+    await root.write("LLMS.txt", "# Klart\n\nOld rules.\n");
+    const data = await sync.pull(createEmptyData(), { today: TODAY, acceptInbox: true });
+    await sync.push(data.data, { today: TODAY, options: { ...OPTIONS, writeViews: false } });
+    expect(root.read("LLMS.txt")).toBe(LLMS_TXT);
+
+    const nextSession = new FolderSync(new BrowserFolderBackend(root as unknown as FileSystemDirectoryHandle), "Mac");
+    const pulled = await nextSession.pull(createEmptyData(), { today: TODAY, acceptInbox: true });
+    const written = await nextSession.push(pulled.data, { today: TODAY, options: { ...OPTIONS, writeViews: false } });
+    expect(written).toBe(0);
+  });
+
+  it("rewrites task files from an older version in the current format", async () => {
+    await root.write(
+      "tasks/work/OLD.json",
+      JSON.stringify({
+        id: "OLD",
+        title: "Read the news",
+        context: "work",
+        links: ["www.fz.se", "ftp://host"],
+        createdAt: "2026-10-01T08:00:00Z",
+        updatedAt: "2026-10-01T08:00:00Z",
+      })
+    );
+    const pulled = await sync.pull(createEmptyData(), { today: TODAY, acceptInbox: true });
+    await sync.push(pulled.data, { today: TODAY, options: OPTIONS });
+
+    expect(JSON.parse(root.read("tasks/work/OLD.json")!)).toMatchObject({
+      schema: "klart.task/v1",
+      links: ["https://www.fz.se"],
+      status: "open",
+      notes: "",
+      updatedAt: "2026-10-01T08:00:00Z",
+    });
+  });
+
   it("only writes files that changed", async () => {
     const data = seed();
     expect(await sync.push(data, { today: TODAY, options: OPTIONS })).toBeGreaterThan(0);

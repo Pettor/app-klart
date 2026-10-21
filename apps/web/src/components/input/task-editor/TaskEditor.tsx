@@ -362,9 +362,9 @@ export function TaskEditor({
           />
           <FieldError>
             {intl.formatMessage({
-              description: "TaskEditor - error shown when a link isn't an http(s) URL",
-              defaultMessage: "Links must start with http:// or https://",
-              id: "HHuOdl",
+              description: "TaskEditor - error shown when a link isn't an http(s) URL or www. address",
+              defaultMessage: "Links must start with http://, https:// or www.",
+              id: "FjHUYj",
             })}
           </FieldError>
         </TextField>
