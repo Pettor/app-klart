@@ -24,6 +24,7 @@ import { desktop, isDesktop } from "~/core/platform/Desktop";
 import { klartDataAtom, todayAtom } from "~/core/tasks/KlartAtoms";
 import type { KlartData } from "~/core/tasks/KlartData";
 import { toUtcTimestamp } from "~/core/tasks/LocalDate";
+import { hasSampleData, withoutSampleData } from "~/core/tasks/SampleData";
 
 const PULL_INTERVAL_MS = 4_000;
 const PUSH_DEBOUNCE_MS = 400;
@@ -315,6 +316,12 @@ export function useFolderSyncLifecycle(): void {
       return;
     }
 
+    // Dev sample data stays on this device: drop it before the first sync so it never reaches a real folder.
+    if (hasSampleData(latestRef.current.data)) {
+      latestRef.current = { ...latestRef.current, data: withoutSampleData(latestRef.current.data) };
+      setData(withoutSampleData);
+    }
+
     engineRef.current = new FolderSync(backend, deviceName);
     lastTouchRef.current = 0;
     setStatus({ state: "syncing", method, folderName: backend.name, location });
@@ -383,7 +390,7 @@ export function useFolderSyncLifecycle(): void {
       engineRef.current = null;
       remoteRef.current = null;
     };
-  }, [connection, permission, deviceName, setStatus]);
+  }, [connection, permission, deviceName, setStatus, setData]);
 
   // Write local changes shortly after they happen.
   useEffect(() => {

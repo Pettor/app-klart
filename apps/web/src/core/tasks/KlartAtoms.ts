@@ -3,6 +3,7 @@ import { atomWithStorage, createJSONStorage } from "jotai/utils";
 import type { KlartData } from "./KlartData";
 import { createEmptyData, normalizeData } from "./KlartData";
 import { toLocalDate } from "./LocalDate";
+import { createSampleData, SAMPLE_DATA_ENABLED } from "./SampleData";
 import type { ContextSelection } from "~/core/contexts/KlartContext";
 
 /** Smart views in the sidebar. */
@@ -16,7 +17,13 @@ const klartDataStorage: typeof jsonStorage = {
   ...jsonStorage,
   getItem: (key, initialValue) => {
     const stored = jsonStorage.getItem(key, initialValue) as KlartData;
-    return stored === initialValue ? stored : normalizeData(stored);
+    if (stored === initialValue) {
+      return stored;
+    }
+    // Dev builds: an empty list (tasks are never deleted) gets the sample data too, not just a fresh browser.
+    return SAMPLE_DATA_ENABLED && Object.keys(stored.tasks ?? {}).length === 0
+      ? createSampleData()
+      : normalizeData(stored);
   },
   // Other tabs may still run an older version.
   subscribe: (key, callback, initialValue) =>
@@ -27,9 +34,13 @@ const klartDataStorage: typeof jsonStorage = {
     ),
 };
 
-export const klartDataAtom = atomWithStorage<KlartData>("klart-data", createEmptyData(), klartDataStorage, {
-  getOnInit: true,
-});
+/** Starts empty, or with sample data in dev builds until a task is stored. */
+export const klartDataAtom = atomWithStorage<KlartData>(
+  "klart-data",
+  SAMPLE_DATA_ENABLED ? createSampleData() : createEmptyData(),
+  klartDataStorage,
+  { getOnInit: true }
+);
 
 /** The selected context id, or `"all"`. Remembered per device. */
 export const currentContextAtom = atomWithStorage<ContextSelection>("klart-context", "all", undefined, {
