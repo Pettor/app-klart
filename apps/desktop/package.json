@@ -1,0 +1,20 @@
+{
+  "name": "@app/desktop",
+  "version": "0.1.0",
+  "description": "Klart desktop app: the web build packaged with Tauri",
+  "license": "MIT",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "clean": "rimraf ../../output/build",
+    "clean:all": "pnpm clean && rimraf node_modules src-tauri/target",
+    "dev": "tauri dev",
+    "build": "tauri build && node scripts/collect-artifacts.mjs",
+    "tauri": "tauri"
+  },
+  "devDependencies": {
+    "@app/web": "workspace:*",
+    "@tauri-apps/cli": "catalog:dev",
+    "rimraf": "catalog:dev"
+  }
+}

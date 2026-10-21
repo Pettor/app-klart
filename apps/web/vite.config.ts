@@ -5,6 +5,9 @@ import basicSsl from "@vitejs/plugin-basic-ssl";
 import { defineConfig, mergeConfig } from "vite";
 import istanbul from "vite-plugin-istanbul";
 
+// Set by the Tauri CLI when it starts this dev server for the desktop app
+const isTauri = !!process.env.TAURI_ENV_PLATFORM;
+
 // Repo root — two levels up from apps/web
 const repoRoot = path.resolve(import.meta.dirname, "../..");
 
@@ -40,12 +43,13 @@ export default defineConfig(({ command }) => {
       return mergeConfig(config, {
         server: {
           cors: true,
-          // basicSsl() below provides the self-signed cert; https: true signals intent
-          https: true,
+          // basicSsl() below provides the self-signed cert; https: true signals intent.
+          // Under `tauri dev` the webview rejects self-signed certs, so serve plain HTTP there.
+          https: !isTauri,
           port: 5167,
         },
         plugins: [
-          basicSsl(),
+          ...(isTauri ? [] : [basicSsl()]),
           // Istanbul instrumentation is only active when VITE_COVERAGE is set (E2E coverage runs).
           ...(process.env.VITE_COVERAGE
             ? [

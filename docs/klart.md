@@ -43,4 +43,8 @@ Git sync from the design is shown as "coming with the desktop app" — it isn't 
 
 `NotificationPlanner.planNotifications()` is pure and decides what is due: task reminders (`remindAt`), "Plan your day", "Due today without a time", "Overdue nudge" and "End of day wrap-up", each within its time window and the context's hours. The scheduler runs every 20 s while the app is open, shows system notifications when permission is granted (via the service worker when registered) and in-app toasts otherwise. Sent keys are remembered per device. With several devices, the "last used" policy uses `devices/*/device.json`.
 
-Desktop-only items from the design (menu-bar mode, open at login, notification action buttons) need the planned Tauri app.
+## Desktop app
+
+`apps/desktop` packages `apps/web/dist` with Tauri 2 (see CLAUDE.md for commands). It's currently a plain wrapper: the same UI and browser APIs inside the system webview. On macOS (WKWebView) and Linux (WebKitGTK) that means no File System Access API, so folder sync is unavailable there and Settings shows the "unsupported browser" notice, and notifications fall back to in-app toasts. Windows (WebView2, Chromium) supports folder sync.
+
+Next steps for a native desktop implementation: a Tauri-backed folder adapter for `FolderSync` (plugin-fs + plugin-dialog), native notifications (plugin-notification), and the design's desktop-only items (menu-bar mode, open at login, notification actions).

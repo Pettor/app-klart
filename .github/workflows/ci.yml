@@ -106,8 +106,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile --ignore-scripts
 
+      # The desktop app (apps/desktop) needs Rust and the platform webview SDK; it's built locally with `pnpm build`.
       - name: Build application
-        run: pnpm build
+        run: pnpm build:web
 
   test-components:
     name: Test components

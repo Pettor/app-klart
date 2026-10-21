@@ -97,7 +97,10 @@ Your application will be available at `https://localhost:5167` with hot reload e
 ### Available Scripts
 
 - `pnpm dev` - Start development server
-- `pnpm build` - Build for production
+- `pnpm build` - Build everything: web app and desktop app (installers in `output/build/`)
+- `pnpm build:web` - Build only the web app
+- `pnpm build:desktop` - Build only the desktop app (needs Rust and the [Tauri prerequisites](https://tauri.app/start/prerequisites/))
+- `pnpm dev:desktop` - Run the desktop app in development
 - `pnpm test` - Run unit tests
 - `pnpm lint` - Run ESLint
 - `pnpm storybook` - Start Storybook development server
