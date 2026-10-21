@@ -3,6 +3,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { useAtomValue } from "jotai";
 import { useIntl } from "react-intl";
 import { useThemeSelector } from "~/components/actions/theme-selector/UseThemeSelector";
+import { useAppInfo } from "~/core/config/UseAppInfo";
 import { getContextNotifications } from "~/core/notifications/NotificationSettings";
 import { useNotifications } from "~/core/notifications/UseNotifications";
 import type { SettingsSectionId } from "~/core/settings/SettingsSection";
@@ -24,6 +25,7 @@ export function useSettingsRoute(section?: SettingsSectionId): SettingsViewProps
   const sync = useFolderSync();
   const notifications = useNotifications();
   const themeSelector = useThemeSelector();
+  const { appName, appVersion } = useAppInfo();
 
   function reportError(error: unknown): void {
     toast.danger(
@@ -172,5 +174,6 @@ export function useSettingsRoute(section?: SettingsSectionId): SettingsViewProps
       onContextChange: notifications.updateContext,
     },
     appearance: { themeSelector },
+    about: { appName, ...appVersion },
   };
 }

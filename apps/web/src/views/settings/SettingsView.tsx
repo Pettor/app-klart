@@ -2,6 +2,8 @@ import { useEffect, type ReactElement } from "react";
 import { ChevronLeftIcon } from "@heroicons/react/20/solid";
 import { Button } from "@heroui/react";
 import { useIntl } from "react-intl";
+import type { SettingsAboutSectionProps } from "./SettingsAboutSection";
+import { SettingsAboutSection } from "./SettingsAboutSection";
 import type { SettingsAgentsSectionProps } from "./SettingsAgentsSection";
 import { SettingsAgentsSection } from "./SettingsAgentsSection";
 import type { SettingsContextsSectionProps } from "./SettingsContextsSection";
@@ -24,6 +26,7 @@ export interface SettingsViewProps {
   agents: SettingsAgentsSectionProps;
   notifications: SettingsNotificationsSectionProps;
   appearance: { themeSelector: ThemeSelectorProps };
+  about: SettingsAboutSectionProps;
 }
 
 function scrollToSection(id: SettingsSectionId): void {
@@ -38,6 +41,7 @@ export function SettingsView({
   agents,
   notifications,
   appearance,
+  about,
 }: SettingsViewProps): ReactElement {
   const intl = useIntl();
 
@@ -69,6 +73,7 @@ export function SettingsView({
       defaultMessage: "Appearance",
       id: "+TqxRH",
     }),
+    about: intl.formatMessage({ description: "SettingsView - nav item", defaultMessage: "About", id: "yqQ5e6" }),
   };
 
   return (
@@ -123,6 +128,7 @@ export function SettingsView({
         <SettingsSectionShell id="appearance" title={labels.appearance}>
           <ThemeSelector {...appearance.themeSelector} />
         </SettingsSectionShell>
+        <SettingsAboutSection {...about} />
       </main>
     </div>
   );

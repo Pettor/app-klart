@@ -56,11 +56,6 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile --ignore-scripts
 
-      - name: Add buildnumber to version
-        run: |
-          cd $GITHUB_WORKSPACE/apps/web
-          echo "VITE_APP_VERSION=\${npm_package_version}-build.${{github.run_number}}" > .env.demo.local
-
       - name: Build demo deployment and move files
         run: pnpm run deploy:demo
         env:
@@ -85,5 +80,7 @@ jobs:
           jekyll: false
           keep_history: false
           target_branch: deploy/main
+          # Writes the CNAME file; without it each force-push to deploy/main would drop the custom domain
+          fqdn: klart.madebyhancock.com
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

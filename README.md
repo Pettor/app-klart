@@ -3,7 +3,7 @@
 [![GitHub](https://img.shields.io/badge/license-MIT-green)](https://github.com/Pettor/app-klart/blob/main/LICENSE)
 [![Actions Main](../../actions/workflows/main.yml/badge.svg)](../../actions/workflows/main.yml)
 [![Coverage](https://img.shields.io/badge/coverage-%E2%89%A580%25-brightgreen)](../../actions/workflows/ci.yml)
-[![Storybook](https://raw.githubusercontent.com/storybooks/brand/master/badge/badge-storybook.svg)](https://pettor.github.io/app-klart/storybook/)
+[![Storybook](https://raw.githubusercontent.com/storybooks/brand/master/badge/badge-storybook.svg)](https://klart.madebyhancock.com/storybook/)
 
 A modern, production-ready React web application template designed to jumpstart your next enterprise project with industry best practices, comprehensive tooling, and a robust development workflow.
 
@@ -11,8 +11,8 @@ A modern, production-ready React web application template designed to jumpstart 
 
 Experience the template in action:
 
-- **[Live Application Demo](https://pettor.github.io/app-klart/app/)** - See the main application
-- **[Storybook Component Library](https://pettor.github.io/app-klart/storybook/)** - Explore the component documentation
+- **[Live Application Demo](https://klart.madebyhancock.com/app/)** - See the main application
+- **[Storybook Component Library](https://klart.madebyhancock.com/storybook/)** - Explore the component documentation
 
 ## ✨ Key Features
 
@@ -178,7 +178,7 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 - **Issues**: [GitHub Issues](https://github.com/Pettor/app-klart/issues)
 - **Discussions**: [GitHub Discussions](https://github.com/Pettor/app-klart/discussions)
-- **Documentation**: [Storybook Documentation](https://pettor.github.io/app-klart/storybook/)
+- **Documentation**: [Storybook Documentation](https://klart.madebyhancock.com/storybook/)
 
 ---
 

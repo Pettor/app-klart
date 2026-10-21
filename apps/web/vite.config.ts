@@ -1,3 +1,4 @@
+import { execSync } from "node:child_process";
 import path from "node:path";
 import { createBaseConfig, createPWAConfig, createReactConfig, mergeConfigs } from "@config/vite";
 import { tanstackRouter } from "@tanstack/router-plugin/vite";
@@ -10,6 +11,20 @@ const isTauri = !!process.env.TAURI_ENV_PLATFORM;
 
 // Repo root — two levels up from apps/web
 const repoRoot = path.resolve(import.meta.dirname, "../..");
+
+// CI run number of the workflow that built this bundle; empty for local builds
+const buildNumber = process.env.GITHUB_RUN_NUMBER ?? "";
+
+// Short commit hash, so local builds (e.g. the desktop app) can be traced too
+function readCommit(): string {
+  try {
+    return execSync("git rev-parse --short HEAD", { cwd: repoRoot, stdio: ["ignore", "pipe", "ignore"] })
+      .toString()
+      .trim();
+  } catch {
+    return "";
+  }
+}
 
 // https://vitejs.dev/config/
 export default defineConfig(({ command }) => {
@@ -27,6 +42,12 @@ export default defineConfig(({ command }) => {
       plugins: [tanstackRouter({ routeToken: "route" })],
     },
     { resolve: { dedupe: ["react", "react-dom"] } },
+    {
+      define: {
+        "import.meta.env.VITE_APP_BUILD": JSON.stringify(buildNumber),
+        "import.meta.env.VITE_APP_COMMIT": JSON.stringify(readCommit()),
+      },
+    },
   ]);
 
   switch (command) {
