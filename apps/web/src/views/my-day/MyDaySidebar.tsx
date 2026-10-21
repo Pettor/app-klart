@@ -6,7 +6,6 @@ import { useIntl } from "react-intl";
 import { getSmartViewLabel } from "./MyDayLabels";
 import type { MyDaySidebarProps } from "./MyDayTypes";
 import { ContextSwitcher } from "~/components/actions/context-switcher/ContextSwitcher";
-import { KlartMark } from "~/components/display/klart-mark/KlartMark";
 import { SyncStatusCard } from "~/components/display/sync-status/SyncStatusCard";
 import { SearchField } from "~/components/input/input-field/SearchField";
 import type { SmartView } from "~/core/tasks/KlartAtoms";
@@ -40,8 +39,7 @@ export function MyDaySidebar({
         className
       )}
     >
-      <div className="flex items-center gap-2.5 px-2">
-        <KlartMark size={28} outlined />
+      <div className="flex items-center px-2">
         <span className="text-[15px] font-bold">
           {intl.formatMessage({
             description: "MyDaySidebar - app name",

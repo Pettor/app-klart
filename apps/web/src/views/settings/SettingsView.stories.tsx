@@ -35,6 +35,7 @@ const defaultArgs = {
     onConnect: fn(),
     onConnectGit: fn(),
     onCloneGit: fn(),
+    onConnectGitHub: fn(async () => true),
     onReconnect: fn(),
     onDisconnect: fn(),
     onSyncNow: fn(),
@@ -174,8 +175,80 @@ export const DesktopWithoutGit: Story = {
   },
 };
 
+export const GitHubSetup: Story = {
+  args: {
+    ...defaultArgs,
+    sync: { ...defaultArgs.sync, isSupported: false, status: { state: "local", method: "local" }, devices: [] },
+  },
+  play: async ({ args, canvas, userEvent }) => {
+    await userEvent.click(canvas.getByRole("radio", { name: /GitHub/ }));
+    await expect(canvas.getByTestId("settings__github-connect")).toBeDisabled();
+    await userEvent.type(canvas.getByTestId("settings__github-owner"), "you");
+    await userEvent.type(canvas.getByTestId("settings__github-repository"), "klart-data");
+    await userEvent.type(canvas.getByTestId("settings__github-token"), "github_pat_123");
+    await userEvent.click(canvas.getByTestId("settings__github-connect"));
+    await expect(args.sync.onConnectGitHub).toHaveBeenCalledWith({
+      owner: "you",
+      repository: "klart-data",
+      token: "github_pat_123",
+    });
+    await expect(args.sync.onDisconnect).not.toHaveBeenCalled();
+  },
+};
+
+export const GitHubConnected: Story = {
+  args: {
+    ...defaultArgs,
+    sync: {
+      ...defaultArgs.sync,
+      isSupported: false,
+      status: {
+        state: "synced",
+        method: "github",
+        folderName: "you/klart-data",
+        lastSyncedAt: "2026-10-21T09:59:00Z",
+        git: { remoteUrl: "github.com/you/klart-data", branch: "main", lastSyncedAt: "2026-10-21T09:58:00Z" },
+      },
+    },
+  },
+  play: async ({ args, canvas, userEvent }) => {
+    await userEvent.click(canvas.getByTestId("settings__github-sync-now"));
+    await expect(args.sync.onSyncNow).toHaveBeenCalled();
+    await userEvent.click(canvas.getByTestId("settings__github-change"));
+    await expect(canvas.getByTestId("settings__github-setup")).toBeVisible();
+  },
+};
+
+export const GitHubTokenRejected: Story = {
+  args: {
+    ...defaultArgs,
+    sync: {
+      ...defaultArgs.sync,
+      status: {
+        state: "synced",
+        method: "github",
+        folderName: "you/klart-data",
+        git: {
+          remoteUrl: "github.com/you/klart-data",
+          branch: "main",
+          error: "Bad credentials",
+          errorKind: "unauthorized",
+        },
+      },
+    },
+  },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByTestId("settings__github-error")).toHaveTextContent(/didn't accept the token/);
+  },
+};
+
 export const Phone: Story = {
   args: defaultArgs,
+  globals: { viewport: { value: "iphonex" } },
+};
+
+export const PhoneGitHub: Story = {
+  args: GitHubConnected.args,
   globals: { viewport: { value: "iphonex" } },
 };
 

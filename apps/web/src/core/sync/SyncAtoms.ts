@@ -2,6 +2,7 @@ import { atom } from "jotai";
 import { atomWithStorage } from "jotai/utils";
 import type { FolderPermission } from "./FileSystemAccess";
 import type { AgentFileOptions, DeviceInfo } from "./FolderSync";
+import type { GitHubErrorKind } from "./GitHubBackend";
 
 export interface SyncSettings {
   /** Shown to other devices in `devices/<name>/`. */
@@ -9,7 +10,7 @@ export interface SyncSettings {
   agentFiles: AgentFileOptions;
 }
 
-export type SyncMethod = "local" | "folder" | "git";
+export type SyncMethod = "local" | "folder" | "git" | "github";
 
 export type SyncState = "local" | "syncing" | "synced" | "error" | "needs-permission";
 
@@ -18,6 +19,8 @@ export interface GitSyncStatus {
   branch?: string;
   lastSyncedAt?: string;
   error?: string;
+  /** GitHub sync only: what kind of problem `error` is. */
+  errorKind?: GitHubErrorKind;
   /** Conflicts resolved in the last sync; the losing versions are in `.conflicts/`. */
   conflicts?: number;
 }
@@ -38,11 +41,21 @@ export interface SyncStatus {
  * - `browser-folder`: a folder opened with the File System Access API (Chrome, Edge)
  * - `desktop-folder`: a folder on disk, through the desktop app (e.g. inside OneDrive)
  * - `desktop-git`: a local Git clone, through the desktop app; committed, pulled and pushed automatically
+ * - `github`: a GitHub repository through its REST API; works in any browser, including on phones
  */
 export type SyncConnection =
   | { kind: "browser-folder"; handle: FileSystemDirectoryHandle }
   | { kind: "desktop-folder"; path: string }
-  | { kind: "desktop-git"; path: string };
+  | { kind: "desktop-git"; path: string }
+  | GitHubConnection;
+
+/** Signs in with a personal access token; GitHub's API doesn't accept account passwords. */
+export interface GitHubConnection {
+  kind: "github";
+  owner: string;
+  repo: string;
+  token: string;
+}
 
 /** The desktop app remembers its folder by path; the browser keeps a handle in IndexedDB instead. */
 export type StoredDesktopConnection = Extract<SyncConnection, { kind: "desktop-folder" | "desktop-git" }>;
@@ -75,6 +88,14 @@ export const syncSettingsAtom = atomWithStorage<SyncSettings>(
 
 export const desktopConnectionAtom = atomWithStorage<StoredDesktopConnection | null>(
   "klart-desktop-connection",
+  null,
+  undefined,
+  { getOnInit: true }
+);
+
+/** Kept in this browser's storage so the phone stays connected; never written to the data folder. */
+export const githubConnectionAtom = atomWithStorage<GitHubConnection | null>(
+  "klart-github-connection",
   null,
   undefined,
   { getOnInit: true }
