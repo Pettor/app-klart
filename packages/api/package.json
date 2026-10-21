@@ -1,0 +1,42 @@
+{
+  "name": "@package/api",
+  "version": "0.7.0",
+  "description": "API client for the web application using native fetch and React Query",
+  "license": "MIT",
+  "private": true,
+  "main": "./src/index.ts",
+  "type": "module",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./*": "./src/*"
+  },
+  "scripts": {
+    "clean": "rimraf dist",
+    "clean:all": "pnpm clean node_modules",
+    "lint": "eslint ./src",
+    "lint:fix": "pnpm lint --fix",
+    "test": "vitest run",
+    "test:ci": "vitest run --reporter=junit --outputFile=.test-results/unit-test.xml",
+    "test:coverage": "vitest run --coverage",
+    "test:coverage:ci": "pnpm test:coverage && pnpm test:coverage:ci:move",
+    "test:coverage:ci:move": "move-cli ./coverage/cobertura-coverage.xml ../../output/coverage/api.xml --mkdirp"
+  },
+  "peerDependencies": {
+    "@tanstack/react-query": ">=5.0.0",
+    "react": ">=19.0.0",
+    "zod": ">=4.0.0"
+  },
+  "dependencies": {
+    "immer": "catalog:state"
+  },
+  "devDependencies": {
+    "@config/eslint": "workspace:*",
+    "@config/typescript": "workspace:*",
+    "@vitest/coverage-v8": "catalog:dev",
+    "move-cli": "catalog:dev",
+    "vite": "catalog:dev",
+    "vitest": "catalog:dev",
+    "zod": "catalog:validation"
+  }
+}

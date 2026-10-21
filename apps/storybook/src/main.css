@@ -1,0 +1,17 @@
+/* Font */
+@import "@fontsource/rubik";
+@import "@fontsource/rubik/300.css";
+@import "@fontsource/rubik/400.css";
+@import "@fontsource/rubik/500.css";
+@import "@fontsource/rubik/600.css";
+@import "@fontsource/rubik/700.css";
+@import "@fontsource/rubik/800.css";
+@import "@fontsource/rubik/900.css";
+
+/* Tailwind configuration */
+@import "../node_modules/@config/tailwind/tailwind.css";
+
+/* Tailwind sources */
+@source "../node_modules/@app/web/src/**/*.{js,ts,jsx,tsx}";
+@source "../node_modules/@package/ui/src/**/*.{js,ts,jsx,tsx}";
+@source "../node_modules/@package/storybook/src/**/*.{js,ts,jsx,tsx}";

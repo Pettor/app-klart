@@ -1,0 +1,17 @@
+{
+  "exclude": ["dist"],
+  "extends": "@config/typescript/base.json",
+  "compilerOptions": {
+    // Build & Resolve
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "Node",
+    "lib": ["DOM", "DOM.Iterable", "ESNext"],
+    // Paths & Types
+    "paths": {
+      "~/*": ["./src/*"]
+    },
+    "types": ["@config/typescript/types"]
+  },
+  "include": ["./src"]
+}

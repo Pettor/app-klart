@@ -1,0 +1,51 @@
+{
+  "name": "@package/ui",
+  "version": "0.7.0",
+  "description": "UI components and hooks for the web application",
+  "license": "MIT",
+  "private": true,
+  "files": [
+    "dist"
+  ],
+  "main": "./src/index.ts",
+  "type": "module",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./*": "./src/*"
+  },
+  "bin": {
+    "generate-assets": "./scripts/generate-assets.mjs"
+  },
+  "scripts": {
+    "clean": "rimraf dist",
+    "clean:all": "pnpm clean node_modules",
+    "lint": "eslint ./src",
+    "lint:fix": "pnpm lint --fix"
+  },
+  "peerDependencies": {
+    "react": ">=19.0.0",
+    "react-dom": ">=19.0.0"
+  },
+  "dependencies": {
+    "@config/tailwind": "workspace:*",
+    "@heroui/react": "catalog:ui",
+    "clsx": "catalog:ui",
+    "framer-motion": "catalog:ui",
+    "jotai": "catalog:state"
+  },
+  "devDependencies": {
+    "@config/eslint": "workspace:*",
+    "@config/typescript": "workspace:*",
+    "@faker-js/faker": "catalog:dev",
+    "@package/storybook": "workspace:*",
+    "@types/react": "catalog:react",
+    "@types/react-dom": "catalog:react",
+    "@vitejs/plugin-react": "catalog:dev",
+    "@vitest/browser": "catalog:dev",
+    "@vitest/coverage-v8": "catalog:dev",
+    "tailwindcss": "catalog:dev",
+    "vite": "catalog:dev",
+    "vitest": "catalog:dev"
+  }
+}

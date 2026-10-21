@@ -1,0 +1,1632 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/api/tokens": {
+      "post": {
+        "tags": ["Tokens"],
+        "summary": "Request an access token using credentials.",
+        "operationId": "Tokens_GetToken",
+        "parameters": [
+          {
+            "name": "tenant",
+            "in": "header",
+            "required": true,
+            "description": "Input your tenant Id to access this API",
+            "schema": {
+              "type": "string",
+              "default": ""
+            }
+          }
+        ],
+        "requestBody": {
+          "x-name": "request",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TokenRequest"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenResponse"
+                },
+                "examples": {
+                  "$ref": "#/components/examples/TokenResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                },
+                "examples": {
+                  "$ref": "#/components/examples/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResult"
+                },
+                "examples": {
+                  "$ref": "#/components/examples/ErrorResult"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Tokens"],
+        "summary": "Request an access token using credentials.",
+        "operationId": "Tokens_RemoveToken",
+        "parameters": [
+          {
+            "name": "tenant",
+            "in": "header",
+            "required": true,
+            "description": "Input your tenant Id to access this API",
+            "schema": {
+              "type": "string",
+              "default": ""
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenResponse"
+                },
+                "examples": {
+                  "$ref": "#/components/examples/TokenResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/tokens/refresh": {
+      "get": {
+        "tags": ["Tokens"],
+        "summary": "Request an access token using a refresh token.",
+        "operationId": "Tokens_Refresh",
+        "parameters": [
+          {
+            "name": "tenant",
+            "in": "header",
+            "required": true,
+            "description": "Input your tenant Id to access this API",
+            "schema": {
+              "type": "string",
+              "default": ""
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenResponse"
+                },
+                "examples": {
+                  "$ref": "#/components/examples/TokenResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                },
+                "examples": {
+                  "$ref": "#/components/examples/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResult"
+                },
+                "examples": {
+                  "$ref": "#/components/examples/ErrorResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/personal/profile": {
+      "get": {
+        "tags": ["Personal"],
+        "summary": "Get profile details of currently logged in user.",
+        "operationId": "Personal_GetProfile",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserDetailsDto"
+                },
+                "examples": {
+                  "$ref": "#/components/examples/UserDetailsDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                },
+                "examples": {
+                  "$ref": "#/components/examples/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                },
+                "examples": {
+                  "$ref": "#/components/examples/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResult"
+                },
+                "examples": {
+                  "$ref": "#/components/examples/ErrorResult"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      },
+      "put": {
+        "tags": ["Personal"],
+        "summary": "Update profile details of currently logged in user.",
+        "operationId": "Personal_UpdateProfile",
+        "requestBody": {
+          "x-name": "request",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateUserRequest"
+              },
+              "examples": {
+                "$ref": "#/components/examples/UpdateUserRequest"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                },
+                "examples": {
+                  "$ref": "#/components/examples/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResult"
+                },
+                "examples": {
+                  "$ref": "#/components/examples/ErrorResult"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/personal/change-password": {
+      "put": {
+        "tags": ["Personal"],
+        "summary": "Change password of currently logged in user.",
+        "operationId": "Personal_ChangePassword",
+        "requestBody": {
+          "x-name": "model",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangePasswordRequest"
+              },
+              "examples": {
+                "$ref": "#/components/examples/ChangePasswordRequest"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                },
+                "examples": {
+                  "$ref": "#/components/examples/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResult"
+                },
+                "examples": {
+                  "$ref": "#/components/examples/ErrorResult"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/users": {
+      "get": {
+        "tags": ["Users"],
+        "summary": "Get list of all users.",
+        "operationId": "Users_GetList",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/UserDetailsDto"
+                  },
+                  "examples": {
+                    "$ref": "#/components/examples/UserDetailsDto"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                },
+                "examples": {
+                  "$ref": "#/components/examples/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResult"
+                },
+                "examples": {
+                  "$ref": "#/components/examples/ErrorResult"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      },
+      "post": {
+        "tags": ["Users"],
+        "summary": "Creates a new user.",
+        "operationId": "Users_Create",
+        "requestBody": {
+          "x-name": "request",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateUserRequest"
+              },
+              "examples": {
+                "$ref": "#/components/examples/CreateUserRequest"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                },
+                "examples": {
+                  "$ref": "#/components/examples/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResult"
+                },
+                "examples": {
+                  "$ref": "#/components/examples/ErrorResult"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/users/self-register": {
+      "post": {
+        "tags": ["Users"],
+        "summary": "Anonymous user creates a user.",
+        "operationId": "Users_SelfRegister",
+        "parameters": [
+          {
+            "name": "tenant",
+            "in": "header",
+            "required": true,
+            "description": "Input your tenant Id to access this API",
+            "schema": {
+              "type": "string",
+              "default": ""
+            }
+          }
+        ],
+        "requestBody": {
+          "x-name": "request",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateUserRequest"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                },
+                "examples": {
+                  "default": {
+                    "value": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                },
+                "examples": {
+                  "$ref": "#/components/examples/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResult"
+                },
+                "examples": {
+                  "$ref": "#/components/examples/ErrorResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/users/forgot-password": {
+      "post": {
+        "tags": ["Users"],
+        "summary": "Request a pasword reset email for a user.",
+        "operationId": "Users_ForgotPassword",
+        "parameters": [
+          {
+            "name": "tenant",
+            "in": "header",
+            "required": true,
+            "description": "Input your tenant Id to access this API",
+            "schema": {
+              "type": "string",
+              "default": ""
+            }
+          }
+        ],
+        "requestBody": {
+          "x-name": "request",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ForgotPasswordRequest"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                },
+                "examples": {
+                  "default": {
+                    "value": {
+                      "type": ""
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                },
+                "examples": {
+                  "$ref": "#/components/examples/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResult"
+                },
+                "examples": {
+                  "$ref": "#/components/examples/ErrorResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/users/reset-password": {
+      "post": {
+        "tags": ["Users"],
+        "summary": "Reset a user's password.",
+        "operationId": "Users_ResetPassword",
+        "requestBody": {
+          "x-name": "request",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResetPasswordRequest"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                },
+                "examples": {
+                  "$ref": "#/components/examples/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResult"
+                },
+                "examples": {
+                  "$ref": "#/components/examples/ErrorResult"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/dashboard": {
+      "get": {
+        "tags": ["Dashboard"],
+        "summary": "Get dashboard data including stats, chart data and recent transactions.",
+        "operationId": "Dashboard_GetData",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardData"
+                },
+                "examples": {
+                  "$ref": "#/components/examples/DashboardData"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResult"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/application/info": {
+      "get": {
+        "tags": ["Application"],
+        "summary": "Get application info.",
+        "operationId": "Application_GetInfo",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "ref": "#/components/schemas/ApplicationInfo"
+                },
+                "examples": {
+                  "$ref": "#/components/examples/ApplicationInfo"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "UserDetailsDto": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "guid"
+          },
+          "userName": {
+            "type": "string",
+            "nullable": true
+          },
+          "firstName": {
+            "type": "string",
+            "nullable": true
+          },
+          "lastName": {
+            "type": "string",
+            "nullable": true
+          },
+          "email": {
+            "type": "string",
+            "nullable": true
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "emailConfirmed": {
+            "type": "boolean"
+          },
+          "phoneNumber": {
+            "type": "string",
+            "nullable": true
+          },
+          "imageUrl": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "HttpValidationProblemDetails": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ProblemDetails"
+          },
+          {
+            "type": "object",
+            "additionalProperties": {
+              "nullable": true
+            },
+            "properties": {
+              "errors": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+      "ProblemDetails": {
+        "type": "object",
+        "additionalProperties": {
+          "nullable": true
+        },
+        "properties": {
+          "type": {
+            "type": "string",
+            "nullable": true
+          },
+          "title": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "detail": {
+            "type": "string",
+            "nullable": true
+          },
+          "instance": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "ErrorResult": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "messages": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "type": "string"
+            }
+          },
+          "source": {
+            "type": "string",
+            "nullable": true
+          },
+          "exception": {
+            "type": "string",
+            "nullable": true
+          },
+          "errorId": {
+            "type": "string",
+            "nullable": true
+          },
+          "supportMessage": {
+            "type": "string",
+            "nullable": true
+          },
+          "statusCode": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "UpdateUserRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "firstName": {
+            "type": "string",
+            "nullable": true
+          },
+          "lastName": {
+            "type": "string",
+            "nullable": true
+          },
+          "phoneNumber": {
+            "type": "string",
+            "nullable": true
+          },
+          "email": {
+            "type": "string",
+            "nullable": true
+          },
+          "image": {
+            "nullable": true,
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/FileUploadRequest"
+              }
+            ]
+          },
+          "deleteCurrentImage": {
+            "type": "boolean"
+          }
+        }
+      },
+      "FileUploadRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "extension": {
+            "type": "string"
+          },
+          "data": {
+            "type": "string"
+          }
+        }
+      },
+      "ChangePasswordRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "password": {
+            "type": "string"
+          },
+          "newPassword": {
+            "type": "string"
+          },
+          "confirmNewPassword": {
+            "type": "string"
+          }
+        }
+      },
+      "AuditDto": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "guid"
+          },
+          "userId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "type": {
+            "type": "string",
+            "nullable": true
+          },
+          "tableName": {
+            "type": "string",
+            "nullable": true
+          },
+          "dateTime": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "oldValues": {
+            "type": "string",
+            "nullable": true
+          },
+          "newValues": {
+            "type": "string",
+            "nullable": true
+          },
+          "affectedColumns": {
+            "type": "string",
+            "nullable": true
+          },
+          "primaryKey": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "TenantDto": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "connectionString": {
+            "type": "string",
+            "nullable": true
+          },
+          "adminEmail": {
+            "type": "string"
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "validUpto": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "issuer": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "CreateTenantRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "connectionString": {
+            "type": "string",
+            "nullable": true
+          },
+          "adminEmail": {
+            "type": "string"
+          },
+          "issuer": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "UpgradeSubscriptionRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "tenantId": {
+            "type": "string"
+          },
+          "extendedExpiryDate": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "RoleDto": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "permissions": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "nullable": true
+            }
+          }
+        }
+      },
+      "UpdateRolePermissionsRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "roleId": {
+            "type": "string"
+          },
+          "permissions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "CreateOrUpdateRoleRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "nullable": true
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "TokenResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "token": {
+            "type": "string"
+          },
+          "refreshTokenExpiryTime": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "TokenRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "email": {
+            "type": "string"
+          },
+          "password": {
+            "type": "string"
+          }
+        }
+      },
+      "UserRoleDto": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "roleId": {
+            "type": "string",
+            "nullable": true
+          },
+          "roleName": {
+            "type": "string",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "enabled": {
+            "type": "boolean"
+          }
+        }
+      },
+      "UserRolesRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "userRoles": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UserRoleDto"
+            }
+          }
+        }
+      },
+      "CreateUserRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "firstName": {
+            "type": "string"
+          },
+          "lastName": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "userName": {
+            "type": "string"
+          },
+          "password": {
+            "type": "string"
+          },
+          "confirmPassword": {
+            "type": "string"
+          },
+          "phoneNumber": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "ToggleUserStatusRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "activateUser": {
+            "type": "boolean"
+          },
+          "userId": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "ForgotPasswordRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "email": {
+            "type": "string"
+          }
+        }
+      },
+      "ResetPasswordRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "email": {
+            "type": "string",
+            "nullable": true
+          },
+          "password": {
+            "type": "string",
+            "nullable": true
+          },
+          "token": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "DashboardStats": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "totalRevenue": {
+            "type": "number"
+          },
+          "totalUsers": {
+            "type": "integer"
+          },
+          "activeUsers": {
+            "type": "integer"
+          },
+          "conversionRate": {
+            "type": "number"
+          }
+        }
+      },
+      "DashboardChartPoint": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "label": {
+            "type": "string"
+          },
+          "revenue": {
+            "type": "number"
+          },
+          "expenses": {
+            "type": "number"
+          }
+        }
+      },
+      "DashboardTransaction": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "customer": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "number"
+          },
+          "status": {
+            "type": "string"
+          },
+          "date": {
+            "type": "string"
+          }
+        }
+      },
+      "DashboardKpi": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string" },
+          "deltaPct": { "type": "number" },
+          "deltaAbs": { "type": "number" },
+          "spark": { "type": "array", "items": { "type": "number" } }
+        }
+      },
+      "DashboardCohort": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "key": { "type": "string" },
+          "value": { "type": "number" },
+          "total": { "type": "number" }
+        }
+      },
+      "DashboardChannel": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "key": { "type": "string" },
+          "pct": { "type": "number" }
+        }
+      },
+      "DashboardActivity": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "key": { "type": "string" },
+          "title": { "type": "string" },
+          "detail": { "type": "string" },
+          "relativeTime": { "type": "string" },
+          "color": { "type": "string" }
+        }
+      },
+      "DashboardData": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "stats": {
+            "$ref": "#/components/schemas/DashboardStats"
+          },
+          "chartData": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DashboardChartPoint"
+            }
+          },
+          "recentTransactions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DashboardTransaction"
+            }
+          },
+          "kpis": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/DashboardKpi" }
+          },
+          "cohorts": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/DashboardCohort" }
+          },
+          "channels": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/DashboardChannel" }
+          },
+          "activity": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/DashboardActivity" }
+          }
+        }
+      },
+      "ApplicationInfo": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "version": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "examples": {
+      "TokenResponse": {
+        "token-valid": {
+          "value": {
+            "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c",
+            "refreshTokenExpiryTime": "2099-09-09T00:00:00.0000000Z"
+          }
+        }
+      },
+      "UserDetailsDto": {
+        "detail-john-doe": {
+          "value": {
+            "id": "aad514b0-183f-4422-a666-c4e4d4defae8",
+            "userName": "JohnDoe",
+            "firstName": "John",
+            "lastName": "Doe",
+            "email": "john.doe@test.com",
+            "isActive": true,
+            "emailConfirmed": true,
+            "phoneNumber": "0701234567",
+            "imageUrl": "http://placekitten.com/200/200"
+          }
+        }
+      },
+      "UpdateUserRequest": {
+        "update-john-doe": {
+          "value": {
+            "firstName": "John",
+            "lastName": "Doe",
+            "email": "john.doe@test.com",
+            "phoneNumber": "0701234567"
+          }
+        }
+      },
+      "ChangePasswordRequest": {
+        "change-password123": {
+          "value": {
+            "currentPassword": "password123",
+            "newPassword": "password123"
+          }
+        }
+      },
+      "CreateUserRequest": {
+        "create-bill-andersson": {
+          "value": {
+            "userName": "bill.andersson",
+            "firstName": "Bill",
+            "lastName": "Andersson",
+            "email": "bill.andersson@yahoo.com",
+            "password": "password123",
+            "phoneNumber": "0701234567"
+          }
+        }
+      },
+      "HttpValidationProblemDetails": {
+        "status-400-no-error": {
+          "value": {
+            "type": "https://tools.ietf.org/html/rfc7231#section-6.5.1",
+            "title": "One or more validation errors occurred.",
+            "status": 400,
+            "traceId": "|a0f0a0f-4c0f0a0f4c0f0a0f."
+          }
+        }
+      },
+      "ErrorResult": {
+        "code-20-server-error": {
+          "value": {
+            "code": "20",
+            "message": "Server Error",
+            "details": [
+              {
+                "code": "20",
+                "message": "Server Error"
+              }
+            ]
+          }
+        }
+      },
+      "DashboardData": {
+        "dashboard-data-default": {
+          "value": {
+            "stats": {
+              "totalRevenue": 45231.89,
+              "totalUsers": 2350,
+              "activeUsers": 1280,
+              "conversionRate": 12.5
+            },
+            "chartData": [
+              { "label": "Jan", "revenue": 28400, "expenses": 18200 },
+              { "label": "Feb", "revenue": 21900, "expenses": 16400 },
+              { "label": "Mar", "revenue": 34800, "expenses": 20100 },
+              { "label": "Apr", "revenue": 31200, "expenses": 19800 },
+              { "label": "May", "revenue": 42100, "expenses": 23400 },
+              { "label": "Jun", "revenue": 45231, "expenses": 24100 },
+              { "label": "Jul", "revenue": 38900, "expenses": 22500 },
+              { "label": "Aug", "revenue": 47800, "expenses": 25200 },
+              { "label": "Sep", "revenue": 52100, "expenses": 26800 },
+              { "label": "Oct", "revenue": 49300, "expenses": 26100 },
+              { "label": "Nov", "revenue": 54800, "expenses": 27900 },
+              { "label": "Dec", "revenue": 61200, "expenses": 29400 }
+            ],
+            "recentTransactions": [
+              {
+                "id": "tx-001",
+                "customer": "Olivia Martin",
+                "email": "olivia.martin@email.com",
+                "amount": 1999.0,
+                "status": "completed",
+                "date": "2026-04-01"
+              },
+              {
+                "id": "tx-002",
+                "customer": "Jackson Lee",
+                "email": "jackson.lee@email.com",
+                "amount": 39.0,
+                "status": "completed",
+                "date": "2026-04-02"
+              },
+              {
+                "id": "tx-003",
+                "customer": "Isabella Nguyen",
+                "email": "isabella.nguyen@email.com",
+                "amount": 299.0,
+                "status": "pending",
+                "date": "2026-04-03"
+              },
+              {
+                "id": "tx-004",
+                "customer": "William Kim",
+                "email": "will@email.com",
+                "amount": 99.0,
+                "status": "completed",
+                "date": "2026-04-04"
+              },
+              {
+                "id": "tx-005",
+                "customer": "Sofia Davis",
+                "email": "sofia.davis@email.com",
+                "amount": 450.0,
+                "status": "pending",
+                "date": "2026-04-05"
+              },
+              {
+                "id": "tx-006",
+                "customer": "Ethan Walker",
+                "email": "ethan.walker@email.com",
+                "amount": 129.0,
+                "status": "refunded",
+                "date": "2026-04-05"
+              },
+              {
+                "id": "tx-007",
+                "customer": "Maya Patel",
+                "email": "maya.patel@email.com",
+                "amount": 880.0,
+                "status": "completed",
+                "date": "2026-04-06"
+              }
+            ],
+            "kpis": [
+              {
+                "id": "revenue",
+                "deltaPct": 20.1,
+                "deltaAbs": 7582,
+                "spark": [22, 24, 23, 28, 26, 31, 30, 34, 33, 38, 36, 45]
+              },
+              {
+                "id": "users",
+                "deltaPct": 18.0,
+                "deltaAbs": 180,
+                "spark": [12, 15, 14, 17, 16, 19, 18, 20, 22, 24, 23, 24]
+              },
+              {
+                "id": "active",
+                "deltaPct": 19.0,
+                "deltaAbs": 201,
+                "spark": [8, 9, 9, 11, 12, 11, 13, 14, 14, 15, 14, 16]
+              },
+              {
+                "id": "conversion",
+                "deltaPct": -2.1,
+                "deltaAbs": -0.3,
+                "spark": [14, 13.5, 14.2, 13, 13.5, 12.8, 13.1, 12.9, 12.6, 13.0, 12.8, 12.5]
+              }
+            ],
+            "cohorts": [
+              { "key": "dau", "value": 1280, "total": 2350 },
+              { "key": "wau", "value": 1842, "total": 2350 },
+              { "key": "mau", "value": 2180, "total": 2350 }
+            ],
+            "channels": [
+              { "key": "direct", "pct": 38 },
+              { "key": "organic", "pct": 26 },
+              { "key": "referral", "pct": 18 },
+              { "key": "paid", "pct": 12 },
+              { "key": "other", "pct": 6 }
+            ],
+            "activity": [
+              {
+                "key": "deploy",
+                "title": "Deployment succeeded",
+                "detail": "api-gateway · v4.12.3",
+                "relativeTime": "just now",
+                "color": "success"
+              },
+              {
+                "key": "signup",
+                "title": "New enterprise signup",
+                "detail": "Northwind Analytics · 340 seats",
+                "relativeTime": "2m",
+                "color": "accent"
+              },
+              {
+                "key": "errors",
+                "title": "Spike in 4xx errors",
+                "detail": "/v1/checkout · 3.2% error rate",
+                "relativeTime": "14m",
+                "color": "warning"
+              },
+              {
+                "key": "invoice",
+                "title": "Invoice paid",
+                "detail": "Acme Inc · $18,400",
+                "relativeTime": "1h",
+                "color": "success"
+              },
+              {
+                "key": "policy",
+                "title": "Password policy updated",
+                "detail": "admin@company.com",
+                "relativeTime": "3h",
+                "color": "default"
+              }
+            ]
+          }
+        }
+      },
+      "ApplicationInfo": {
+        "application-info-1.0.0": {
+          "value": {
+            "version": "1.0.0"
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "Bearer": {
+        "type": "http",
+        "description": "Input your Bearer token to access this API",
+        "name": "Authorization",
+        "in": "header",
+        "scheme": "Bearer",
+        "bearerFormat": "JWT"
+      }
+    }
+  }
+}

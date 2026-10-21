@@ -1,0 +1,145 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "globalDependencies": ["**/.env.*local"],
+  "globalEnv": ["PORT"],
+  "tasks": {
+    "prepare": {
+      "cache": true,
+      "inputs": [".husky/**", "package.json"]
+    },
+    "build": {
+      "dependsOn": ["^build:libs", "^build"],
+      "inputs": ["src/**", "assets/**", "package.json", "tsconfig.json", "vite.config.ts", "pwa-assets.config.ts", "eslint.config.js"],
+      "outputs": ["dist/**", "build/**"]
+    },
+    "build:libs": {
+      "cache": true,
+      "inputs": ["src/**", "package.json", "tsconfig.json", "vite.config.ts", "eslint.config.js"],
+      "outputs": ["dist/**"]
+    },
+    "build:demo": {
+      "dependsOn": ["^build:libs"],
+      "inputs": ["src/**", "package.json", "tsconfig.json", "vite.config.ts", "eslint.config.js", ".env.demo"],
+      "outputs": ["dist/**", "build/**"]
+    },
+    "deploy": {
+      "dependsOn": ["build", "storybook:build"],
+      "cache": true,
+      "inputs": ["dist/**", "build/**", "storybook-static/**"],
+      "outputs": ["output/deployment/**"]
+    },
+    "deploy:demo": {
+      "dependsOn": ["build:demo", "storybook:build"],
+      "cache": true,
+      "inputs": ["dist/**", "build/**", "storybook-static/**"],
+      "outputs": ["output/deployment/**"]
+    },
+    "dev": {
+      "cache": false,
+      "dependsOn": ["^build:libs"],
+      "persistent": true
+    },
+    "dev:mocks": {
+      "cache": false,
+      "dependsOn": ["^build:libs"], 
+      "persistent": true
+    },
+    "dev:mocks:cli": {
+      "cache": false,
+      "persistent": true
+    },
+    "clean": {
+      "cache": false
+    },
+    "clean:all": {
+      "cache": false
+    },
+    "lint": {
+      "cache": true,
+      "inputs": ["src/**", "eslint.config.js", ".eslintrc.*", "package.json", "tsconfig.json"],
+      "outputs": []
+    },
+    "lint:fix": {
+      "cache": false,
+      "inputs": ["src/**", "eslint.config.js", ".eslintrc.*", "package.json", "tsconfig.json"]
+    },
+    "test": {
+      "cache": false,
+      "inputs": ["src/**", "test/**", "vitest.config.ts", "package.json", "tsconfig.json"],
+      "outputs": ["coverage/**"]
+    },
+    "test:ci": {
+      "cache": false,
+      "dependsOn": ["^build:libs"],
+      "inputs": ["src/**", "test/**", "vitest.config.ts", "package.json", "tsconfig.json"],
+      "outputs": [".test-results/**"]
+    },
+    "test:e2e": {
+      "cache": false,
+      "dependsOn": ["^build:libs"],
+      "inputs": ["src/**", "playwright.ui.config.ts", "package.json"],
+      "persistent": true
+    },
+    "test:e2e:ci": {
+      "cache": false,
+      "dependsOn": ["^build:libs"],
+      "inputs": ["src/**", "playwright.config.ts", "package.json"],
+      "outputs": [".test-results/**", "test-results/**"],
+      "persistent": false
+    },
+    "test:e2e:ui": {
+      "cache": false,
+      "dependsOn": ["^build:libs"],
+      "inputs": ["src/**", "playwright.ui.config.ts", "package.json"],
+      "persistent": true
+    },
+    "test:e2e:coverage": {
+      "cache": false,
+      "dependsOn": ["^build:libs"],
+      "inputs": ["src/**", "playwright.coverage.config.ts", "package.json"],
+      "outputs": [".test-results/**", "test-results/**", ".nyc_output/**"]
+    },
+    "test:e2e:env": {
+      "cache": false,
+      "persistent": true
+    },
+    "test:e2e:env:coverage": {
+      "cache": false,
+      "persistent": true
+    },
+    "test:coverage": {
+      "cache": true,
+      "dependsOn": ["^build:libs"],
+      "inputs": ["src/**", "test/**", "vitest.config.ts", "package.json", "tsconfig.json"],
+      "outputs": ["coverage/**", ".coverage/**"]
+    },
+    "test:coverage:ci": {
+      "cache": false,
+      "dependsOn": ["^build:libs"],
+      "inputs": ["src/**", "test/**", "vitest.config.ts", "package.json", "tsconfig.json"],
+      "outputs": ["coverage/**"]
+    },
+    "storybook": {
+      "cache": false,
+      "dependsOn": ["^build:libs"],
+      "persistent": true
+    },
+    "storybook:build": {
+      "cache": true,
+      "dependsOn": ["^build:libs"],
+      "inputs": ["src/**/*.tsx", "src/**/*.ts", ".storybook/**", "package.json", "tsconfig.json", "vite.config.ts"],
+      "outputs": ["storybook-static/**"]
+    },
+    "storybook:move": {
+      "cache": true,
+      "dependsOn": ["storybook:build"],
+      "inputs": ["storybook-static/**"],
+      "outputs": ["output/storybook-static/**"]
+    },
+    "storybook:nopen": {
+      "cache": false,
+      "dependsOn": ["^build:libs"],
+      "persistent": true
+    }
+  }
+}
