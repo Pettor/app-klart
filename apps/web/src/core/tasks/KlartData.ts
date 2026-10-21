@@ -15,7 +15,9 @@ export interface KlartData {
   days: Record<string, DayFile>;
 }
 
-export type TaskPatch = Partial<Pick<Task, "title" | "context" | "tags" | "due" | "remindAt" | "important" | "notes">>;
+export type TaskPatch = Partial<
+  Pick<Task, "title" | "context" | "tags" | "due" | "remindAt" | "important" | "notes" | "links">
+>;
 
 export function createEmptyData(): KlartData {
   return { contexts: DEFAULT_CONTEXTS, tasks: {}, days: {} };
@@ -34,6 +36,7 @@ export function createTask(parsed: ParsedQuickAdd, now: Date, id: string = creat
     important: parsed.important,
     status: "open",
     notes: "",
+    links: parsed.links,
     createdAt: timestamp,
     updatedAt: timestamp,
     completedAt: null,

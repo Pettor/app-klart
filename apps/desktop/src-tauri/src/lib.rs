@@ -23,6 +23,7 @@ pub fn run() {
             git::git_sync,
             system::device_name,
             system::show_notification,
+            system::open_url,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Klart");

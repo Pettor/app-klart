@@ -66,8 +66,19 @@ describe("parseQuickAdd", () => {
       due: "2026-07-08",
       remindAt: null,
       important: false,
+      links: [],
       raw: "#work #acme @2026-07-08 #team find more tasks to create",
     });
+  });
+
+  it("takes http(s) URLs as links, not title words", () => {
+    const parsed = parse("Review https://github.com/acme/pr/1 PR http://example.com https://github.com/acme/pr/1");
+    expect(parsed.title).toBe("Review PR");
+    expect(parsed.links).toEqual(["https://github.com/acme/pr/1", "http://example.com"]);
+  });
+
+  it("keeps non-web URLs in the title", () => {
+    expect(parse("Run javascript:alert(1) ftp://host").links).toEqual([]);
   });
 
   it("reads tokens anywhere in the line", () => {

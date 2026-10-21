@@ -29,6 +29,7 @@ function QuickAddInputWrapper({ initialValue = "", compact, onSubmit }: WrapperP
         remindAt: parsed.remindAt,
         important: parsed.important,
         tags: parsed.tags.filter((tag) => tag !== context.tag),
+        links: parsed.links,
       }
     : null;
 
@@ -64,6 +65,15 @@ export const Empty: Story = {};
 
 export const WithSyntax: Story = {
   args: { initialValue: "#work #acme @fri ^09:00 ! prepare sprint planning" },
+};
+
+export const WithLink: Story = {
+  args: { initialValue: "#work review gateway PR https://github.com/acme/gateway-client/pull/412" },
+  play: async ({ canvas }) => {
+    const preview = canvas.getByTestId("quick-add__preview");
+    await expect(preview).toHaveTextContent("Review gateway PR");
+    await expect(preview).toHaveTextContent("github.com");
+  },
 };
 
 export const Compact: Story = {

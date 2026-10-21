@@ -31,6 +31,7 @@ function toMyDayTask(task: Task, contexts: KlartContext[], inTodayIds: Set<strin
     due: task.due,
     remindAt: task.remindAt,
     tags: task.tags.filter((tag) => tag !== context?.tag),
+    links: task.links,
     contextName: context?.name ?? task.context,
     contextColor: context?.color ?? "blue",
     isInMyDay: inTodayIds.has(task.id),
@@ -155,6 +156,7 @@ export function useMyDayRoute(): MyDayViewProps {
             remindAt: parsed.remindAt,
             important: parsed.important,
             tags: parsed.tags.filter((tag) => tag !== parsedContext?.tag),
+            links: parsed.links,
           }
         : null,
     },

@@ -56,7 +56,9 @@ function matchesSearch(task: Task, search: string): boolean {
   return terms.every((term) =>
     term.startsWith("#") && term.length > 1
       ? task.tags.includes(term.slice(1))
-      : task.title.toLowerCase().includes(term) || task.notes.toLowerCase().includes(term)
+      : task.title.toLowerCase().includes(term) ||
+        task.notes.toLowerCase().includes(term) ||
+        task.links.some((link) => link.toLowerCase().includes(term))
   );
 }
 

@@ -1,10 +1,11 @@
 import type { ChangeEvent, KeyboardEvent, ReactElement, Ref } from "react";
-import { PlusIcon } from "@heroicons/react/20/solid";
+import { LinkIcon, PlusIcon } from "@heroicons/react/20/solid";
 import { Chip, InputGroup, InputGroupInput, InputGroupPrefix, InputGroupSuffix, Kbd, TextField } from "@heroui/react";
 import clsx from "clsx";
 import { useIntl } from "react-intl";
 import { formatReminder, formatRelativeDate } from "~/components/display/task-row/TaskDateFormat";
 import type { ContextColor } from "~/core/contexts/KlartContext";
+import { formatTaskLink } from "~/core/tasks/TaskLink";
 
 /** What the typed line will become, shown live under the input. */
 export interface QuickAddPreview {
@@ -16,6 +17,7 @@ export interface QuickAddPreview {
   important: boolean;
   /** Tags other than the context's routing tag. */
   tags: string[];
+  links: string[];
 }
 
 export interface QuickAddInputProps {
@@ -104,6 +106,12 @@ export function QuickAddInput({
           {preview.tags.map((tag) => (
             <Chip key={tag} size="sm" variant="soft" color="accent">
               #{tag}
+            </Chip>
+          ))}
+          {preview.links.map((link) => (
+            <Chip key={link} size="sm" variant="soft">
+              <LinkIcon className="size-3" aria-hidden />
+              <Chip.Label>{formatTaskLink(link)}</Chip.Label>
             </Chip>
           ))}
         </div>

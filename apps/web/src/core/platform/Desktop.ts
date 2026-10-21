@@ -42,6 +42,7 @@ export const desktop = {
   gitSync: (root: string): Promise<DesktopGitSyncResult> => invoke("git_sync", { root }),
   deviceName: (): Promise<string | null> => invoke("device_name"),
   showNotification: (title: string, body: string): Promise<void> => invoke("show_notification", { title, body }),
+  openUrl: (url: string): Promise<void> => invoke("open_url", { url }),
 };
 
 /** Last path segment, e.g. `Klart` for `/Users/me/OneDrive/Klart`. */

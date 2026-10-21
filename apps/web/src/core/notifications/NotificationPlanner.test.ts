@@ -18,6 +18,7 @@ function task(id: string, patch: Partial<Task> = {}): Task {
     important: false,
     status: "open",
     notes: "",
+    links: [],
     createdAt: "2026-10-01T08:00:00Z",
     updatedAt: "2026-10-01T08:00:00Z",
     completedAt: null,

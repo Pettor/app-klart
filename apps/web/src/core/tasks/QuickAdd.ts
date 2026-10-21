@@ -1,4 +1,5 @@
 import { addDays, isLocalDate, weekdayOf } from "./LocalDate";
+import { isTaskLink } from "./TaskLink";
 import type { KlartContext } from "~/core/contexts/KlartContext";
 import { ALL_CONTEXTS, findContextByTag, getDefaultContextId } from "~/core/contexts/KlartContext";
 
@@ -9,6 +10,7 @@ import { ALL_CONTEXTS, findContextByTag, getDefaultContextId } from "~/core/cont
  * - `@2026-07-08`, `@today`, `@tomorrow`, `@fri`, `@+3d` set the due date.
  * - `^09:00`, `^fri-09:00`, `^2026-11-02T09:00` set a reminder.
  * - `!` marks the task important.
+ * - `https://…` adds a link to the task's source.
  * - Every other word is the title, in order.
  */
 export interface ParsedQuickAdd {
@@ -18,6 +20,7 @@ export interface ParsedQuickAdd {
   due: string | null;
   remindAt: string | null;
   important: boolean;
+  links: string[];
   raw: string;
 }
 
@@ -82,6 +85,7 @@ function capitalize(value: string): string {
 export function parseQuickAdd(text: string, { today, contexts, currentContext }: QuickAddOptions): ParsedQuickAdd {
   const tags: string[] = [];
   const words: string[] = [];
+  const links: string[] = [];
   let due: string | null = null;
   let remindToken: string | null = null;
   let important = false;
@@ -106,6 +110,12 @@ export function parseQuickAdd(text: string, { today, contexts, currentContext }:
     }
     if (token.length > 1 && token.startsWith("^")) {
       remindToken = token.slice(1);
+      continue;
+    }
+    if (isTaskLink(token)) {
+      if (!links.includes(token)) {
+        links.push(token);
+      }
       continue;
     }
     if (token === "!") {
@@ -133,6 +143,7 @@ export function parseQuickAdd(text: string, { today, contexts, currentContext }:
     due,
     remindAt,
     important,
+    links,
     raw: text.trim(),
   };
 }
