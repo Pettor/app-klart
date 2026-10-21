@@ -1,6 +1,5 @@
 import { useMemo, useState } from "react";
 import { useBreakpoint } from "@package/react";
-import { useNavigate } from "@tanstack/react-router";
 import { useAtom } from "jotai";
 import { useIntl } from "react-intl";
 import type { ContextSwitcherOption } from "~/components/actions/context-switcher/ContextSwitcher";
@@ -8,6 +7,7 @@ import type { SuggestionListGroup } from "~/components/display/suggestion-list/S
 import type { TaskEditorTask } from "~/components/input/task-editor/TaskEditor";
 import type { KlartContext } from "~/core/contexts/KlartContext";
 import { ALL_CONTEXTS, findContext } from "~/core/contexts/KlartContext";
+import { useHierarchyNavigation } from "~/core/routes/UseHierarchyNavigation";
 import type { SettingsSectionId } from "~/core/settings/SettingsSection";
 import { taskPath } from "~/core/sync/FolderSync";
 import { useFolderSync } from "~/core/sync/UseFolderSync";
@@ -61,9 +61,9 @@ function toEditorTask(task: Task, contexts: KlartContext[], inTodayIds: Set<stri
   };
 }
 
-export function useMyDayRoute(): MyDayViewProps {
+export function useMyDayRoute(editingId: string | null): MyDayViewProps {
   const intl = useIntl();
-  const navigate = useNavigate();
+  const navigation = useHierarchyNavigation();
   const myDay = useMyDay();
   const actions = useKlartActions();
   const sync = useFolderSync();
@@ -72,7 +72,6 @@ export function useMyDayRoute(): MyDayViewProps {
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [showJson, setShowJson] = useAtom(showAgentJsonAtom);
   const [draft, setDraft] = useState("");
-  const [editingId, setEditingId] = useState<string | null>(null);
   const editingTask = useTask(editingId);
 
   const { contexts, currentContext, today, inTodayIds } = myDay;
@@ -84,7 +83,22 @@ export function useMyDayRoute(): MyDayViewProps {
   });
 
   function openSettings(section?: SettingsSectionId): void {
-    void navigate({ to: "/settings", search: section ? { section } : {} });
+    navigation.down({ to: "/settings", search: section ? { section } : {} });
+  }
+
+  function openTask(taskId: string): void {
+    if (taskId === editingId) {
+      return;
+    }
+    // Switching tasks replaces the entry, so Back from any task lands on the list.
+    const open = editingId ? navigation.across : navigation.down;
+    open({ to: "/", search: { task: taskId } });
+  }
+
+  function closeTask(): void {
+    if (editingId) {
+      navigation.up({ to: "/" });
+    }
   }
 
   const contextOptions = useMemo<ContextSwitcherOption[]>(
@@ -156,10 +170,10 @@ export function useMyDayRoute(): MyDayViewProps {
     onArchive: () => {
       if (editingTask) {
         actions.archive(editingTask.id);
-        setEditingId(null);
+        closeTask();
       }
     },
-    onClose: () => setEditingId(null),
+    onClose: closeTask,
   };
 
   const parsed = draft.trim() ? parseQuickAdd(draft, { today, contexts, currentContext }) : null;
@@ -206,11 +220,11 @@ export function useMyDayRoute(): MyDayViewProps {
       onArchive: (taskId) => {
         actions.archive(taskId);
         if (taskId === editingId) {
-          setEditingId(null);
+          closeTask();
         }
       },
       onOpen: (taskId) => {
-        setEditingId(taskId);
+        openTask(taskId);
         setIsSheetOpen(false);
       },
     },
@@ -245,7 +259,7 @@ export function useMyDayRoute(): MyDayViewProps {
         if (!isWide) {
           setIsSheetOpen(!isSheetOpen);
         } else if (editor.task) {
-          setEditingId(null);
+          closeTask();
           setShowSuggestions(true);
         } else {
           setShowSuggestions(!showSuggestions);

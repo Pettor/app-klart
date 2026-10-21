@@ -7,7 +7,7 @@ import {
   RectangleStackIcon,
   SunIcon,
 } from "@heroicons/react/20/solid";
-import { useNavigate } from "@tanstack/react-router";
+import { useRouter } from "@tanstack/react-router";
 import { useAtomValue, useSetAtom } from "jotai";
 import { useIntl } from "react-intl";
 import type { Command } from "./Command";
@@ -16,6 +16,7 @@ import { useCommandPalette } from "./UseCommandPalette";
 import { useCommandPaletteShortcut } from "./UseCommandPaletteShortcut";
 import { useCommandShortcuts } from "./UseCommandShortcuts";
 import { ALL_CONTEXTS } from "~/core/contexts/KlartContext";
+import { useHierarchyNavigation } from "~/core/routes/UseHierarchyNavigation";
 import {
   currentContextAtom,
   klartDataAtom,
@@ -34,7 +35,8 @@ import type { ThemeMode } from "~/core/theme/ThemeMode";
  */
 export function useCommandPaletteController(): CommandPaletteProps {
   const intl = useIntl();
-  const navigate = useNavigate();
+  const router = useRouter();
+  const navigation = useHierarchyNavigation();
   const setThemeMode = useSetAtom(themeModeAtom);
   const { isOpen, close } = useCommandPalette();
   const { contexts } = useAtomValue(klartDataAtom);
@@ -66,6 +68,13 @@ export function useCommandPaletteController(): CommandPaletteProps {
   });
 
   const commands = useMemo<Command[]>(() => {
+    /** Leaves settings for My Day; on My Day itself it stays put, keeping any open task. */
+    function goToMyDay(): void {
+      if (router.state.location.pathname !== "/") {
+        navigation.up({ to: "/" });
+      }
+    }
+
     function setTheme(mode: ThemeMode): void {
       setThemeMode(mode);
     }
@@ -88,7 +97,7 @@ export function useCommandPaletteController(): CommandPaletteProps {
         perform: () => {
           setCurrentContext(context.id);
           setTag(null);
-          void navigate({ to: "/" });
+          goToMyDay();
         },
       })
     );
@@ -112,7 +121,7 @@ export function useCommandPaletteController(): CommandPaletteProps {
         shortcut: { mod: true, shift: true, key: "h" },
         perform: () => {
           setSmartView("day");
-          void navigate({ to: "/" });
+          goToMyDay();
         },
       },
       {
@@ -131,7 +140,9 @@ export function useCommandPaletteController(): CommandPaletteProps {
         keywords: ["settings", "preferences", "sync", "folder", "notifications"],
         icon: <Cog6ToothIcon className="h-4 w-4" />,
         perform: () => {
-          void navigate({ to: "/settings" });
+          if (router.state.location.pathname !== "/settings") {
+            navigation.down({ to: "/settings" });
+          }
         },
       },
       {
@@ -146,7 +157,7 @@ export function useCommandPaletteController(): CommandPaletteProps {
         icon: <LightBulbIcon className="h-4 w-4" />,
         perform: () => {
           setShowSuggestions((current) => !current);
-          void navigate({ to: "/" });
+          goToMyDay();
         },
       },
       ...contextCommands,
@@ -191,7 +202,8 @@ export function useCommandPaletteController(): CommandPaletteProps {
     ];
   }, [
     intl,
-    navigate,
+    router,
+    navigation,
     setThemeMode,
     navigationGroup,
     appearanceGroup,

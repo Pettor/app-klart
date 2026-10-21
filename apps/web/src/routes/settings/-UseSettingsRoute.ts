@@ -1,11 +1,11 @@
 import { toast } from "@heroui/react";
-import { useNavigate } from "@tanstack/react-router";
 import { useAtomValue } from "jotai";
 import { useIntl } from "react-intl";
 import { useThemeSelector } from "~/components/actions/theme-selector/UseThemeSelector";
 import { useAppInfo } from "~/core/config/UseAppInfo";
 import { getContextNotifications } from "~/core/notifications/NotificationSettings";
 import { useNotifications } from "~/core/notifications/UseNotifications";
+import { useHierarchyNavigation } from "~/core/routes/UseHierarchyNavigation";
 import type { SettingsSectionId } from "~/core/settings/SettingsSection";
 import { toDeviceId } from "~/core/sync/FolderSync";
 import { GitHubError } from "~/core/sync/GitHubBackend";
@@ -20,7 +20,7 @@ import type { SettingsViewProps } from "~/views/settings/SettingsView";
 
 export function useSettingsRoute(section?: SettingsSectionId): SettingsViewProps {
   const intl = useIntl();
-  const navigate = useNavigate();
+  const navigation = useHierarchyNavigation();
   const data = useAtomValue(klartDataAtom);
   const actions = useKlartActions();
   const sync = useFolderSync();
@@ -131,7 +131,7 @@ export function useSettingsRoute(section?: SettingsSectionId): SettingsViewProps
 
   return {
     initialSection: section,
-    onBack: () => void navigate({ to: "/" }),
+    onBack: () => navigation.up({ to: "/" }),
     contexts: {
       contexts: data.contexts.map((context) => ({ ...context, openTaskCount: openCounts.get(context.id) ?? 0 })),
       onCreate: (name, color) => void actions.createContext(name, color),

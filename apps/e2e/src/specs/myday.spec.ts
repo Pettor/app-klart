@@ -73,3 +73,37 @@ test.describe("myday.settings", () => {
     await expect(page.getByRole("menuitemradio", { name: /BRF board/ })).toBeVisible();
   });
 });
+
+test.describe("myday.back", () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto("/");
+    const input = page.getByTestId("quick-add__input");
+    await input.fill("first task");
+    await input.press("Enter");
+    await input.fill("second task");
+    await input.press("Enter");
+  });
+
+  test("goes from a task back to the list, not to the previous route", async ({ page }) => {
+    await page.goto("/#/settings");
+    await page.getByTestId("settings__back").click();
+    await expect(page.getByTestId("quick-add__input")).toBeVisible();
+
+    await page.getByTestId("task-row").filter({ hasText: "First task" }).getByTestId("task-row__open").click();
+    await expect(page.getByTestId("task-editor")).toBeVisible();
+
+    await page.goBack();
+    await expect(page.getByTestId("task-editor")).toHaveCount(0);
+    await expect(page.getByTestId("quick-add__input")).toBeVisible();
+    await expect(page).not.toHaveURL(/settings/);
+  });
+
+  test("switching tasks doesn't stack history entries", async ({ page }) => {
+    await page.getByTestId("task-row").filter({ hasText: "First task" }).getByTestId("task-row__open").click();
+    await page.getByTestId("task-row").filter({ hasText: "Second task" }).getByTestId("task-row__open").click();
+    await expect(page.getByTestId("task-editor__title")).toHaveValue("Second task");
+
+    await page.goBack();
+    await expect(page.getByTestId("task-editor")).toHaveCount(0);
+  });
+});
