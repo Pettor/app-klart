@@ -121,13 +121,13 @@ export function SettingsView({
       </aside>
 
       <main className="flex w-full max-w-[980px] min-w-0 flex-col gap-10 px-4 pt-6 pb-12 sm:px-8 lg:pt-10">
-        <SettingsContextsSection {...contexts} />
-        <SettingsSyncSection {...sync} />
-        <SettingsAgentsSection {...agents} />
-        <SettingsNotificationsSection {...notifications} />
         <SettingsSectionShell id="appearance" title={labels.appearance}>
           <ThemeSelector {...appearance.themeSelector} />
         </SettingsSectionShell>
+        <SettingsContextsSection {...contexts} />
+        <SettingsNotificationsSection {...notifications} />
+        <SettingsSyncSection {...sync} />
+        <SettingsAgentsSection {...agents} />
         <SettingsAboutSection {...about} />
       </main>
     </div>
