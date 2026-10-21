@@ -24,7 +24,10 @@ This file is the **rules** layer (what you must do); `docs/` is the **reference*
 
 ### Build & Deploy
 
-- `pnpm build` - Build all apps for production
+- `pnpm build` - Full pipeline: web app, then the Tauri desktop app; installers land in `output/build/`
+- `pnpm build:web` - Build only the web app (`apps/web/dist`)
+- `pnpm build:desktop` - Build the desktop app (builds the web app first if needed); installers land in `output/build/`
+- `pnpm dev:desktop` - Run the desktop app against the web dev server (http://localhost:1420)
 - `pnpm deploy` - Build and prepare deployment artifacts in `output/deployment/`
 - `pnpm storybook:build` - Build Storybook static files
 
@@ -58,6 +61,7 @@ This is a **Turborepo monorepo** managed with **pnpm workspaces** (pnpm 10.33.0,
 root/
 ├── apps/
 │   ├── web/          # Main React application (Vite + React 19)
+│   ├── desktop/      # Tauri 2 desktop app wrapping apps/web/dist
 │   ├── storybook/    # Storybook configuration and stories
 │   └── e2e/          # Playwright end-to-end tests
 ├── packages/
@@ -89,6 +93,15 @@ root/
 - **Stack**: Storybook 10 with React/Vite builder, addon-vitest (Playwright/Chromium), addon-a11y, addon-docs, addon-mcp
 - **MCP Server**: Available at `http://localhost:9089/mcp` when Storybook dev server is running (enables AI agents to query component docs and run story tests)
 - **Stories**: Pulls from `@app/web` and `@package/ui` node_modules
+
+### `apps/desktop` — Desktop App (Tauri 2)
+
+- **Stack**: Tauri 2 (Rust, in `src-tauri/`), system webview; no frontend code of its own — it bundles `apps/web/dist`
+- **Build**: `tauri build`, then `scripts/collect-artifacts.mjs` copies the app and installers to `output/build/` (macOS `.app` + `.dmg`, Windows `.exe`/`.msi`/setup, Linux binary/AppImage/deb/rpm)
+- **Prerequisites**: Rust toolchain plus the platform's Tauri prerequisites (Xcode CLT on macOS, WebView2 + MSVC on Windows, WebKitGTK on Linux)
+- **Icons**: `src-tauri/icons/`, generated with `pnpm --filter @app/desktop tauri icon ../web/src/assets/branding/klart-icon.svg -o src-tauri/icons`
+- **Dev**: `pnpm dev:desktop` starts the web dev server over plain HTTP on port 1420 (the webview rejects the self-signed cert)
+- **Not cached by Turbo**: Cargo does its own incremental builds in `src-tauri/target/`
 
 ### `apps/e2e` — End-to-End Tests
 
@@ -184,13 +197,13 @@ Files prefixed with `-` are ignored by TanStack Router. Detail: [`docs/patterns.
 
 ### State Management
 
-| Scope | Mechanism | Location |
-| --- | --- | --- |
-| Global, persisted UI state | Jotai atoms + `atomEffect` | `core/<feature>/XxxAtoms.ts` |
-| Feature-local UI state | Jotai atoms | next to the component (e.g. `components/actions/command-palette/CommandPaletteAtoms.ts`) |
-| Server state | `@tanstack/react-query` | `packages/api` hooks; route loaders |
-| Auth state | Jotai atoms + initializer | `core/auth/` |
-| Component-local state | `useState`, `useReducer` | inline |
+| Scope                      | Mechanism                  | Location                                                                                 |
+| -------------------------- | -------------------------- | ---------------------------------------------------------------------------------------- |
+| Global, persisted UI state | Jotai atoms + `atomEffect` | `core/<feature>/XxxAtoms.ts`                                                             |
+| Feature-local UI state     | Jotai atoms                | next to the component (e.g. `components/actions/command-palette/CommandPaletteAtoms.ts`) |
+| Server state               | `@tanstack/react-query`    | `packages/api` hooks; route loaders                                                      |
+| Auth state                 | Jotai atoms + initializer  | `core/auth/`                                                                             |
+| Component-local state      | `useState`, `useReducer`   | inline                                                                                   |
 
 **Atoms co-locate with their consumer.** There is no central `src/atoms/` folder. See [`docs/patterns.md#atoms-co-location`](./docs/patterns.md#atoms-co-location).
 
@@ -204,20 +217,20 @@ Files prefixed with `-` are ignored by TanStack Router. Detail: [`docs/patterns.
 
 ## Naming & File Conventions
 
-| Thing | Convention | Example |
-| --- | --- | --- |
-| React components | PascalCase file + function declaration | `LoginView.tsx`, `function LoginView()` |
-| Component folders | `kebab-case` | `command-palette/`, `input-field/` |
-| Hooks | PascalCase file with `Use` prefix | `UseAuth.ts`, `UseDocumentTitle.ts` |
-| Route files | `route.tsx` (TanStack requirement) | `routes/_public/login/route.tsx` |
-| Route hooks | `-Use<Name>Route.ts` (leading `-` hides from router) | `-UseLoginRoute.ts` |
-| Controllers | `<Component>Controller.tsx` + `Use<Component>Controller.ts(x)` | `SettingsModalController.tsx` |
-| Utilities / classes | PascalCase | `TokenStorage.ts`, `JwtToken.ts` |
-| Jotai atom files | `PascalCaseAtoms.ts` | `ThemeAtoms.ts`, `AuthAtoms.ts` |
-| Jotai atom exports | `camelCase + Atom` suffix | `themeModeAtom` |
-| Views | `<Name>View.tsx` under `views/<name>/` | `LoginView.tsx`, `DashboardView.tsx` |
-| Stories | Co-located `<Component>.stories.tsx` | `Logo.stories.tsx` |
-| Props interfaces | `<ComponentName>Props` | `NavbarProps` |
+| Thing               | Convention                                                     | Example                                 |
+| ------------------- | -------------------------------------------------------------- | --------------------------------------- |
+| React components    | PascalCase file + function declaration                         | `LoginView.tsx`, `function LoginView()` |
+| Component folders   | `kebab-case`                                                   | `command-palette/`, `input-field/`      |
+| Hooks               | PascalCase file with `Use` prefix                              | `UseAuth.ts`, `UseDocumentTitle.ts`     |
+| Route files         | `route.tsx` (TanStack requirement)                             | `routes/_public/login/route.tsx`        |
+| Route hooks         | `-Use<Name>Route.ts` (leading `-` hides from router)           | `-UseLoginRoute.ts`                     |
+| Controllers         | `<Component>Controller.tsx` + `Use<Component>Controller.ts(x)` | `SettingsModalController.tsx`           |
+| Utilities / classes | PascalCase                                                     | `TokenStorage.ts`, `JwtToken.ts`        |
+| Jotai atom files    | `PascalCaseAtoms.ts`                                           | `ThemeAtoms.ts`, `AuthAtoms.ts`         |
+| Jotai atom exports  | `camelCase + Atom` suffix                                      | `themeModeAtom`                         |
+| Views               | `<Name>View.tsx` under `views/<name>/`                         | `LoginView.tsx`, `DashboardView.tsx`    |
+| Stories             | Co-located `<Component>.stories.tsx`                           | `Logo.stories.tsx`                      |
+| Props interfaces    | `<ComponentName>Props`                                         | `NavbarProps`                           |
 
 **Function style**: Prefer **function declarations** over arrow functions for components and named utilities. Arrow functions are acceptable for callbacks and inline handlers. (ESLint enforces this.)
 
@@ -263,7 +276,7 @@ Files prefixed with `-` are ignored by TanStack Router. Detail: [`docs/patterns.
 Task execution order enforced by Turborepo:
 
 1. `build:libs` — compiles upstream library packages (e.g. `@design/tokens`, `@config/vite`)
-2. `build` — Vite bundles apps (depends on `build:libs`)
+2. `build` — Vite bundles apps (depends on `build:libs`); `@app/desktop` builds after `@app/web` and copies installers to `output/build/`
 3. `storybook:build` — builds Storybook static site
 4. `deploy` — copies `dist/` and `storybook-static/` to `output/deployment/`
 
@@ -271,9 +284,9 @@ Turborepo caches outputs; use `--force` to bypass cache when debugging build iss
 
 ## Environment Variables
 
-| Variable            | Default            | Mocks              |
-| ------------------- | ------------------ | ------------------ |
-| `VITE_APP_VERSION`  | `0.6.0`            | `0.6.0`            |
+| Variable           | Default | Mocks   |
+| ------------------ | ------- | ------- |
+| `VITE_APP_VERSION` | `0.6.0` | `0.6.0` |
 
 - `.env` — development defaults
 - `.env.mocks` — overrides for mock server mode
@@ -363,15 +376,15 @@ Hooks for panel-local state (filter, sort, range selection, derived totals) live
 
 ### When to Use HeroUI Components
 
-| Need | HeroUI Component |
-|---|---|
-| Buttons | `Button`, `ButtonGroup` |
-| Forms | `Input`, `Textarea`, `Select`, `Checkbox`, `Radio`, `RadioGroup`, `Switch` |
-| Layout | `Card`, `Divider`, `Spacer` |
-| Navigation | `Navbar`, `Tabs`, `Breadcrumbs`, `Link`, `Pagination` |
-| Feedback | `Modal`, `Popover`, `Tooltip`, `Alert`, `Spinner`, `Progress`, `Skeleton` |
-| Data display | `Table`, `Chip`, `Badge`, `Avatar`, `Accordion`, `Listbox` |
-| Overlay | `Dropdown`, `Modal`, `Drawer` |
+| Need         | HeroUI Component                                                           |
+| ------------ | -------------------------------------------------------------------------- |
+| Buttons      | `Button`, `ButtonGroup`                                                    |
+| Forms        | `Input`, `Textarea`, `Select`, `Checkbox`, `Radio`, `RadioGroup`, `Switch` |
+| Layout       | `Card`, `Divider`, `Spacer`                                                |
+| Navigation   | `Navbar`, `Tabs`, `Breadcrumbs`, `Link`, `Pagination`                      |
+| Feedback     | `Modal`, `Popover`, `Tooltip`, `Alert`, `Spinner`, `Progress`, `Skeleton`  |
+| Data display | `Table`, `Chip`, `Badge`, `Avatar`, `Accordion`, `Listbox`                 |
+| Overlay      | `Dropdown`, `Modal`, `Drawer`                                              |
 
 Always check the LLM docs first — HeroUI v3 may have components not listed here.
 
@@ -424,6 +437,7 @@ export function MyComponent(): ReactElement {
 ### Story Discovery
 
 Stories are discovered by Storybook from:
+
 - `apps/web/src/**/*.stories.tsx` (via node_modules symlink)
 - `packages/ui/src/**/*.stories.tsx` (via node_modules symlink)
 
@@ -431,11 +445,11 @@ Stories are discovered by Storybook from:
 
 Use these skills to follow established patterns when adding to the project:
 
-| Skill | Purpose |
-|---|---|
-| `/add-component` | Add a new UI component with HeroUI v3, Tailwind, React, and Storybook story |
-| `/add-e2e-test` | Add Playwright E2E tests |
-| `/add-component-test` | Add component tests using Storybook play functions |
+| Skill                 | Purpose                                                                     |
+| --------------------- | --------------------------------------------------------------------------- |
+| `/add-component`      | Add a new UI component with HeroUI v3, Tailwind, React, and Storybook story |
+| `/add-e2e-test`       | Add Playwright E2E tests                                                    |
+| `/add-component-test` | Add component tests using Storybook play functions                          |
 
 ## Important Notes
 
