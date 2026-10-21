@@ -70,6 +70,7 @@ export function MyDaySidebar({
         value={search.value}
         onChange={search.onChange}
         focusRequest={search.focusRequest}
+        tags={search.tags}
         shortcutHint="/"
       />
 
