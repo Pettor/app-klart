@@ -1,11 +1,8 @@
 import { defineConfig } from "@vite-pwa/assets-generator/config";
-import { createRequire } from "node:module";
-import { dirname, resolve } from "node:path";
+import { resolve } from "node:path";
 
-const require = createRequire(import.meta.url);
-// Resolve the package root of @package/ui (main entry is src/index.ts, one level up → package root)
-const uiRoot = resolve(dirname(require.resolve("@package/ui")), "..");
-const svgPath = resolve(uiRoot, "src/Branding/assets/template-512x512.svg");
+// The Klart dial mark; keep in sync with components/display/klart-mark/KlartMark.tsx
+const svgPath = resolve(import.meta.dirname, "src/assets/branding/klart-icon.svg");
 
 export default defineConfig({
   preset: {

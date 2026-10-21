@@ -3,7 +3,7 @@
     "font-family": {
       "primary": {
         "$type": "fontFamily",
-        "$value": ["Rubik", "sans-serif", "system-ui"],
+        "$value": ["Inter", "system-ui", "-apple-system", "sans-serif"],
         "$description": "Primary font family for the application"
       }
     },

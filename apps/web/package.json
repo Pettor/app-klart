@@ -11,7 +11,7 @@
     "dev": "vite --open",
     "lint": "eslint ./src",
     "lint:fix": "pnpm lint --fix",
-    "generate:assets": "generate-assets public",
+    "generate:assets": "generate-assets public src/assets/branding",
     "build": "pnpm generate:assets && tsc && vite build",
     "build:demo": "tsc && vite build --mode demo",
     "deploy": "pnpm deploy:build && pnpm deploy:move",
@@ -24,7 +24,8 @@
   },
   "dependencies": {
     "@config/tailwind": "workspace:*",
-    "@fontsource/rubik": "catalog:ui",
+    "@fontsource/inter": "catalog:ui",
+    "@fontsource/jetbrains-mono": "catalog:ui",
     "@heroicons/react": "catalog:ui",
     "@heroui/react": "catalog:ui",
     "@package/react": "workspace:*",

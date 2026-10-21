@@ -1,14 +1,14 @@
 import { expect, test } from "../fixtures";
 
-test.describe("general.home", () => {
-  test("renders the home view", async ({ page }) => {
+test.describe("general.myday", () => {
+  test("renders My Day", async ({ page }) => {
     await page.goto("/");
 
     await expect(async () => {
-      expect(await page.title()).toBe("Home");
+      expect(await page.title()).toBe("My Day · Klart");
     }).toPass();
 
-    await expect(page.getByRole("heading", { name: "Welcome to Klart" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "My Day" })).toBeVisible();
   });
 
   test("navigates home from the not found page", async ({ page }) => {
@@ -18,7 +18,7 @@ test.describe("general.home", () => {
     await page.getByRole("button", { name: "Go home" }).click();
 
     await expect(async () => {
-      expect(await page.title()).toBe("Home");
+      expect(await page.title()).toBe("My Day · Klart");
     }).toPass();
   });
 });
@@ -28,7 +28,7 @@ test.describe("general.commandpalette", () => {
     await page.goto("/");
 
     await expect(async () => {
-      expect(await page.title()).toBe("Home");
+      expect(await page.title()).toBe("My Day · Klart");
     }).toPass();
 
     await page.keyboard.press("ControlOrMeta+K");

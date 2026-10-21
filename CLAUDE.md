@@ -11,6 +11,7 @@ Deeper structural detail lives in the [`docs/`](./docs/) folder. When making arc
 - [`docs/patterns.md`](./docs/patterns.md) — Controller pattern, route hooks, atom co-location
 - [`docs/naming.md`](./docs/naming.md) — file, folder, hook, atom, story, and test-id conventions
 - [`docs/packages.md`](./docs/packages.md) — every workspace package and its responsibilities
+- [`docs/klart.md`](./docs/klart.md) — Klart's domain: contexts, tasks, My Day, suggestions, folder sync, notifications
 
 This file is the **rules** layer (what you must do); `docs/` is the **reference** layer (how the system is shaped). If they disagree, `docs/` is authoritative for structure — update this file to match.
 
@@ -132,7 +133,7 @@ apps/web/src/
 
 **Layer responsibilities:**
 
-- **`core/`** — app shell (`App.tsx`, `AppProviders.tsx`, `AppLocales.tsx`, `AppTheme.tsx`) plus domain modules (`auth/`, `theme/`, `settings/`, `pwa/`, `session/`, `config/`, `social-links/`, `routes/`). No rendered UI components except domain-inseparable ones (`AuthInitializer`, `PwaLifecycle`).
+- **`core/`** — app shell (`App.tsx`, `AppProviders.tsx`, `AppLocales.tsx`, `AppTheme.tsx`) plus domain modules (`tasks/`, `contexts/`, `sync/`, `notifications/`, `theme/`, `settings/`, `pwa/`, `config/`, `social-links/`, `routes/`). No rendered UI components except domain-inseparable ones (`PwaLifecycle`, `FolderSyncLifecycle`, `NotificationLifecycle`).
 - **`components/`** — reusable UI in categorised folders: `actions/`, `display/`, `feedback/`, `forms/`, `input/`, `navigation/`. Each component lives in its own `kebab-case` folder with a co-located `.stories.tsx`.
 - **`views/`** — page-level compositions (`LoginView`, `DashboardView`, etc.). Pure presentational — never calls hooks from `core/`. Consumed only by routes.
 - **`routes/`** — TanStack file-based routes. Each leaf has `route.tsx` (the binding) and `-UseXxxRoute.ts` (the route hook). Layout segments (`_authenticated`, `_public`) apply guards.

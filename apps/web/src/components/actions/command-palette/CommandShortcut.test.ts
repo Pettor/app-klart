@@ -65,4 +65,10 @@ describe("matchesShortcut", () => {
   it("does not match when unexpected shift is pressed", () => {
     expect(matchesShortcut(makeEvent("k", { shiftKey: true }), { key: "k" })).toBe(false);
   });
+
+  it("matches alt + digit by physical key, as macOS turns ⌥1 into a symbol", () => {
+    const event = { ...makeEvent("¡", { altKey: true }), code: "Digit1" } as KeyboardEvent;
+    expect(matchesShortcut(event, { alt: true, key: "1" })).toBe(true);
+    expect(matchesShortcut(event, { alt: true, key: "2" })).toBe(false);
+  });
 });

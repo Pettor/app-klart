@@ -24,5 +24,9 @@ export function matchesShortcut(event: KeyboardEvent, shortcut: CommandShortcut)
   if (!!shortcut.mod !== modPressed) return false;
   if (!!shortcut.shift !== event.shiftKey) return false;
   if (!!shortcut.alt !== event.altKey) return false;
+  // Option+digit on macOS produces symbols (⌥1 → "¡"), so digits match on the physical key instead.
+  if (/^\d$/.test(shortcut.key) && event.code?.startsWith("Digit")) {
+    return event.code === `Digit${shortcut.key}`;
+  }
   return event.key.toLowerCase() === shortcut.key.toLowerCase();
 }
