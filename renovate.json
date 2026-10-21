@@ -1,0 +1,92 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "automerge": true,
+  "extends": [":semanticCommits", "config:recommended"],
+  "labels": ["dependency", "bot"],
+  "packageRules": [
+    {
+      "groupName": "react",
+      "groupSlug": "react",
+      "matchDatasources": ["npm"],
+      "matchDepTypes": ["pnpm.catalog.react"],
+      "minimumReleaseAge": "7 days",
+      "semanticCommitType": "fix",
+      "separateMajorMinor": false,
+      "separateMultipleMajor": false
+    },
+    {
+      "groupName": "tanstack",
+      "groupSlug": "tanstack",
+      "matchDatasources": ["npm"],
+      "matchDepTypes": ["pnpm.catalog.tanstack"],
+      "minimumReleaseAge": "7 days",
+      "semanticCommitType": "fix",
+      "separateMajorMinor": false,
+      "separateMultipleMajor": false
+    },
+    {
+      "groupName": "ui",
+      "groupSlug": "ui",
+      "matchDatasources": ["npm"],
+      "matchDepTypes": ["pnpm.catalog.ui"],
+      "minimumReleaseAge": "7 days",
+      "semanticCommitType": "fix",
+      "separateMajorMinor": false,
+      "separateMultipleMajor": false
+    },
+    {
+      "groupName": "state",
+      "groupSlug": "state",
+      "matchDatasources": ["npm"],
+      "matchDepTypes": ["pnpm.catalog.state"],
+      "minimumReleaseAge": "7 days",
+      "semanticCommitType": "fix",
+      "separateMajorMinor": false,
+      "separateMultipleMajor": false
+    },
+    {
+      "groupName": "validation",
+      "groupSlug": "validation",
+      "matchDatasources": ["npm"],
+      "matchDepTypes": ["pnpm.catalog.validation"],
+      "minimumReleaseAge": "7 days",
+      "semanticCommitType": "fix",
+      "separateMajorMinor": false,
+      "separateMultipleMajor": false
+    },
+    {
+      "groupName": "dev dependencies",
+      "groupSlug": "dev-deps",
+      "matchDatasources": ["npm"],
+      "matchDepTypes": ["pnpm.catalog.dev", "devDependencies", "pnpm-workspace.overrides"],
+      "minimumReleaseAge": "7 days",
+      "semanticCommitType": "chore",
+      "separateMajorMinor": false,
+      "separateMultipleMajor": false
+    },
+    {
+      "groupName": "tanstack",
+      "groupSlug": "tanstack",
+      "matchDatasources": ["npm"],
+      "matchDepNames": ["@tanstack/query-core"],
+      "minimumReleaseAge": "7 days",
+      "semanticCommitType": "fix",
+      "separateMajorMinor": false,
+      "separateMultipleMajor": false
+    },
+    {
+      "description": "typescript-eslint peer range is `>=4.8.4 <6.1.0`; TS 7.x breaks `pnpm lint`. See the pin comment in pnpm-workspace.yaml.",
+      "matchDatasources": ["npm"],
+      "matchPackageNames": ["typescript"],
+      "allowedVersions": "<6.1.0"
+    },
+    {
+      "description": "glob@7 (transitive dev dep) breaks on minimatch v10's GLOBSTAR Symbol, which takes down the mock server and `pnpm test:e2e`. See the override comment in pnpm-workspace.yaml.",
+      "matchDatasources": ["npm"],
+      "matchPackageNames": ["minimatch"],
+      "matchCurrentValue": "/^\\^3\\./",
+      "enabled": false
+    }
+  ],
+  "schedule": ["every weekend"]
+}

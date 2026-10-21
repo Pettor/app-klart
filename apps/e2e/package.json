@@ -1,0 +1,27 @@
+{
+  "name": "@app/e2e",
+  "version": "0.7.0",
+  "description": "End-to-end tests for the web application using Playwright",
+  "license": "MIT",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "prepare": "playwright install chromium",
+    "clean": "rimraf .test-results",
+    "clean:all": "pnpm clean node_modules",
+    "test:e2e": "pnpm playwright test --ui --config=playwright.ui.config.ts",
+    "test:e2e:ci": "cross-env PLAYWRIGHT_JUNIT_OUTPUT_NAME=\"./.test-results/results.xml\" pnpm playwright test --reporter=junit",
+    "test:e2e:coverage": "cross-env COVERAGE=true PLAYWRIGHT_JUNIT_OUTPUT_NAME=\"./.test-results/results.xml\" pnpm playwright test --config=playwright.coverage.config.ts --reporter=junit",
+    "test:e2e:ui": "pnpm playwright test --ui --config=playwright.ui.config.ts",
+    "generate:screenshots": "pnpm playwright test --config=playwright.screenshots.config.ts"
+  },
+  "devDependencies": {
+    "@config/eslint": "workspace:*",
+    "@config/typescript": "workspace:*",
+    "@package/mocks": "workspace:*",
+    "@playwright/test": "catalog:dev",
+    "cross-env": "catalog:dev",
+    "nyc": "catalog:dev",
+    "playwright": "catalog:dev"
+  }
+}

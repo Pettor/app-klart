@@ -1,0 +1,47 @@
+/* Design Tokens */
+@import "@design/tokens/css";
+
+/* Tailwind confugration */
+@import "tailwindcss";
+
+/* Animation utilities (required by HeroUI components) */
+@import "tw-animate-css";
+
+/* Tailwind plugins */
+@plugin "@tailwindcss/typography";
+
+/* HeroUI base styles */
+@import "@heroui/styles/base";
+
+/* HeroUI component styles */
+@import "@heroui/styles/components/index.css" layer(components);
+
+/* HeroUI theme (variables + component overrides) */
+@import "@heroui/styles/themes/default";
+
+/* Design token overrides for HeroUI v3 CSS variables */
+@import "./hero.css";
+
+/* HeroUI utilities and variants */
+@import "@heroui/styles/utilities";
+@import "@heroui/styles/variants";
+@custom-variant dark (&:is(.dark *));
+
+
+/* Theme extensions from design tokens */
+@theme {
+  /* Typography */
+  --font-family-primary: var(--typography-font-family-primary);
+  
+  --font-weight-light: var(--typography-font-weight-light);
+  --font-weight-regular: var(--typography-font-weight-regular);
+  --font-weight-medium: var(--typography-font-weight-medium);
+  --font-weight-semibold: var(--typography-font-weight-semibold);
+  --font-weight-bold: var(--typography-font-weight-bold);
+  --font-weight-extrabold: var(--typography-font-weight-extrabold);
+  --font-weight-black: var(--typography-font-weight-black);
+}
+
+body {
+  font-family: var(--typography-font-family-primary);
+}

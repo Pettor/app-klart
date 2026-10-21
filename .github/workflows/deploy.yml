@@ -1,0 +1,89 @@
+name: "deploy"
+
+on:
+  pull_request:
+    types:
+      - closed
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  deploy-gh-pages:
+    name: Deploy
+    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 2
+
+      - name: Cache turbo build setup
+        uses: actions/cache@v6
+        with:
+          path: .turbo
+          key: ${{ runner.os }}-turbo-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-turbo-
+
+      - name: Setup node
+        uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v6.1.0
+        id: pnpm-install
+        with:
+          run_install: false
+
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v6
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile --ignore-scripts
+
+      - name: Add buildnumber to version
+        run: |
+          cd $GITHUB_WORKSPACE/apps/web
+          echo "VITE_APP_VERSION=\${npm_package_version}-build.${{github.run_number}}" > .env.demo.local
+
+      - name: Build demo deployment and move files
+        run: pnpm run deploy:demo
+        env:
+          NODE_OPTIONS: "--max_old_space_size=4096"
+
+      - name: Create root redirect index.html
+        run: |
+          cat > output/deployment/index.html << 'EOF'
+          <!DOCTYPE html>
+          <html>
+            <head>
+              <meta http-equiv="refresh" content="0; url=./app">
+            </head>
+          </html>
+          EOF
+
+      - name: Deploy to GitHub Pages
+        uses: crazy-max/ghaction-github-pages@v5
+        with:
+          build_dir: output/deployment
+          commit_message: "chore(deploy): deploy to github pages"
+          jekyll: false
+          keep_history: false
+          target_branch: deploy/main
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

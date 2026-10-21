@@ -1,0 +1,28 @@
+{
+  "name": "@package/storybook",
+  "version": "0.7.0",
+  "description": "Storybook configuration for the web application",
+  "license": "MIT",
+  "private": true,
+  "main": "./src/index.ts",
+  "type": "module",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./*": "./src/*"
+  },
+  "scripts": {
+    "clean": "rimraf dist",
+    "clean:all": "pnpm clean node_modules"
+  },
+  "peerDependencies": {
+    "@storybook/react": "catalog:dev",
+    "@tanstack/react-router": "catalog:tanstack",
+    "react": ">=19.0.0",
+    "react-dom": ">=19.0.0"
+  },
+  "devDependencies": {
+    "@config/eslint": "workspace:*",
+    "@config/typescript": "workspace:*"
+  }
+}

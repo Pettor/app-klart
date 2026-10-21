@@ -1,0 +1,2 @@
+#!/usr/bin/env sh
+pnpx commitlint --edit ${1}
