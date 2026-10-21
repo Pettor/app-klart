@@ -27,6 +27,17 @@ const v020 = defineMessages({
       "Drag the left edge of suggestions or the task editor to make room for long notes. Klart remembers the width, and a double-click puts it back.",
     id: "CiKK/a",
   },
+  backFixTitle: {
+    description: "ReleaseNotes 0.2.0 - fix title: Back button",
+    defaultMessage: "Back goes back where you'd expect",
+    id: "rmLPpd",
+  },
+  backFixDescription: {
+    description: "ReleaseNotes 0.2.0 - fix text: Back button",
+    defaultMessage:
+      "Back from a task or from settings now lands on your list, like in a phone app, instead of wherever you were before.",
+    id: "NIyMrl",
+  },
 });
 
 const v010 = defineMessages({
@@ -101,7 +112,7 @@ export const RELEASE_NOTES: ReleaseNote[] = [
   {
     version: "0.2.0",
     highlights: [{ emoji: "↔️", title: v020.resizeTitle, description: v020.resizeDescription }],
-    fixes: [],
+    fixes: [{ emoji: "🔙", title: v020.backFixTitle, description: v020.backFixDescription }],
   },
   {
     version: "0.1.0",

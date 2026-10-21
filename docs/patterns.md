@@ -124,6 +124,14 @@ Return a single `XxxViewProps`-shaped object so the route component can spread i
 
 Lives in `views/<name>/<Name>View.tsx`. Accepts the props object. Never calls hooks from `core/` or `@package/api` directly — if you find yourself wanting to, move the call into the route hook.
 
+### Back navigation
+
+Back works like in a phone app: it moves up the view hierarchy (task editor → My Day, settings → My Day) and never returns to whatever route happened to come before. To keep that true, anything the Back button should close lives in the URL (the open task is `/?task=<id>`), and route hooks navigate through `useHierarchyNavigation()` (`core/routes/`) instead of calling `navigate` directly:
+
+- `down` opens a child view and marks the new history entry as having its parent behind it.
+- `across` swaps to a sibling (another task) with `replace`, so siblings never stack up.
+- `up` pops the entry when its parent is right behind it, and otherwise (deep link, reload in a new tab) replaces it with the fallback.
+
 ## Atoms co-location
 
 Jotai atoms are feature-scoped, not app-scoped. They live next to whichever layer owns them:
