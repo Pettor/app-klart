@@ -64,6 +64,7 @@ const defaultArgs = {
     onContextChange: fn(),
   },
   appearance: { themeSelector: { mode: "auto", onSelect: fn() } },
+  about: { appName: "Klart", version: "0.1.0", build: "42", commit: "447df5b" },
 } satisfies Props;
 
 const meta: Meta<typeof Component> = {
@@ -80,6 +81,23 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: defaultArgs,
+};
+
+export const About: Story = {
+  args: defaultArgs,
+  play: async ({ canvas }) => {
+    await expect(canvas.getByTestId("settings__about-version")).toHaveTextContent("0.1.0");
+    await expect(canvas.getByTestId("settings__about-build")).toHaveTextContent("42");
+    await expect(canvas.getByTestId("settings__about-commit")).toHaveTextContent("447df5b");
+  },
+};
+
+export const AboutLocalBuild: Story = {
+  args: { ...defaultArgs, about: { appName: "Klart", version: "0.1.0" } },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByTestId("settings__about-build")).toHaveTextContent("Local build");
+    await expect(canvas.queryByTestId("settings__about-commit")).toBeNull();
+  },
 };
 
 export const LocalOnly: Story = {

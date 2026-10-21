@@ -288,7 +288,7 @@ Turborepo caches outputs; use `--force` to bypass cache when debugging build iss
 
 | Variable           | Default | Mocks   |
 | ------------------ | ------- | ------- |
-| `VITE_APP_VERSION` | `0.6.0` | `0.6.0` |
+| `VITE_APP_VERSION` | `$npm_package_version` | `$npm_package_version` |
 
 - `.env` — development defaults
 - `.env.mocks` — overrides for mock server mode

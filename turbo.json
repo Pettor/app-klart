@@ -15,6 +15,9 @@
       ]
     },
     "build": {
+      "env": [
+        "GITHUB_RUN_NUMBER"
+      ],
       "dependsOn": [
         "^build:libs",
         "^build"
@@ -47,6 +50,9 @@
       ]
     },
     "build:demo": {
+      "env": [
+        "GITHUB_RUN_NUMBER"
+      ],
       "dependsOn": [
         "^build:libs"
       ],
