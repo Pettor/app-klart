@@ -138,7 +138,7 @@ export function QuickAddInput({
                 : intl.formatMessage({
                     description: "QuickAddInput - placeholder showing the quick-add syntax",
                     defaultMessage: "Add a task  ·  #work #acme  @fri  ^09:00  !",
-                    id: "uTTdmv",
+                    id: "mPCg6n",
                   })
             }
           />
