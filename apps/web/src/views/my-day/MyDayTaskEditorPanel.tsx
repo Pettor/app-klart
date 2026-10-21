@@ -3,15 +3,17 @@ import { Drawer } from "@heroui/react";
 import { useBreakpoint } from "@package/react";
 import { useIntl } from "react-intl";
 import type { MyDayTaskEditorProps } from "./MyDayTypes";
+import type { MyDayPane } from "./UseMyDayPaneWidth";
 import type { TaskEditorTask } from "~/components/input/task-editor/TaskEditor";
 import { TaskEditor } from "~/components/input/task-editor/TaskEditor";
 
 export interface MyDayTaskEditorPanelProps {
   editor: MyDayTaskEditorProps;
+  pane: MyDayPane;
 }
 
 /** Takes the suggestions panel's place on wide screens; a bottom sheet on phones and tablets. */
-export function MyDayTaskEditorPanel({ editor }: MyDayTaskEditorPanelProps): ReactElement | null {
+export function MyDayTaskEditorPanel({ editor, pane }: MyDayTaskEditorPanelProps): ReactElement | null {
   const intl = useIntl();
   const isWide = useBreakpoint("xl");
   const heading = intl.formatMessage({
@@ -45,9 +47,11 @@ export function MyDayTaskEditorPanel({ editor }: MyDayTaskEditorPanelProps): Rea
     return (
       <aside
         aria-label={heading}
-        className="bg-surface border-separator sticky top-0 flex h-dvh w-[340px] shrink-0 flex-col overflow-y-auto border-l px-4 pt-10 pb-4"
+        className="bg-surface border-separator sticky top-0 flex h-dvh max-w-[60vw] shrink-0 flex-col border-l"
+        style={{ width: pane.width }}
       >
-        {form(editor.task, false)}
+        {pane.handle}
+        <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-4 pt-10 pb-4">{form(editor.task, false)}</div>
       </aside>
     );
   }

@@ -4,6 +4,7 @@ import { useBreakpoint } from "@package/react";
 import clsx from "clsx";
 import { useIntl } from "react-intl";
 import type { MyDaySuggestionsProps } from "./MyDayTypes";
+import type { MyDayPane } from "./UseMyDayPaneWidth";
 import { SuggestionList } from "~/components/display/suggestion-list/SuggestionList";
 
 export interface MyDaySuggestionsPanelProps {
@@ -11,6 +12,7 @@ export interface MyDaySuggestionsPanelProps {
   contextColor: string;
   suggestions: MyDaySuggestionsProps;
   onOpenTask?: (taskId: string) => void;
+  pane: MyDayPane;
 }
 
 /** A side panel on wide screens; a bottom sheet on phones and tablets. */
@@ -19,6 +21,7 @@ export function MyDaySuggestionsPanel({
   contextColor,
   suggestions,
   onOpenTask,
+  pane,
 }: MyDaySuggestionsPanelProps): ReactElement | null {
   const intl = useIntl();
   const isWide = useBreakpoint("xl");
@@ -50,9 +53,11 @@ export function MyDaySuggestionsPanel({
         })}
         className={clsx(
           `ctx-${contextColor}`,
-          "bg-surface border-separator flex w-80 shrink-0 flex-col border-l px-4 pt-10 pb-4"
+          "bg-surface border-separator relative flex max-w-[60vw] shrink-0 flex-col border-l px-4 pt-10 pb-4"
         )}
+        style={{ width: pane.width }}
       >
+        {pane.handle}
         {list(false)}
       </aside>
     );

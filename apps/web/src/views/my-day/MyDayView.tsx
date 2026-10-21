@@ -19,6 +19,7 @@ import type {
   MyDayTaskActions,
   MyDayTaskEditorProps,
 } from "./MyDayTypes";
+import { useMyDayPaneWidth } from "./UseMyDayPaneWidth";
 import { QuickAddInput } from "~/components/input/quick-add/QuickAddInput";
 
 export interface MyDayViewProps extends MyDaySidebarProps {
@@ -56,6 +57,7 @@ export function MyDayView({
   const intl = useIntl();
   const isPhone = !useBreakpoint("sm");
   const isWide = useBreakpoint("xl");
+  const pane = useMyDayPaneWidth();
 
   return (
     <div className="bg-background text-foreground flex min-h-dvh text-sm">
@@ -138,13 +140,14 @@ export function MyDayView({
       </main>
 
       {/* On wide screens the editor takes the suggestions panel's place. */}
-      <MyDayTaskEditorPanel editor={editor} />
+      <MyDayTaskEditorPanel editor={editor} pane={pane} />
       {!(isWide && editor.task) && (
         <MyDaySuggestionsPanel
           today={today}
           contextColor={context.selectedColor}
           suggestions={suggestions}
           onOpenTask={taskActions.onOpen}
+          pane={pane}
         />
       )}
     </div>
