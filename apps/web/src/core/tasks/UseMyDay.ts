@@ -47,6 +47,8 @@ export interface MyDayState {
   dayCountByContext: Record<string, number>;
   smartCounts: Record<SmartView, number>;
   tags: TagCount[];
+  /** Every tag on a task in the current context (except the context's own tag), most used first. */
+  searchTags: string[];
   inTodayIds: Set<string>;
   /** `views/today.json` for the visible tasks. */
   todayView: TodayView;
@@ -135,6 +137,17 @@ export function useMyDay(): MyDayState {
       tags.push({ tag, count: tagTotals.get(tag) ?? 0 });
     }
 
+    const ownTag = data.contexts.find((context) => context.id === currentContext)?.tag;
+    const searchTagTotals = new Map<string, number>();
+    for (const task of inContext) {
+      for (const taskTag of task.tags) {
+        if (taskTag !== ownTag) searchTagTotals.set(taskTag, (searchTagTotals.get(taskTag) ?? 0) + 1);
+      }
+    }
+    const searchTags = [...searchTagTotals.entries()]
+      .sort(([a, aCount], [b, bCount]) => bCount - aCount || a.localeCompare(b))
+      .map(([name]) => name);
+
     const suggestionGroups = buildSuggestions({
       tasks: visible,
       today,
@@ -153,6 +166,7 @@ export function useMyDay(): MyDayState {
       dayCountByContext,
       smartCounts,
       tags,
+      searchTags,
       inTodayIds,
       todayView,
     };

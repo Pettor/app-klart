@@ -192,7 +192,12 @@ export function useMyDayRoute(editingId: string | null): MyDayViewProps {
       },
       onManage: () => openSettings("contexts"),
     },
-    search: { value: myDay.search, onChange: myDay.setSearch, focusRequest: myDay.searchFocusRequest },
+    search: {
+      value: myDay.search,
+      onChange: myDay.setSearch,
+      focusRequest: myDay.searchFocusRequest,
+      tags: myDay.searchTags,
+    },
     smartViews: {
       items: (["day", "important", "planned", "tasks"] as const).map((id) => ({ id, count: myDay.smartCounts[id] })),
       active: myDay.smartView,
