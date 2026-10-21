@@ -35,6 +35,10 @@ export interface TaskRowProps {
   onAddToMyDay?: (taskId: string) => void;
   onRemoveFromMyDay?: (taskId: string) => void;
   onArchive?: (taskId: string) => void;
+  /** Makes the title pressable, e.g. to open the task editor. */
+  onOpen?: (taskId: string) => void;
+  /** Highlights the row, e.g. while it's open in the editor. */
+  isSelected?: boolean;
 }
 
 export function TaskRow({
@@ -47,6 +51,8 @@ export function TaskRow({
   onAddToMyDay,
   onRemoveFromMyDay,
   onArchive,
+  onOpen,
+  isSelected = false,
 }: TaskRowProps): ReactElement {
   const intl = useIntl();
   const hasMenu = !!onArchive || (isInMyDay && !!onRemoveFromMyDay);
@@ -57,7 +63,8 @@ export function TaskRow({
       className={clsx(
         `ctx-${task.contextColor}`,
         "group flex items-center gap-2 rounded-lg px-2 py-1.5 transition-colors sm:gap-3 sm:px-3",
-        task.done ? "bg-surface-secondary/80 min-h-12" : "bg-surface-secondary hover:bg-surface-tertiary min-h-13"
+        task.done ? "bg-surface-secondary/80 min-h-12" : "bg-surface-secondary hover:bg-surface-tertiary min-h-13",
+        isSelected && "ring-2 ring-(--ctx) ring-inset"
       )}
     >
       <Button
@@ -90,7 +97,25 @@ export function TaskRow({
         )}
       </Button>
 
-      <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+      <div className="relative flex min-w-0 flex-1 flex-col gap-0.5">
+        {onOpen && (
+          // An invisible button over the whole column, so the meta line opens the task too, while links sit above it.
+          // It must be the pressed element itself: React Aria drops a press released outside the button's box.
+          <Button
+            variant="ghost"
+            aria-label={intl.formatMessage(
+              {
+                description: "TaskRow - aria-label of the task title, which opens the task editor",
+                defaultMessage: "Edit task: {title}",
+                id: "KEvGdJ",
+              },
+              { title: task.title }
+            )}
+            onPress={() => onOpen(task.id)}
+            className="absolute inset-0 h-auto min-h-0 w-auto transform-none rounded-md p-0 data-[hovered=true]:bg-transparent data-[pressed=true]:bg-transparent"
+            data-testid="task-row__open"
+          />
+        )}
         <span className={clsx("text-sm", task.done && "text-muted line-through")}>{task.title}</span>
         {!task.done && (
           <span className="text-muted flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-xs">
@@ -129,7 +154,7 @@ export function TaskRow({
                   { host: formatTaskLink(link) }
                 )}
                 data-testid="task-row__link"
-                className="text-accent inline-flex max-w-48 items-center gap-1 text-xs no-underline hover:underline"
+                className="text-accent relative z-10 inline-flex max-w-48 items-center gap-1 text-xs no-underline hover:underline"
               >
                 <LinkIcon className="size-3 shrink-0" aria-hidden />
                 <span className="truncate">{formatTaskLink(link)}</span>

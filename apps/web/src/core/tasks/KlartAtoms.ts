@@ -1,7 +1,7 @@
 import { atom } from "jotai";
-import { atomWithStorage } from "jotai/utils";
+import { atomWithStorage, createJSONStorage } from "jotai/utils";
 import type { KlartData } from "./KlartData";
-import { createEmptyData } from "./KlartData";
+import { createEmptyData, normalizeData } from "./KlartData";
 import { toLocalDate } from "./LocalDate";
 import type { ContextSelection } from "~/core/contexts/KlartContext";
 
@@ -9,7 +9,25 @@ import type { ContextSelection } from "~/core/contexts/KlartContext";
 export type SmartView = "day" | "important" | "planned" | "tasks";
 
 /** All tasks, days and contexts. Persisted in the browser; mirrored to the data folder when one is connected. */
-export const klartDataAtom = atomWithStorage<KlartData>("klart-data", createEmptyData(), undefined, {
+const jsonStorage = createJSONStorage<KlartData>(() => localStorage);
+
+/** Normalizes on read, so data stored by an older version gets fields added since. */
+const klartDataStorage: typeof jsonStorage = {
+  ...jsonStorage,
+  getItem: (key, initialValue) => {
+    const stored = jsonStorage.getItem(key, initialValue) as KlartData;
+    return stored === initialValue ? stored : normalizeData(stored);
+  },
+  // Other tabs may still run an older version.
+  subscribe: (key, callback, initialValue) =>
+    jsonStorage.subscribe!(
+      key,
+      (value) => callback(value === initialValue ? value : normalizeData(value)),
+      initialValue
+    ),
+};
+
+export const klartDataAtom = atomWithStorage<KlartData>("klart-data", createEmptyData(), klartDataStorage, {
   getOnInit: true,
 });
 

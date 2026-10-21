@@ -2,6 +2,11 @@ import type { ContextSwitcherOption } from "~/components/actions/context-switche
 import type { SuggestionListGroup } from "~/components/display/suggestion-list/SuggestionList";
 import type { TaskRowTask } from "~/components/display/task-row/TaskRow";
 import type { QuickAddPreview } from "~/components/input/quick-add/QuickAddInput";
+import type {
+  TaskEditorContextOption,
+  TaskEditorPatch,
+  TaskEditorTask,
+} from "~/components/input/task-editor/TaskEditor";
 import type { ContextColor } from "~/core/contexts/KlartContext";
 import type { SyncStatus } from "~/core/sync/SyncAtoms";
 import type { SuggestionReason } from "~/core/tasks/Day";
@@ -36,6 +41,20 @@ export interface MyDayTaskActions {
   onAddToMyDay: (taskId: string) => void;
   onRemoveFromMyDay: (taskId: string) => void;
   onArchive: (taskId: string) => void;
+  /** Opens the task in the editor. */
+  onOpen: (taskId: string) => void;
+}
+
+export interface MyDayTaskEditorProps {
+  /** The task being edited, or `null` when the editor is closed. */
+  task: TaskEditorTask | null;
+  contexts: TaskEditorContextOption[];
+  onChange: (patch: TaskEditorPatch) => void;
+  onToggleDone: () => void;
+  onToggleImportant: () => void;
+  onToggleMyDay: () => void;
+  onArchive: () => void;
+  onClose: () => void;
 }
 
 export interface MyDayQuickAddProps {
