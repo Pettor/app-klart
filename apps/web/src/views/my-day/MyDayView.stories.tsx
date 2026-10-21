@@ -82,7 +82,7 @@ function buildArgs(contextId: string): Props {
       onSelect: fn(),
     },
     sync: {
-      status: { state: "synced", folderName: "OneDrive/Klart", lastSyncedAt: "2026-10-21T09:58:00Z" },
+      status: { state: "synced", method: "folder", folderName: "OneDrive/Klart", lastSyncedAt: "2026-10-21T09:58:00Z" },
       onPress: fn(),
     },
     tasks: dayTasks.filter((task) => task.status === "open").map(toRow),
@@ -155,7 +155,7 @@ export const WithQuickAddPreview: Story = {
   args: {
     ...buildArgs("personal"),
     quickAdd: {
-      value: "#work #appgate @fri ^09:00 ! prepare sprint planning",
+      value: "#work #acme @fri ^09:00 ! prepare sprint planning",
       onChange: fn(),
       onSubmit: fn(),
       preview: {
@@ -165,7 +165,7 @@ export const WithQuickAddPreview: Story = {
         due: "2026-10-23",
         remindAt: "2026-10-23T09:00",
         important: true,
-        tags: ["appgate"],
+        tags: ["acme"],
       },
     },
   },

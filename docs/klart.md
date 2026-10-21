@@ -45,6 +45,24 @@ Git sync from the design is shown as "coming with the desktop app" — it isn't 
 
 ## Desktop app
 
-`apps/desktop` packages `apps/web/dist` with Tauri 2 (see CLAUDE.md for commands). It's currently a plain wrapper: the same UI and browser APIs inside the system webview. On macOS (WKWebView) and Linux (WebKitGTK) that means no File System Access API, so folder sync is unavailable there and Settings shows the "unsupported browser" notice, and notifications fall back to in-app toasts. Windows (WebView2, Chromium) supports folder sync.
+`apps/desktop` packages `apps/web/dist` with Tauri 2 (see CLAUDE.md for commands). The web code detects it with `isDesktop()` (`core/platform/Desktop.ts`) and calls native commands from `apps/desktop/src-tauri/src`:
 
-Next steps for a native desktop implementation: a Tauri-backed folder adapter for `FolderSync` (plugin-fs + plugin-dialog), native notifications (plugin-notification), and the design's desktop-only items (menu-bar mode, open at login, notification actions).
+| Feature                                                   | Browser                                                           | Desktop app                                                                                                   |
+| --------------------------------------------------------- | ----------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| Folder sync (OneDrive, iCloud Drive, Dropbox, any folder) | File System Access API, Chrome/Edge only (`BrowserFolderBackend`) | Native file commands, every OS (`DesktopFolderBackend` → `folder.rs`); writes are atomic (temp file + rename) |
+| Git sync                                                  | —                                                                 | `git.rs`, using the installed `git` and the user's SSH keys / credential helper                               |
+| Notifications                                             | Web Notifications / service worker                                | Native, via `tauri-plugin-notification` (`system.rs`)                                                         |
+
+`FolderSync` only talks to the `FolderBackend` interface, so both platforms share the sync logic.
+
+### Git sync
+
+The data folder is a local clone. Settings → Sync → Git repository either clones a URL into a folder you pick or uses an existing clone. Each sync (`git_sync`):
+
+1. commits local changes (`klart: 3 tasks updated`),
+2. fetches and merges the remote; a conflicting file keeps the version with the newer `updatedAt`, and the other version is committed to `.conflicts/`,
+3. pushes.
+
+It runs when the app opens, every 5 minutes, 30 seconds after the last local change, and on "Sync now". After a merge that brought changes, the folder is re-read immediately. `GIT_TERMINAL_PROMPT=0` makes git fail instead of waiting for a password; the error shows in Settings. Without `user.email` configured, commits use `Klart <klart@localhost>`.
+
+Not yet built: the online OneDrive API (for computers without the OneDrive app, and a future phone app), built-in Git with "Sign in with GitHub", and the design's desktop-only items (menu-bar mode, open at login, notification actions).

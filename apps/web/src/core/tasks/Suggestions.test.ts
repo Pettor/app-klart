@@ -41,8 +41,8 @@ describe("buildSuggestions", () => {
     task("yesterday", { tags: ["hem"] }),
     task("soon", { due: "2026-10-23" }),
     task("later", { due: "2026-11-30" }),
-    task("related", { tags: ["appgate"] }),
-    task("planned", { tags: ["appgate"] }),
+    task("related", { tags: ["acme"] }),
+    task("planned", { tags: ["acme"] }),
     task("done", { due: "2026-10-01", status: "done" }),
     task("archived", { status: "archived" }),
   ];

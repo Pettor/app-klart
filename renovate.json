@@ -35,6 +35,16 @@
       "separateMultipleMajor": false
     },
     {
+      "groupName": "desktop",
+      "groupSlug": "desktop",
+      "matchDatasources": ["npm"],
+      "matchDepTypes": ["pnpm.catalog.desktop"],
+      "minimumReleaseAge": "7 days",
+      "semanticCommitType": "fix",
+      "separateMajorMinor": false,
+      "separateMultipleMajor": false
+    },
+    {
       "groupName": "state",
       "groupSlug": "state",
       "matchDatasources": ["npm"],

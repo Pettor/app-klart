@@ -2,6 +2,7 @@ import { atom } from "jotai";
 import { atomWithStorage } from "jotai/utils";
 import type { NotificationSettings } from "./NotificationSettings";
 import { DEFAULT_NOTIFICATION_SETTINGS } from "./NotificationSettings";
+import { isDesktop } from "~/core/platform/Desktop";
 
 export const notificationSettingsAtom = atomWithStorage<NotificationSettings>(
   "klart-notifications",
@@ -16,6 +17,10 @@ export const sentNotificationsAtom = atomWithStorage<Record<string, string>>("kl
 });
 
 function readPermission(): NotificationPermission | "unsupported" {
+  // Desktop apps can always notify; the OS lets the user mute Klart in its own settings.
+  if (isDesktop()) {
+    return "granted";
+  }
   return typeof Notification === "undefined" ? "unsupported" : Notification.permission;
 }
 

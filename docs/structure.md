@@ -48,7 +48,7 @@ core/
 │
 ├── sync/                 # Data folder sync (File System Access API)
 │   ├── FolderSync.ts          # Pull/push engine; one JSON file per task
-│   ├── FolderFs.ts            # Path helpers on a directory handle
+│   ├── FolderBackend.ts       # File-access interface; Browser- and DesktopFolderBackend implement it
 │   ├── FolderHandleStore.ts   # Persists the folder handle in IndexedDB
 │   ├── FileSystemAccess.ts    # Picker + permission typings
 │   ├── LlmsTxt.ts             # LLMS.txt written for agents

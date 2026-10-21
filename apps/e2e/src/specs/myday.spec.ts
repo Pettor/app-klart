@@ -8,7 +8,7 @@ test.describe("myday.quickadd", () => {
 
   test("adds a task with quick-add syntax and routes it to its context", async ({ page }) => {
     const input = page.getByTestId("quick-add__input");
-    await input.fill("#work #appgate @tomorrow ! prepare sprint planning");
+    await input.fill("#work #acme @tomorrow ! prepare sprint planning");
 
     const preview = page.getByTestId("quick-add__preview");
     await expect(preview).toContainText("Prepare sprint planning");
@@ -21,7 +21,7 @@ test.describe("myday.quickadd", () => {
     const row = page.getByTestId("task-row").filter({ hasText: "Prepare sprint planning" });
     await expect(row).toBeVisible();
     await expect(row).toContainText("Tomorrow");
-    await expect(row).toContainText("#appgate");
+    await expect(row).toContainText("#acme");
   });
 
   test("completes a task and keeps it under Completed", async ({ page }) => {

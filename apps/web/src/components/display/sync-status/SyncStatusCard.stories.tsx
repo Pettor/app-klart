@@ -23,7 +23,7 @@ type Story = StoryObj<typeof meta>;
 
 const defaultArgs = {
   now: NOW,
-  status: { state: "synced", folderName: "Klart", lastSyncedAt: "2026-10-21T09:58:00Z" },
+  status: { state: "synced", method: "folder", folderName: "Klart", lastSyncedAt: "2026-10-21T09:58:00Z" },
   onPress: fn(),
 } satisfies Props;
 
@@ -32,15 +32,18 @@ export const Synced: Story = {
 };
 
 export const LocalOnly: Story = {
-  args: { ...defaultArgs, status: { state: "local" } },
+  args: { ...defaultArgs, status: { state: "local", method: "local" } },
 };
 
 export const NeedsPermission: Story = {
-  args: { ...defaultArgs, status: { state: "needs-permission", folderName: "Klart" } },
+  args: { ...defaultArgs, status: { state: "needs-permission", method: "folder", folderName: "Klart" } },
 };
 
 export const SyncError: Story = {
-  args: { ...defaultArgs, status: { state: "error", folderName: "Klart", error: "The folder was moved" } },
+  args: {
+    ...defaultArgs,
+    status: { state: "error", method: "folder", folderName: "Klart", error: "The folder was moved" },
+  },
 };
 
 export const OpensSettings: Story = {

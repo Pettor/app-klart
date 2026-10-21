@@ -63,7 +63,7 @@ type Story = StoryObj<typeof meta>;
 export const Empty: Story = {};
 
 export const WithSyntax: Story = {
-  args: { initialValue: "#work #appgate @fri ^09:00 ! prepare sprint planning" },
+  args: { initialValue: "#work #acme @fri ^09:00 ! prepare sprint planning" },
 };
 
 export const Compact: Story = {

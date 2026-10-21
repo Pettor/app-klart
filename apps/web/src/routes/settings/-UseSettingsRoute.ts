@@ -8,6 +8,7 @@ import { useNotifications } from "~/core/notifications/UseNotifications";
 import type { SettingsSectionId } from "~/core/settings/SettingsSection";
 import { toDeviceId } from "~/core/sync/FolderSync";
 import { LLMS_TXT } from "~/core/sync/LlmsTxt";
+import type { GitConnectResult } from "~/core/sync/UseFolderSync";
 import { useFolderSync } from "~/core/sync/UseFolderSync";
 import { klartDataAtom } from "~/core/tasks/KlartAtoms";
 import { useKlartActions } from "~/core/tasks/UseKlartActions";
@@ -33,6 +34,36 @@ export function useSettingsRoute(section?: SettingsSectionId): SettingsViewProps
     );
   }
 
+  function reportGit(result: GitConnectResult): void {
+    if (result === "not-a-repo") {
+      toast.warning(
+        intl.formatMessage({
+          description: "SettingsRoute - toast when the chosen folder isn't a Git clone",
+          defaultMessage: "That folder isn't a Git repository",
+          id: "QEDD7p",
+        }),
+        {
+          description: intl.formatMessage({
+            description: "SettingsRoute - hint when the chosen folder isn't a Git clone",
+            defaultMessage: "Pick the folder you cloned, or clone the repository from its URL.",
+            id: "3y2DF+",
+          }),
+        }
+      );
+    }
+  }
+
+  function reportGitError(error: unknown): void {
+    toast.danger(
+      intl.formatMessage({
+        description: "SettingsRoute - toast when cloning or opening a repository fails",
+        defaultMessage: "Couldn't set up the repository",
+        id: "T14W/h",
+      }),
+      { description: error instanceof Error ? error.message : String(error) }
+    );
+  }
+
   const openCounts = new Map<string, number>();
   for (const task of Object.values(data.tasks)) {
     if (task.status === "open") {
@@ -53,10 +84,14 @@ export function useSettingsRoute(section?: SettingsSectionId): SettingsViewProps
     sync: {
       status: sync.status,
       isSupported: sync.isSupported,
+      isDesktop: sync.isDesktop,
+      isGitSupported: sync.isGitSupported,
       deviceName: sync.settings.deviceName,
       thisDeviceId: toDeviceId(sync.settings.deviceName),
       devices: sync.devices,
       onConnect: () => void sync.connect().catch(reportError),
+      onConnectGit: () => void sync.connectGit().then(reportGit).catch(reportGitError),
+      onCloneGit: (url) => void sync.cloneGit(url).then(reportGit).catch(reportGitError),
       onReconnect: () => void sync.reconnect().catch(reportError),
       onDisconnect: () => void sync.disconnect(),
       onSyncNow: sync.syncNow,

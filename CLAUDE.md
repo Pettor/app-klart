@@ -97,6 +97,8 @@ root/
 ### `apps/desktop` — Desktop App (Tauri 2)
 
 - **Stack**: Tauri 2 (Rust, in `src-tauri/`), system webview; no frontend code of its own — it bundles `apps/web/dist`
+- **Native commands** (`src-tauri/src/`): `folder.rs` (data-folder file access), `git.rs` (Git sync via the installed `git`), `system.rs` (device name, notifications). Typed wrappers live in `apps/web/src/core/platform/Desktop.ts`; guard calls with `isDesktop()`
+- **Tests**: `pnpm --filter @app/desktop test` (cargo test, includes a real two-clone Git sync test)
 - **Build**: `tauri build`, then `scripts/collect-artifacts.mjs` copies the app and installers to `output/build/` (macOS `.app` + `.dmg`, Windows `.exe`/`.msi`/setup, Linux binary/AppImage/deb/rpm)
 - **Prerequisites**: Rust toolchain plus the platform's Tauri prerequisites (Xcode CLT on macOS, WebView2 + MSVC on Windows, WebKitGTK on Linux)
 - **Icons**: `src-tauri/icons/`, generated with `pnpm --filter @app/desktop tauri icon ../web/src/assets/branding/klart-icon.svg -o src-tauri/icons`

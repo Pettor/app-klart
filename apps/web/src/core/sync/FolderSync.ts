@@ -1,6 +1,5 @@
 import { z } from "zod";
-import type { FolderFile } from "./FolderFs";
-import { getFileHandle, listFiles, removeFile, writeTextFile } from "./FolderFs";
+import type { FolderBackend, FolderFileInfo } from "./FolderBackend";
 import { LLMS_TXT } from "./LlmsTxt";
 import type { KlartContext } from "~/core/contexts/KlartContext";
 import { CONTEXT_COLORS, findContext } from "~/core/contexts/KlartContext";
@@ -101,33 +100,30 @@ function mergeContexts(local: KlartContext[], remote: KlartContext[]): KlartCont
  * The folder is the source of truth. Each file's last seen content and
  * `lastModified` are remembered, so a pull only reads what changed on disk and
  * a push only writes what changed in the app. Tasks resolve by `updatedAt`
- * (newest wins); a losing remote edit is kept in `.conflicts/`.
+ * (newest wins); a losing remote edit is kept in `.conflicts/`. File access
+ * goes through a {@link FolderBackend}, so it works in the browser and the desktop app.
  */
 export class FolderSync {
   private readonly known = new Map<string, KnownFile>();
   private readonly viewSignatures = new Map<string, string>();
 
   constructor(
-    private readonly root: FileSystemDirectoryHandle,
+    private readonly folder: FolderBackend,
     private readonly deviceName: string
   ) {}
 
   get folderName(): string {
-    return this.root.name;
+    return this.folder.name;
   }
 
   /** Reads a file only when it changed since last seen. Returns `null` when unchanged. */
-  private async readChanged(
-    path: string,
-    handle: FileSystemFileHandle
-  ): Promise<{ text: string; isNew: boolean } | null> {
-    const file = await handle.getFile();
+  private async readChanged({ path, lastModified }: FolderFileInfo): Promise<{ text: string; isNew: boolean } | null> {
     const known = this.known.get(path);
-    if (known && known.lastModified === file.lastModified) {
+    if (known && known.lastModified === lastModified) {
       return null;
     }
-    const text = await file.text();
-    this.known.set(path, { content: text, lastModified: file.lastModified });
+    const text = await this.folder.read(path);
+    this.known.set(path, { content: text, lastModified });
     if (known && known.content === text) {
       return null;
     }
@@ -135,7 +131,7 @@ export class FolderSync {
   }
 
   private async write(path: string, content: string): Promise<void> {
-    const lastModified = await writeTextFile(this.root, path, content);
+    const lastModified = await this.folder.write(path, content);
     this.known.set(path, { content, lastModified });
   }
 
@@ -143,9 +139,9 @@ export class FolderSync {
     let data = local;
     let changed = false;
 
-    const configHandle = await getFileHandle(this.root, CONFIG_FILE);
-    if (configHandle) {
-      const read = await this.readChangedSafely({ path: CONFIG_FILE, handle: configHandle });
+    const configModified = await this.folder.stat(CONFIG_FILE);
+    if (configModified !== null) {
+      const read = await this.readChangedSafely({ path: CONFIG_FILE, lastModified: configModified });
       const parsed = read && KlartConfigSchema.safeParse(read.json);
       if (read && parsed?.success) {
         const contexts = read.isNew ? mergeContexts(data.contexts, parsed.data.contexts) : parsed.data.contexts;
@@ -154,7 +150,7 @@ export class FolderSync {
       }
     }
 
-    const taskFiles = (await listFiles(this.root, "tasks", 1)).filter((file) => file.path.endsWith(".json"));
+    const taskFiles = (await this.folder.list("tasks", 1)).filter((file) => file.path.endsWith(".json"));
     for (const file of taskFiles) {
       const read = await this.readChangedSafely(file);
       if (!read) {
@@ -174,9 +170,7 @@ export class FolderSync {
       }
     }
 
-    const dayFiles = (await listFiles(this.root, "days", 0)).filter((file) =>
-      /\d{4}-\d{2}-\d{2}\.json$/.test(file.path)
-    );
+    const dayFiles = (await this.folder.list("days", 0)).filter((file) => /\d{4}-\d{2}-\d{2}\.json$/.test(file.path));
     for (const file of dayFiles) {
       const read = await this.readChangedSafely(file);
       const parsed = read && DayFileSchema.safeParse(read.json);
@@ -199,8 +193,10 @@ export class FolderSync {
     return { data, changed, inboxCount };
   }
 
-  private async readChangedSafely(file: FolderFile): Promise<{ text: string; json: unknown; isNew: boolean } | null> {
-    const read = await this.readChanged(file.path, file.handle);
+  private async readChangedSafely(
+    file: FolderFileInfo
+  ): Promise<{ text: string; json: unknown; isNew: boolean } | null> {
+    const read = await this.readChanged(file);
     if (!read) {
       return null;
     }
@@ -216,8 +212,8 @@ export class FolderSync {
     let count = 0;
     const now = new Date();
 
-    for (const file of await listFiles(this.root, "inbox", 0)) {
-      const text = await (await file.handle.getFile()).text();
+    for (const file of await this.folder.list("inbox", 0)) {
+      const text = await this.folder.read(file.path);
       const tasks: Task[] = [];
 
       if (file.path.endsWith(".json")) {
@@ -266,7 +262,7 @@ export class FolderSync {
         data = { ...data, tasks: { ...data.tasks, [task.id]: task } };
       }
       count += tasks.length;
-      await removeFile(this.root, file.path);
+      await this.folder.remove(file.path);
     }
 
     return { data, count };
@@ -296,7 +292,7 @@ export class FolderSync {
     // A task that moved context leaves its old file behind; remove it.
     for (const path of [...this.known.keys()]) {
       if (path.startsWith("tasks/") && !desired.has(path)) {
-        await removeFile(this.root, path);
+        await this.folder.remove(path);
         this.known.delete(path);
       }
     }
@@ -327,11 +323,11 @@ export class FolderSync {
   }
 
   async listDevices(): Promise<DeviceInfo[]> {
-    const files = (await listFiles(this.root, "devices", 1)).filter((file) => file.path.endsWith("/device.json"));
+    const files = (await this.folder.list("devices", 1)).filter((file) => file.path.endsWith("/device.json"));
     const devices: DeviceInfo[] = [];
     for (const file of files) {
       try {
-        const parsed = DeviceFileSchema.safeParse(JSON.parse(await (await file.handle.getFile()).text()));
+        const parsed = DeviceFileSchema.safeParse(JSON.parse(await this.folder.read(file.path)));
         if (parsed.success) {
           devices.push({ id: file.path.split("/")[1]!, ...parsed.data });
         }

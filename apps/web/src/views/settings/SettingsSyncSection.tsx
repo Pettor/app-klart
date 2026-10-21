@@ -1,21 +1,26 @@
-import type { ChangeEvent, ReactElement } from "react";
+import { useState, type ChangeEvent, type ReactElement } from "react";
 import { CheckIcon, ExclamationTriangleIcon } from "@heroicons/react/20/solid";
 import { Alert, Button, Description, Input, Label, Radio, RadioGroup, TextField } from "@heroui/react";
 import clsx from "clsx";
 import { FormattedRelativeTime, useIntl } from "react-intl";
+import { SettingsGitPanel } from "./SettingsGitPanel";
 import { SettingsPanel, SettingsSectionShell } from "./SettingsSectionShell";
 import type { DeviceInfo } from "~/core/sync/FolderSync";
-import type { SyncStatus } from "~/core/sync/SyncAtoms";
-
-export type SyncMethod = "folder" | "local" | "git";
+import type { SyncMethod, SyncStatus } from "~/core/sync/SyncAtoms";
 
 export interface SettingsSyncSectionProps {
   status: SyncStatus;
   isSupported: boolean;
+  /** Running in the desktop app. */
+  isDesktop: boolean;
+  /** Git is installed (desktop app only); `null` while checking. */
+  isGitSupported: boolean | null;
   deviceName: string;
   thisDeviceId: string;
   devices: DeviceInfo[];
   onConnect: () => void;
+  onConnectGit: () => void;
+  onCloneGit: (url: string) => void;
   onReconnect: () => void;
   onDisconnect: () => void;
   onSyncNow: () => void;
@@ -41,10 +46,14 @@ function RelativeTime({ iso, now }: { iso: string; now: number }): ReactElement 
 export function SettingsSyncSection({
   status,
   isSupported,
+  isDesktop,
+  isGitSupported,
   deviceName,
   thisDeviceId,
   devices,
   onConnect,
+  onConnectGit,
+  onCloneGit,
   onReconnect,
   onDisconnect,
   onSyncNow,
@@ -52,14 +61,36 @@ export function SettingsSyncSection({
   now = Date.now(),
 }: SettingsSyncSectionProps): ReactElement {
   const intl = useIntl();
-  const method: SyncMethod = status.state === "local" ? "local" : "folder";
+  // Choosing Git only reveals its setup; the method changes once a clone is connected.
+  const [pending, setPending] = useState<SyncMethod | null>(null);
+  const method: SyncMethod = pending ?? status.method;
 
   function handleMethod(value: string): void {
-    if (value === "folder" && method !== "folder") {
+    setPending(value === "git" ? "git" : null);
+    if (value === "folder" && status.method !== "folder") {
       onConnect();
-    } else if (value === "local" && method !== "local") {
+    } else if (value === "local" && status.method !== "local") {
       onDisconnect();
     }
+  }
+
+  let gitBody = intl.formatMessage({
+    description: "SettingsSync - git method description in the browser",
+    defaultMessage: "A private Git repo with full history. Available in the Klart desktop app.",
+    id: "hDuZqH",
+  });
+  if (isDesktop && isGitSupported) {
+    gitBody = intl.formatMessage({
+      description: "SettingsSync - git method description in the desktop app",
+      defaultMessage: "A private repo, e.g. on GitHub. Pull on launch, commit and push after changes. Full history.",
+      id: "a23IZL",
+    });
+  } else if (isDesktop && isGitSupported === false) {
+    gitBody = intl.formatMessage({
+      description: "SettingsSync - git method description when git isn't installed",
+      defaultMessage: "Install Git on this computer to sync through a repository.",
+      id: "0rJ4k4",
+    });
   }
 
   const options: { value: SyncMethod; title: string; body: string; isDisabled?: boolean }[] = [
@@ -84,24 +115,26 @@ export function SettingsSyncSection({
         defaultMessage: "Git repository",
         id: "k6EKVk",
       }),
-      body: intl.formatMessage({
-        description: "SettingsSync - git method description; not available in the browser",
-        defaultMessage: "A private GitHub repo with full history. Coming with the desktop app.",
-        id: "wacO6+",
-      }),
-      isDisabled: true,
+      body: gitBody,
+      isDisabled: !isGitSupported,
     },
     {
       value: "local",
-      title: intl.formatMessage({
-        description: "SettingsSync - method title",
-        defaultMessage: "This browser only",
-        id: "BWvpym",
-      }),
+      title: isDesktop
+        ? intl.formatMessage({
+            description: "SettingsSync - method title in the desktop app",
+            defaultMessage: "This computer only",
+            id: "CGNvp6",
+          })
+        : intl.formatMessage({
+            description: "SettingsSync - method title",
+            defaultMessage: "This browser only",
+            id: "BWvpym",
+          }),
       body: intl.formatMessage({
         description: "SettingsSync - method description",
-        defaultMessage: "Stored in this browser, no sync. Switch any time.",
-        id: "uJpBMg",
+        defaultMessage: "Stored on this device, no sync. Switch any time.",
+        id: "xqjw42",
       }),
     },
   ];
@@ -177,7 +210,7 @@ export function SettingsSyncSection({
         ))}
       </RadioGroup>
 
-      {method === "folder" && (
+      {method === "folder" && status.method === "folder" && (
         <div className="bg-surface flex flex-col gap-3 rounded-xl p-[18px]">
           <span className="font-semibold">
             {intl.formatMessage({
@@ -188,7 +221,7 @@ export function SettingsSyncSection({
           </span>
           <div className="flex flex-wrap items-center gap-2">
             <code className="bg-background border-border min-w-0 flex-1 truncate rounded-lg border px-3 py-2.5 font-mono text-[13px]">
-              {status.folderName ?? "…"}
+              {status.location ?? status.folderName ?? "…"}
             </code>
             {status.state === "needs-permission" ? (
               <Button onPress={onReconnect} data-testid="settings__sync-reconnect">
@@ -250,6 +283,16 @@ export function SettingsSyncSection({
             </span>
           )}
         </div>
+      )}
+
+      {method === "git" && isGitSupported && (
+        <SettingsGitPanel
+          status={status}
+          onConnectGit={onConnectGit}
+          onCloneGit={onCloneGit}
+          onSyncNow={onSyncNow}
+          now={now}
+        />
       )}
 
       <div className="bg-surface flex flex-col gap-1 rounded-xl p-[18px]">
