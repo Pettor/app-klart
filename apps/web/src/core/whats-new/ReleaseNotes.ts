@@ -15,6 +15,50 @@ export interface ReleaseNote {
   fixes: ReleaseNoteItem[];
 }
 
+const v030 = defineMessages({
+  drawerTitle: {
+    description: "ReleaseNotes 0.3.0 - highlight title: mobile navigation drawer",
+    defaultMessage: "Find your way on your phone",
+    id: "jzIGtO",
+  },
+  drawerDescription: {
+    description: "ReleaseNotes 0.3.0 - highlight text: mobile navigation drawer",
+    defaultMessage:
+      "Tap the menu button to hop between My Day, Important, Planned and Tasks. Settings and sync live there too.",
+    id: "2WBXF0",
+  },
+  tagSearchTitle: {
+    description: "ReleaseNotes 0.3.0 - highlight title: tag suggestions in search",
+    defaultMessage: "Tags finish themselves",
+    id: "HnVkJh",
+  },
+  tagSearchDescription: {
+    description: "ReleaseNotes 0.3.0 - highlight text: tag suggestions in search",
+    defaultMessage: "Type # in search and pick from your tags instead of spelling them out.",
+    id: "vStbdN",
+  },
+  searchShortcutTitle: {
+    description: "ReleaseNotes 0.3.0 - highlight title: search keyboard shortcut",
+    defaultMessage: "Press / to search",
+    id: "XRb4Vc",
+  },
+  searchShortcutDescription: {
+    description: "ReleaseNotes 0.3.0 - highlight text: search keyboard shortcut",
+    defaultMessage: "Jump straight to the search field from anywhere, whatever your keyboard layout.",
+    id: "b40je6",
+  },
+  linkFixTitle: {
+    description: "ReleaseNotes 0.3.0 - fix title: www links",
+    defaultMessage: "www. links just work",
+    id: "H3Mk5k",
+  },
+  linkFixDescription: {
+    description: "ReleaseNotes 0.3.0 - fix text: www links",
+    defaultMessage: "Type www.example.com in quick add or the editor and Klart turns it into a proper link.",
+    id: "AbbkTA",
+  },
+});
+
 const v020 = defineMessages({
   resizeTitle: {
     description: "ReleaseNotes 0.2.0 - highlight title: resizable side panel",
@@ -109,6 +153,15 @@ const v010 = defineMessages({
  * entry here; people who update see every entry newer than the last one they saw.
  */
 export const RELEASE_NOTES: ReleaseNote[] = [
+  {
+    version: "0.3.0",
+    highlights: [
+      { emoji: "📱", title: v030.drawerTitle, description: v030.drawerDescription },
+      { emoji: "🏷️", title: v030.tagSearchTitle, description: v030.tagSearchDescription },
+      { emoji: "⌨️", title: v030.searchShortcutTitle, description: v030.searchShortcutDescription },
+    ],
+    fixes: [{ emoji: "🔗", title: v030.linkFixTitle, description: v030.linkFixDescription }],
+  },
   {
     version: "0.2.0",
     highlights: [{ emoji: "↔️", title: v020.resizeTitle, description: v020.resizeDescription }],
