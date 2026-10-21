@@ -5,6 +5,7 @@ import { useIntl } from "react-intl";
 import { z } from "zod";
 import { useSettingsRoute } from "./-UseSettingsRoute";
 import { CommandPaletteController } from "~/components/actions/command-palette/CommandPaletteController";
+import { WhatsNewDialogController } from "~/components/feedback/whats-new-dialog/WhatsNewDialogController";
 import { RouteError } from "~/core/routes/logic/RouteError";
 import { SETTINGS_SECTION_IDS } from "~/core/settings/SettingsSection";
 import { SettingsView } from "~/views/settings/SettingsView";
@@ -35,6 +36,7 @@ function SettingsPageRoute(): ReactElement {
     <>
       <SettingsView {...props} />
       <CommandPaletteController />
+      <WhatsNewDialogController />
     </>
   );
 }

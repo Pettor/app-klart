@@ -4,6 +4,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useIntl } from "react-intl";
 import { useMyDayRoute } from "./-UseMyDayRoute";
 import { CommandPaletteController } from "~/components/actions/command-palette/CommandPaletteController";
+import { WhatsNewDialogController } from "~/components/feedback/whats-new-dialog/WhatsNewDialogController";
 import { RouteError } from "~/core/routes/logic/RouteError";
 import { MyDayView } from "~/views/my-day/MyDayView";
 
@@ -27,6 +28,7 @@ function MyDayPageRoute(): ReactElement {
     <>
       <MyDayView {...props} />
       <CommandPaletteController />
+      <WhatsNewDialogController />
     </>
   );
 }

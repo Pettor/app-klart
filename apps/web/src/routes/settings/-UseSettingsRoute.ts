@@ -14,6 +14,7 @@ import type { GitConnectResult, GitHubConnectResult, GitHubCredentials } from "~
 import { useFolderSync } from "~/core/sync/UseFolderSync";
 import { klartDataAtom } from "~/core/tasks/KlartAtoms";
 import { useKlartActions } from "~/core/tasks/UseKlartActions";
+import { useWhatsNew } from "~/core/whats-new/UseWhatsNew";
 import { githubErrorText } from "~/views/settings/SettingsGitHubMessages";
 import type { SettingsViewProps } from "~/views/settings/SettingsView";
 
@@ -26,6 +27,7 @@ export function useSettingsRoute(section?: SettingsSectionId): SettingsViewProps
   const notifications = useNotifications();
   const themeSelector = useThemeSelector();
   const { appName, appVersion } = useAppInfo();
+  const whatsNew = useWhatsNew();
 
   function reportError(error: unknown): void {
     toast.danger(
@@ -174,6 +176,6 @@ export function useSettingsRoute(section?: SettingsSectionId): SettingsViewProps
       onContextChange: notifications.updateContext,
     },
     appearance: { themeSelector },
-    about: { appName, ...appVersion },
+    about: { appName, ...appVersion, onShowWhatsNew: whatsNew.open },
   };
 }

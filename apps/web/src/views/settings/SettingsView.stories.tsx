@@ -64,7 +64,7 @@ const defaultArgs = {
     onContextChange: fn(),
   },
   appearance: { themeSelector: { mode: "auto", onSelect: fn() } },
-  about: { appName: "Klart", version: "0.1.0", build: "42", commit: "447df5b" },
+  about: { appName: "Klart", version: "0.1.0", build: "42", commit: "447df5b", onShowWhatsNew: fn() },
 } satisfies Props;
 
 const meta: Meta<typeof Component> = {
@@ -85,15 +85,17 @@ export const Default: Story = {
 
 export const About: Story = {
   args: defaultArgs,
-  play: async ({ canvas }) => {
+  play: async ({ args, canvas, userEvent }) => {
     await expect(canvas.getByTestId("settings__about-version")).toHaveTextContent("0.1.0");
     await expect(canvas.getByTestId("settings__about-build")).toHaveTextContent("42");
     await expect(canvas.getByTestId("settings__about-commit")).toHaveTextContent("447df5b");
+    await userEvent.click(canvas.getByTestId("settings__about-whats-new"));
+    await expect(args.about.onShowWhatsNew).toHaveBeenCalled();
   },
 };
 
 export const AboutLocalBuild: Story = {
-  args: { ...defaultArgs, about: { appName: "Klart", version: "0.1.0" } },
+  args: { ...defaultArgs, about: { appName: "Klart", version: "0.1.0", onShowWhatsNew: fn() } },
   play: async ({ canvas }) => {
     await expect(canvas.getByTestId("settings__about-build")).toHaveTextContent("Local build");
     await expect(canvas.queryByTestId("settings__about-commit")).toBeNull();
