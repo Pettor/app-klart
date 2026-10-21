@@ -234,8 +234,8 @@ export function SettingsContextsSection({
             data-testid="settings__new-context-name"
             placeholder={intl.formatMessage({
               description: "SettingsContexts - placeholder of the new context name field",
-              defaultMessage: "e.g. BRF board",
-              id: "eYD+VN",
+              defaultMessage: "e.g. Football club",
+              id: "Jyha0S",
             })}
             onChange={(event: ChangeEvent<HTMLInputElement>) => setNewName(event.target.value)}
             onKeyDown={onEnter(create)}

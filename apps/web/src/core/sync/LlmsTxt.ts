@@ -6,7 +6,7 @@ export const LLMS_TXT = `# Klart
 > The app watches the folder and reloads within a few seconds.
 
 ## Files
-- klart.json: the user's contexts (e.g. personal, work, brf) with color and
+- klart.json: the user's contexts (e.g. personal, work, club) with color and
   routing tag. "all" is a view, never a context on a task.
 - tasks/<context>/<id>.json: one task per file, schema klart.task/v1.
 - days/YYYY-MM-DD.json: tasks in My Day for that date, schema klart.day/v1.
@@ -32,7 +32,7 @@ export const LLMS_TXT = `# Klart
 - Add details: put free text in the task's "notes".
 
 ## Quick-add syntax
-- #tag adds a tag. A tag naming a context (#work, #brf) also picks the context.
+- #tag adds a tag. A tag naming a context (#work, #club) also picks the context.
 - @YYYY-MM-DD, @today, @tomorrow, @mon..@sun, @+Nd set the due date.
 - ^HH:MM, ^fri-HH:MM, ^YYYY-MM-DDTHH:MM set a reminder (remindAt).
 - ! marks important.

@@ -50,7 +50,7 @@ describe("createSampleData", () => {
 describe("withoutSampleData", () => {
   it("keeps real tasks, their days and the sample contexts they use", () => {
     const sample = createSampleData(NOW);
-    const parsed = parseQuickAdd("#brf real board task", {
+    const parsed = parseQuickAdd("#club real club task", {
       today: TODAY,
       contexts: sample.contexts,
       currentContext: "all",
@@ -69,7 +69,7 @@ describe("withoutSampleData", () => {
     expect(Object.keys(cleaned.tasks)).toEqual(["REAL"]);
     expect(cleaned.days[TODAY]!.items.map((item) => item.taskId)).toEqual(["REAL"]);
     expect(cleaned.days[addDays(TODAY, -1)]).toBeUndefined();
-    expect(cleaned.contexts.map((context) => context.id)).toEqual(["personal", "work", "sample-brf"]);
+    expect(cleaned.contexts.map((context) => context.id)).toEqual(["personal", "work", "sample-club"]);
   });
 
   it("leaves data without sample tasks alone", () => {

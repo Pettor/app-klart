@@ -20,7 +20,7 @@ const defaultArgs = {
     { id: "all", name: "All contexts", color: "all", dayCount: 5, shortcut: "0" },
     { id: "personal", name: "Personal", color: "blue", dayCount: 2, shortcut: "1" },
     { id: "work", name: "Work", color: "orange", dayCount: 2, shortcut: "2" },
-    { id: "brf", name: "BRF board", color: "green", dayCount: 1, shortcut: "3" },
+    { id: "club", name: "Football club", color: "green", dayCount: 1, shortcut: "3" },
   ],
   onSelect: fn(),
   onManage: fn(),

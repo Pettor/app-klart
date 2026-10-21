@@ -63,14 +63,14 @@ test.describe("myday.quickadd", () => {
 test.describe("myday.settings", () => {
   test("creates a context in settings", async ({ page }) => {
     await page.goto("/#/settings");
-    await page.getByTestId("settings__new-context-name").fill("BRF board");
+    await page.getByTestId("settings__new-context-name").fill("Football club");
     await page.getByTestId("settings__new-context").click();
 
-    await expect(page.getByTestId("settings-context-card").filter({ hasText: "BRF board" })).toBeVisible();
+    await expect(page.getByTestId("settings-context-card").filter({ hasText: "Football club" })).toBeVisible();
 
     await page.getByTestId("settings__back").click();
     await page.getByTestId("context-switcher__trigger").first().click();
-    await expect(page.getByRole("menuitemradio", { name: /BRF board/ })).toBeVisible();
+    await expect(page.getByRole("menuitemradio", { name: /Football club/ })).toBeVisible();
   });
 });
 

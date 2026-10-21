@@ -245,7 +245,7 @@ describe("FolderSync", () => {
 
   it("turns inbox files into tasks and removes them", async () => {
     await root.write("inbox/plan.txt", "#work #acme @2026-07-08 find more tasks\n\nbuy milk #köp\n");
-    await root.write("inbox/agent.json", JSON.stringify({ title: "From an agent", tags: ["brf"], due: "2026-10-23" }));
+    await root.write("inbox/agent.json", JSON.stringify({ title: "From an agent", tags: ["club"], due: "2026-10-23" }));
     await root.write("inbox/notes.pdf", "binary");
 
     const pulled = await sync.pull(createEmptyData(), { today: TODAY, acceptInbox: true });

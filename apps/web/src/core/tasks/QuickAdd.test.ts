@@ -8,7 +8,7 @@ const TODAY = "2026-10-21";
 const CONTEXTS: KlartContext[] = [
   { id: "personal", name: "Personal", color: "blue", tag: "personal" },
   { id: "work", name: "Work", color: "orange", tag: "work" },
-  { id: "brf", name: "BRF board", color: "green", tag: "brf" },
+  { id: "club", name: "Football club", color: "green", tag: "club" },
 ];
 
 function parse(text: string, currentContext = "personal"): ReturnType<typeof parseQuickAdd> {
@@ -112,7 +112,7 @@ describe("parseQuickAdd", () => {
   });
 
   it("routes to the first context tag", () => {
-    expect(parse("protokoll #brf #work").context).toBe("brf");
+    expect(parse("protokoll #club #work").context).toBe("club");
   });
 
   it("lowercases and de-duplicates tags", () => {

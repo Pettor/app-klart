@@ -15,7 +15,7 @@ export const SAMPLE_DATA_ENABLED = import.meta.env.VITE_SAMPLE_DATA === "true";
 
 const SAMPLE_CONTEXTS: KlartContext[] = [
   ...DEFAULT_CONTEXTS,
-  { id: "sample-brf", name: "BRF board", color: "green", tag: "brf" },
+  { id: "sample-club", name: "Football club", color: "green", tag: "club" },
   { id: "sample-side", name: "Side project", color: "violet", tag: "side" },
   { id: "sample-health", name: "Health", color: "teal", tag: "health" },
   { id: "sample-travel", name: "Travel", color: "pink", tag: "travel" },
@@ -82,9 +82,9 @@ const SAMPLE_TASKS: SampleTask[] = [
   },
   {
     id: "b1",
-    title: "Förening: kolla lådan för leksaker",
-    context: "sample-brf",
-    tags: ["gård"],
+    title: "Packa bollar och västar till träningen",
+    context: "sample-club",
+    tags: ["träning"],
     today: "agent",
     created: 2,
   },
@@ -133,8 +133,8 @@ const SAMPLE_TASKS: SampleTask[] = [
   { id: "w4", title: "Send expense report for September", context: "work", tags: ["admin"], due: -9, created: 30 },
   {
     id: "b2",
-    title: "Boappa: protokoll från stämman",
-    context: "sample-brf",
+    title: "Skicka ut protokollet från årsmötet",
+    context: "sample-club",
     tags: ["styrelse"],
     due: -45,
     created: 60,
@@ -167,7 +167,7 @@ const SAMPLE_TASKS: SampleTask[] = [
     important: true,
     created: 4,
   },
-  { id: "b3", title: "Styrelsemöte: förbered budget", context: "sample-brf", tags: ["styrelse"], due: 2, created: 14 },
+  { id: "b3", title: "Styrelsemöte: förbered budget", context: "sample-club", tags: ["styrelse"], due: 2, created: 14 },
   {
     id: "t1",
     title: "Check in online for the Berlin flight",
@@ -220,7 +220,7 @@ const SAMPLE_TASKS: SampleTask[] = [
     remind: [9, "19:00"],
     created: 13,
   },
-  { id: "b4", title: "Årsredovisning till revisorn", context: "sample-brf", tags: ["ekonomi"], due: 90, created: 33 },
+  { id: "b4", title: "Årsredovisning till revisorn", context: "sample-club", tags: ["ekonomi"], due: 90, created: 33 },
 
   // No due date: recently added and older backlog.
   { id: "s3", title: "Try a dark-mode friendly accent palette", context: "sample-side", tags: ["design"], created: 0 },

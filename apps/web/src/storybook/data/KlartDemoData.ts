@@ -9,7 +9,7 @@ export const DEMO_TODAY = "2026-10-21";
 export const DEMO_CONTEXTS: KlartContext[] = [
   { id: "personal", name: "Personal", color: "blue", tag: "personal" },
   { id: "work", name: "Work", color: "orange", tag: "work" },
-  { id: "brf", name: "BRF board", color: "green", tag: "brf" },
+  { id: "club", name: "Football club", color: "green", tag: "club" },
 ];
 
 interface DemoTask {
@@ -49,8 +49,8 @@ const DEMO_TASKS: DemoTask[] = [
   { id: "p6", title: "Hem: fixa knarrande dörr", context: "personal", tags: ["hem"], inYesterday: true },
   { id: "p8", title: "Beredskap: Ny brandsläckare", context: "personal", tags: ["hem", "familj"], inToday: true },
   { id: "p10", title: "Betala elräkning", context: "personal", tags: ["ekonomi"], inToday: true, done: true },
-  { id: "b1", title: "Boappa: Protokoll", context: "brf", tags: ["styrelse"], due: "2026-10-23" },
-  { id: "b2", title: "Förening: Kolla låda för leksaker", context: "brf", tags: ["gård"], inToday: true },
+  { id: "b1", title: "Protokoll från årsmötet", context: "club", tags: ["styrelse"], due: "2026-10-23" },
+  { id: "b2", title: "Packa bollar och västar", context: "club", tags: ["träning"], inToday: true },
   {
     id: "w1",
     title: "Review sync PR for gateway client",
