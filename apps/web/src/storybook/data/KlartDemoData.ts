@@ -23,6 +23,7 @@ interface DemoTask {
   done?: boolean;
   inToday?: boolean;
   inYesterday?: boolean;
+  links?: string[];
 }
 
 const DEMO_TASKS: DemoTask[] = [
@@ -58,6 +59,7 @@ const DEMO_TASKS: DemoTask[] = [
     due: "2026-10-21",
     remindAt: "2026-10-21T14:00",
     inToday: true,
+    links: ["https://github.com/acme/gateway-client/pull/412"],
   },
   {
     id: "w2",
@@ -85,6 +87,7 @@ function toTask(demo: DemoTask, index: number): Task {
     important: demo.important ?? false,
     status: demo.done ? "done" : "open",
     notes: "",
+    links: demo.links ?? [],
     createdAt: timestamp,
     updatedAt: timestamp,
     completedAt: demo.done ? "2026-10-21T07:30:00Z" : null,

@@ -25,6 +25,7 @@ const defaultArgs = {
     due: "2026-10-21",
     remindAt: "2026-10-21T14:00",
     tags: ["acme", "review"],
+    links: [],
     contextName: "Work",
     contextColor: "orange",
   },
@@ -47,6 +48,24 @@ export const Overdue: Story = {
 
 export const Important: Story = {
   args: { ...defaultArgs, task: { ...defaultArgs.task, important: true } },
+};
+
+export const WithLinks: Story = {
+  args: {
+    ...defaultArgs,
+    task: {
+      ...defaultArgs.task,
+      links: ["https://github.com/acme/gateway-client/pull/412", "https://www.notion.so/acme/Gateway-sync-spec-9f2c"],
+    },
+  },
+  play: async ({ canvas }) => {
+    const links = canvas.getAllByTestId("task-row__link");
+    await expect(links).toHaveLength(2);
+    await expect(links[0]).toHaveTextContent("github.com");
+    await expect(links[0]).toHaveAttribute("href", "https://github.com/acme/gateway-client/pull/412");
+    await expect(links[0]).toHaveAttribute("target", "_blank");
+    await expect(links[1]).toHaveTextContent("notion.so");
+  },
 };
 
 export const WithContext: Story = {

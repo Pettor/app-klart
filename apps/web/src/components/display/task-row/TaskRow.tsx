@@ -1,11 +1,12 @@
 import type { ReactElement } from "react";
-import { BellIcon, CheckIcon, EllipsisHorizontalIcon, StarIcon, SunIcon } from "@heroicons/react/20/solid";
+import { BellIcon, CheckIcon, EllipsisHorizontalIcon, LinkIcon, StarIcon, SunIcon } from "@heroicons/react/20/solid";
 import { StarIcon as StarOutlineIcon } from "@heroicons/react/24/outline";
-import { Button, Dropdown, Label, ToggleButton } from "@heroui/react";
+import { Button, Dropdown, Label, Link, ToggleButton } from "@heroui/react";
 import clsx from "clsx";
 import { useIntl } from "react-intl";
 import { DUE_TONE_CLASS, formatDue, formatReminder, getDueTone } from "./TaskDateFormat";
 import type { ContextColor } from "~/core/contexts/KlartContext";
+import { formatTaskLink } from "~/core/tasks/TaskLink";
 
 /** Display-ready task. Built by the route hook from a domain `Task`. */
 export interface TaskRowTask {
@@ -17,6 +18,8 @@ export interface TaskRowTask {
   remindAt: string | null;
   /** Tags to show, without the context's own routing tag. */
   tags: string[];
+  /** `http(s)://` links to the task's source; each opens in a new tab. */
+  links: string[];
   contextName: string;
   contextColor: ContextColor;
 }
@@ -110,6 +113,27 @@ export function TaskRow({
               <span key={tag} className="text-(--tag)">
                 #{tag}
               </span>
+            ))}
+            {task.links.map((link) => (
+              <Link
+                key={link}
+                href={link}
+                target="_blank"
+                rel="noreferrer"
+                aria-label={intl.formatMessage(
+                  {
+                    description: "TaskRow - aria-label for a link to the task's source, opened in a new tab",
+                    defaultMessage: "Open link to {host}",
+                    id: "ahIXxO",
+                  },
+                  { host: formatTaskLink(link) }
+                )}
+                data-testid="task-row__link"
+                className="text-accent inline-flex max-w-48 items-center gap-1 text-xs no-underline hover:underline"
+              >
+                <LinkIcon className="size-3 shrink-0" aria-hidden />
+                <span className="truncate">{formatTaskLink(link)}</span>
+              </Link>
             ))}
           </span>
         )}

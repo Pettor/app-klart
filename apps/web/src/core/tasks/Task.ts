@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { toTaskLinks } from "./TaskLink";
 
 export const TASK_SCHEMA = "klart.task/v1";
 
@@ -19,6 +20,8 @@ export interface Task {
   important: boolean;
   status: TaskStatus;
   notes: string;
+  /** Optional `http(s)://` links to the task's source, e.g. a PR, an email or a document. */
+  links: string[];
   createdAt: string;
   updatedAt: string;
   completedAt: string | null;
@@ -43,6 +46,7 @@ export const TaskFileSchema = z.object({
   important: z.boolean().catch(false),
   status: z.enum(["open", "done", "archived"]).catch("open"),
   notes: z.string().catch(""),
+  links: z.array(z.string()).transform(toTaskLinks).catch([]),
   createdAt: z.string(),
   updatedAt: z.string(),
   completedAt: nullableString,
@@ -58,6 +62,7 @@ export const InboxTaskSchema = z.object({
   remindAt: z.string().nullable().optional(),
   important: z.boolean().optional(),
   notes: z.string().optional(),
+  links: z.array(z.string()).optional(),
 });
 
 export type InboxTask = z.infer<typeof InboxTaskSchema>;

@@ -23,12 +23,15 @@ export const LLMS_TXT = `# Klart
 - Remind the user: set "remindAt" (local "YYYY-MM-DDTHH:MM") on the task.
   The app sends a notification then. Clear it with null.
 - Find by tag: tasks whose "tags" array contains the tag, lowercase, no "#".
+- Link a task to its source (PR, email, doc): add the URL to its "links"
+  array. Only absolute http:// or https:// URLs are kept.
 
 ## Quick-add syntax
 - #tag adds a tag. A tag naming a context (#work, #brf) also picks the context.
 - @YYYY-MM-DD, @today, @tomorrow, @mon..@sun, @+Nd set the due date.
 - ^HH:MM, ^fri-HH:MM, ^YYYY-MM-DDTHH:MM set a reminder (remindAt).
-- ! marks important. All other words are the title.
+- ! marks important.
+- https://… adds a link (to "links"). All other words are the title.
 - There are no lists: group and filter with tags.
 
 ## Rules

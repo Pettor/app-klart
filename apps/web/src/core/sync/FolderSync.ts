@@ -12,6 +12,7 @@ import { toUtcTimestamp } from "~/core/tasks/LocalDate";
 import { parseQuickAdd } from "~/core/tasks/QuickAdd";
 import type { Task } from "~/core/tasks/Task";
 import { InboxTaskSchema, TaskFileSchema } from "~/core/tasks/Task";
+import { toTaskLinks } from "~/core/tasks/TaskLink";
 
 export const CONFIG_FILE = "klart.json";
 export const LLMS_FILE = "LLMS.txt";
@@ -242,6 +243,7 @@ export class FolderSync {
             due: entry.due ?? null,
             remindAt: entry.remindAt ?? null,
             important: entry.important ?? false,
+            links: toTaskLinks(entry.links ?? []),
             raw: "",
           },
           now

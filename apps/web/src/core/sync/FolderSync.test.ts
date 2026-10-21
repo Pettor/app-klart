@@ -227,6 +227,29 @@ describe("FolderSync", () => {
     expect(root.read("inbox/notes.pdf")).toBe("binary");
   });
 
+  it("keeps only web links from agent files", async () => {
+    await root.write(
+      "inbox/agent.json",
+      JSON.stringify({ title: "Read the RFC", links: ["https://example.com/rfc", "javascript:alert(1)", "notes"] })
+    );
+    await root.write(
+      "tasks/work/T9.json",
+      JSON.stringify({
+        id: "T9",
+        title: "Old file",
+        context: "work",
+        links: ["file:///etc/passwd", "https://example.com/a"],
+        createdAt: "2026-10-01T08:00:00Z",
+        updatedAt: "2026-10-01T08:00:00Z",
+      })
+    );
+
+    const pulled = await sync.pull(createEmptyData(), { today: TODAY, acceptInbox: true });
+    const fromInbox = Object.values(pulled.data.tasks).find((t) => t.title === "Read the RFC");
+    expect(fromInbox?.links).toEqual(["https://example.com/rfc"]);
+    expect(pulled.data.tasks.T9?.links).toEqual(["https://example.com/a"]);
+  });
+
   it("ignores malformed files", async () => {
     await root.write("tasks/work/bad.json", "{ not json");
     await root.write("days/2026-10-21.json", JSON.stringify({ nope: true }));
