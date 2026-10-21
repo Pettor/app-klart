@@ -78,6 +78,8 @@ export function MyDayView({
       >
         <MyDayMobileBar
           context={context}
+          smartViews={smartViews}
+          sync={sync}
           onOpenNotifications={onOpenNotifications}
           onOpenSettings={onOpenSettings}
           className="lg:hidden"

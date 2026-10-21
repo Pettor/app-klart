@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, fn } from "storybook/test";
+import { expect, fn, screen } from "storybook/test";
 import type { MyDayTask } from "./MyDayTypes";
 import { MyDayView as Component } from "./MyDayView";
 import type { MyDayViewProps as Props } from "./MyDayView";
@@ -197,6 +197,21 @@ export const Empty: Story = {
 export const Phone: Story = {
   args: { ...buildArgs("personal"), suggestions: { ...buildArgs("personal").suggestions, isOpen: false } },
   globals: { viewport: { value: "iphonex" } },
+};
+
+/** The menu button opens the navigation drawer; picking a view or Settings closes it behind the action. */
+export const PhoneNavigation: Story = {
+  args: { ...buildArgs("personal"), suggestions: { ...buildArgs("personal").suggestions, isOpen: false } },
+  globals: { viewport: { value: "iphonex" } },
+  play: async ({ args, canvas, userEvent }) => {
+    await userEvent.click(canvas.getByTestId("my-day__open-nav"));
+    await userEvent.click(await screen.findByTestId("nav-drawer__view-important"));
+    await expect(args.smartViews.onSelect).toHaveBeenCalledWith("important");
+
+    await userEvent.click(canvas.getByTestId("my-day__open-nav"));
+    await userEvent.click(await screen.findByTestId("nav-drawer__settings"));
+    await expect(args.onOpenSettings).toHaveBeenCalled();
+  },
 };
 
 export const CompleteFromMyDay: Story = {

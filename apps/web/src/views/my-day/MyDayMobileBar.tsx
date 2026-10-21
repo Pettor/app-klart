@@ -1,29 +1,48 @@
-import type { ReactElement } from "react";
-import { BellIcon, Cog6ToothIcon } from "@heroicons/react/24/outline";
+import { useState, type ReactElement } from "react";
+import { Bars3Icon, BellIcon } from "@heroicons/react/24/outline";
 import { Button } from "@heroui/react";
 import clsx from "clsx";
 import { useIntl } from "react-intl";
-import type { MyDayContextProps, MyDayTagItem } from "./MyDayTypes";
+import { MyDayNavDrawer } from "./MyDayNavDrawer";
+import type { MyDayContextProps, MyDaySidebarProps, MyDayTagItem } from "./MyDayTypes";
 import { ContextSwitcher } from "~/components/actions/context-switcher/ContextSwitcher";
 
 export interface MyDayMobileBarProps {
   context: MyDayContextProps;
+  smartViews: MyDaySidebarProps["smartViews"];
+  sync: MyDaySidebarProps["sync"];
   onOpenNotifications: () => void;
   onOpenSettings: () => void;
   className?: string;
 }
 
-/** Top bar replacing the sidebar on narrow screens. */
+/** Top bar replacing the sidebar on narrow screens; its menu button opens the navigation drawer. */
 export function MyDayMobileBar({
   context,
+  smartViews,
+  sync,
   onOpenNotifications,
   onOpenSettings,
   className,
 }: MyDayMobileBarProps): ReactElement {
   const intl = useIntl();
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
   return (
     <div className={clsx("flex items-center gap-1", className)}>
+      <Button
+        isIconOnly
+        variant="ghost"
+        onPress={() => setIsDrawerOpen(true)}
+        data-testid="my-day__open-nav"
+        aria-label={intl.formatMessage({
+          description: "MyDayMobileBar - aria-label of the button opening the navigation drawer",
+          defaultMessage: "Open menu",
+          id: "FNQuIH",
+        })}
+      >
+        <Bars3Icon className="size-5" />
+      </Button>
       <ContextSwitcher
         variant="compact"
         options={context.options}
@@ -44,18 +63,13 @@ export function MyDayMobileBar({
       >
         <BellIcon className="size-5" />
       </Button>
-      <Button
-        isIconOnly
-        variant="ghost"
-        onPress={onOpenSettings}
-        aria-label={intl.formatMessage({
-          description: "MyDayMobileBar - aria-label of the settings button",
-          defaultMessage: "Settings and sync",
-          id: "ZTHg47",
-        })}
-      >
-        <Cog6ToothIcon className="size-5" />
-      </Button>
+      <MyDayNavDrawer
+        isOpen={isDrawerOpen}
+        onOpenChange={setIsDrawerOpen}
+        smartViews={smartViews}
+        sync={sync}
+        onOpenSettings={onOpenSettings}
+      />
     </div>
   );
 }
