@@ -4,13 +4,18 @@
 // The @vite-pwa/assets-generator always outputs next to the source image, so this
 // script moves the generated files to the app's public directory afterwards.
 //
-// Usage: generate-assets [public-dir]   (default: public)
+// Usage: generate-assets [public-dir] [source-dir]
+//   public-dir  defaults to public
+//   source-dir  folder holding the source SVG named in pwa-assets.config.ts,
+//               relative to the app; defaults to this package's Branding/assets
 import { execSync } from "node:child_process";
 import { renameSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const assetsDir = resolve(dirname(fileURLToPath(import.meta.url)), "../src/Branding/assets");
+const assetsDir = process.argv[3]
+  ? resolve(process.cwd(), process.argv[3])
+  : resolve(dirname(fileURLToPath(import.meta.url)), "../src/Branding/assets");
 const publicDir = resolve(process.cwd(), process.argv[2] ?? "public");
 
 execSync("pwa-assets-generator", { cwd: process.cwd(), stdio: "inherit" });

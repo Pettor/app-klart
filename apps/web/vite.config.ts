@@ -13,7 +13,13 @@ export default defineConfig(({ command }) => {
   const config = mergeConfigs([
     createBaseConfig(),
     createReactConfig({ enableReactCompiler: command === "build" }),
-    createPWAConfig(),
+    createPWAConfig({
+      manifest: {
+        description: "Plan today from what's due.",
+        themeColor: "#1b1b1d",
+        backgroundColor: "#1b1b1d",
+      },
+    }),
     {
       plugins: [tanstackRouter({ routeToken: "route" })],
     },

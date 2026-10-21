@@ -1,12 +1,11 @@
 /* Font */
-@import "@fontsource/rubik";
-@import "@fontsource/rubik/300.css";
-@import "@fontsource/rubik/400.css";
-@import "@fontsource/rubik/500.css";
-@import "@fontsource/rubik/600.css";
-@import "@fontsource/rubik/700.css";
-@import "@fontsource/rubik/800.css";
-@import "@fontsource/rubik/900.css";
+@import "@fontsource/inter/400.css";
+@import "@fontsource/inter/500.css";
+@import "@fontsource/inter/600.css";
+@import "@fontsource/inter/700.css";
+@import "@fontsource/inter/800.css";
+@import "@fontsource/jetbrains-mono/400.css";
+@import "@fontsource/jetbrains-mono/500.css";
 
 /* Tailwind configuration */
 @import "../node_modules/@config/tailwind/tailwind.css";
@@ -15,3 +14,35 @@
 @source "./**/**.{js,ts,jsx,tsx}";
 @source "../node_modules/@package/ui";
 @source "../node_modules/@package/storybook";
+
+/* Fonts */
+@theme {
+  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+}
+
+/*
+ * Context colors. A `.ctx-<color>` class sets `--ctx` (the accent) and
+ * `--ctx-backdrop` (the tinted My Day background) for everything inside it.
+ */
+.ctx-all { --ctx: #6b7078; --ctx-backdrop: #eef0f3; }
+.ctx-blue { --ctx: #2f74d9; --ctx-backdrop: #e8f0fb; }
+.ctx-orange { --ctx: #b8600f; --ctx-backdrop: #fbf0e2; }
+.ctx-green { --ctx: #2b8a4b; --ctx-backdrop: #e7f4ec; }
+.ctx-teal { --ctx: #0b7285; --ctx-backdrop: #e3f4f2; }
+.ctx-violet { --ctx: #6741d9; --ctx-backdrop: #efeafc; }
+.ctx-pink { --ctx: #c2255c; --ctx-backdrop: #fbe9f0; }
+.ctx-red { --ctx: #c92a2a; --ctx-backdrop: #fbeaea; }
+
+.dark .ctx-all, .dark.ctx-all { --ctx: #b8bcc4; --ctx-backdrop: #24262b; }
+.dark .ctx-blue, .dark.ctx-blue { --ctx: #5ea2ff; --ctx-backdrop: #1d2a3b; }
+.dark .ctx-orange, .dark.ctx-orange { --ctx: #f0a347; --ctx-backdrop: #2e261d; }
+.dark .ctx-green, .dark.ctx-green { --ctx: #7fd19b; --ctx-backdrop: #1d2b24; }
+.dark .ctx-teal, .dark.ctx-teal { --ctx: #63d2c6; --ctx-backdrop: #1b2a2a; }
+.dark .ctx-violet, .dark.ctx-violet { --ctx: #b39dfa; --ctx-backdrop: #251f35; }
+.dark .ctx-pink, .dark.ctx-pink { --ctx: #f783ac; --ctx-backdrop: #33202a; }
+.dark .ctx-red, .dark.ctx-red { --ctx: #ff8a80; --ctx-backdrop: #352020; }
+
+/* Tag and due-date text colors from the design */
+:root { --tag: #1f5fbf; --due-today: #1f5fbf; --star: #d98c0a; }
+.dark { --tag: #9cc4ff; --due-today: #9cc4ff; --star: #f6c58a; }

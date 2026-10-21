@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root/route'
 import { Route as IndexRouteRouteImport } from './routes/index/route'
 import { Route as SplatRouteRouteImport } from './routes/$/route'
+import { Route as SettingsRouteRouteImport } from './routes/settings/route'
 
 const IndexRouteRoute = IndexRouteRouteImport.update({
   id: '/',
@@ -22,31 +23,40 @@ const SplatRouteRoute = SplatRouteRouteImport.update({
   path: '/$',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SettingsRouteRoute = SettingsRouteRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRouteRoute
   '/$': typeof SplatRouteRoute
+  '/settings': typeof SettingsRouteRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRouteRoute
   '/$': typeof SplatRouteRoute
+  '/settings': typeof SettingsRouteRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRouteRoute
   '/$': typeof SplatRouteRoute
+  '/settings': typeof SettingsRouteRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/$'
+  fullPaths: '/' | '/$' | '/settings'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/$'
-  id: '__root__' | '/' | '/$'
+  to: '/' | '/$' | '/settings'
+  id: '__root__' | '/' | '/$' | '/settings'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRouteRoute: typeof IndexRouteRoute
   SplatRouteRoute: typeof SplatRouteRoute
+  SettingsRouteRoute: typeof SettingsRouteRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -65,12 +75,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SplatRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRouteRoute: IndexRouteRoute,
   SplatRouteRoute: SplatRouteRoute,
+  SettingsRouteRoute: SettingsRouteRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

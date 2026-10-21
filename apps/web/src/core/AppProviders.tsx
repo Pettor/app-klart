@@ -2,7 +2,9 @@ import type { ReactElement, ReactNode } from "react";
 import { ToastProvider } from "@heroui/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AppLocales } from "./AppLocales";
+import { NotificationLifecycle } from "./notifications/NotificationLifecycle";
 import { PwaLifecycle } from "./pwa/PwaLifecycle";
+import { FolderSyncLifecycle } from "./sync/FolderSyncLifecycle";
 
 const queryClient = new QueryClient();
 
@@ -16,7 +18,13 @@ export function AppProviders({ children }: AppProvidersProps): ReactElement {
       <ToastProvider />
       <AppLocales>
         <PwaLifecycle>
-          <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+          <QueryClientProvider client={queryClient}>
+            <FolderSyncLifecycle>
+              <NotificationLifecycle>
+                <>{children}</>
+              </NotificationLifecycle>
+            </FolderSyncLifecycle>
+          </QueryClientProvider>
         </PwaLifecycle>
       </AppLocales>
     </>

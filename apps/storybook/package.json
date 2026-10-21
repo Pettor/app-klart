@@ -27,7 +27,8 @@
   "dependencies": {
     "@app/web": "workspace:*",
     "@config/tailwind": "workspace:*",
-    "@fontsource/rubik": "catalog:ui",
+    "@fontsource/inter": "catalog:ui",
+    "@fontsource/jetbrains-mono": "catalog:ui",
     "@package/ui": "workspace:*",
     "react": "catalog:react",
     "react-dom": "catalog:react",

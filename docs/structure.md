@@ -34,6 +34,41 @@ core/
 │   ├── AuthStatus.ts          # Domain type: status enum
 │   └── UseAuth.ts             # Hook exposing { login, logout, ... }
 │
+├── contexts/             # Klart contexts (Personal, Work, …): type, defaults, id/tag helpers
+│   └── KlartContext.ts
+│
+├── notifications/        # Reminders and daily summaries
+│   ├── NotificationPlanner.ts # Pure: which notifications are due now
+│   ├── NotificationSettings.ts
+│   ├── NotificationAtoms.ts
+│   ├── NotificationLifecycle.tsx  # Mounts the scheduler
+│   ├── ShowNotification.ts
+│   ├── UseNotificationScheduler.ts
+│   └── UseNotifications.ts    # Settings, permission, test notification
+│
+├── sync/                 # Data folder sync (File System Access API)
+│   ├── FolderSync.ts          # Pull/push engine; one JSON file per task
+│   ├── FolderFs.ts            # Path helpers on a directory handle
+│   ├── FolderHandleStore.ts   # Persists the folder handle in IndexedDB
+│   ├── FileSystemAccess.ts    # Picker + permission typings
+│   ├── LlmsTxt.ts             # LLMS.txt written for agents
+│   ├── SyncAtoms.ts
+│   ├── FolderSyncLifecycle.tsx    # Mounts today ticker + sync loop
+│   ├── UseFolderSyncLifecycle.ts
+│   └── UseFolderSync.ts       # connect / reconnect / disconnect / sync now
+│
+├── tasks/                # Tasks, My Day and suggestions
+│   ├── Task.ts / Day.ts       # Domain types + Zod file schemas
+│   ├── KlartData.ts           # Pure state transitions (create, done, add to day, …)
+│   ├── KlartAtoms.ts          # Persisted data + UI selection atoms
+│   ├── QuickAdd.ts            # Quick-add syntax parser
+│   ├── Suggestions.ts         # My Day suggestion ranking
+│   ├── AgentViews.ts          # views/today.json + views/suggestions.json
+│   ├── LocalDate.ts / TaskId.ts
+│   ├── UseKlartActions.ts     # All mutations
+│   ├── UseMyDay.ts            # Derived lists, counts, tags, suggestions
+│   └── UseToday.ts            # Keeps today's date current
+│
 ├── config/               # App-level config constants / lookups
 │   └── UseAppInfo.ts          # App name, version, build info
 │
@@ -83,8 +118,13 @@ components/
 │   ├── quick-menu/             # Dropdown of session/appearance actions
 │   └── theme-selector/         # Radio-style theme switcher
 │
+├── actions/context-switcher/   # Context dropdown (sidebar + compact)
 ├── display/
-│   └── grid-item/              # Small card for list/grid contexts
+│   ├── grid-item/              # Small card for list/grid contexts
+│   ├── klart-mark/             # The Klart dial logo
+│   ├── suggestion-list/        # Ranked suggestions with add buttons
+│   ├── sync-status/            # Sidebar sync status card
+│   └── task-row/               # One task: check, meta, star, actions (+ TaskDateFormat)
 │
 ├── feedback/
 │   ├── about-details/          # About modal content
@@ -99,7 +139,8 @@ components/
 │   └── sign-up/
 │
 ├── input/
-│   └── input-field/            # Tanstack-Form-integrated text field
+│   ├── input-field/            # Tanstack-Form-integrated text field
+│   └── quick-add/              # Quick-add field with live parsed preview
 │
 └── navigation/
     └── navbar-content/         # User menu + search used inside NavbarLayout
@@ -117,16 +158,15 @@ components/
 
 ```
 views/
-├── dashboard/
-│   └── DashboardView.tsx
-├── forgot-password/
-│   └── ForgotPasswordView.tsx
-├── home/
-│   └── HomeView.tsx
-├── login/
-│   └── LoginView.tsx
-└── sign-up/
-    └── SignUpView.tsx
+├── my-day/
+│   ├── MyDayView.tsx            # Sidebar + list + quick add + suggestions
+│   ├── MyDaySidebar.tsx / MyDayHeader.tsx / MyDayTaskList.tsx
+│   ├── MyDaySuggestionsPanel.tsx  # Side panel (xl) or bottom sheet
+│   ├── MyDayMobileBar.tsx / MyDayAgentJson.tsx
+│   └── MyDayTypes.ts
+└── settings/
+    ├── SettingsView.tsx
+    └── Settings*Section.tsx     # Contexts, Sync, Agents & files, Notifications
 ```
 
 Each view is a **pure presentational component** that receives every value it needs via props. Views never call hooks from `core/` or `@package/api` directly — that is the route hook's job.
@@ -138,6 +178,8 @@ A view folder contains:
 - Private sub-components used only by this view.
 
 ## `routes/` — TanStack file-based routing
+
+Klart's routes are `index/` (My Day, `-UseMyDayRoute.ts`) and `settings/` (`-UseSettingsRoute.ts`, `?section=` search param). The tree below shows the template's full pattern, including auth layouts.
 
 ```
 routes/
