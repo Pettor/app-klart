@@ -59,14 +59,14 @@ describe("parseRemindToken", () => {
 
 describe("parseQuickAdd", () => {
   it("parses the example from LLMS.txt", () => {
-    expect(parse("#work #appgate @2026-07-08 #team find more tasks to create")).toEqual({
+    expect(parse("#work #acme @2026-07-08 #team find more tasks to create")).toEqual({
       title: "Find more tasks to create",
       context: "work",
-      tags: ["work", "appgate", "team"],
+      tags: ["work", "acme", "team"],
       due: "2026-07-08",
       remindAt: null,
       important: false,
-      raw: "#work #appgate @2026-07-08 #team find more tasks to create",
+      raw: "#work #acme @2026-07-08 #team find more tasks to create",
     });
   });
 

@@ -18,7 +18,7 @@ export const LLMS_TXT = `# Klart
 - Plan today: read views/suggestions.json, pick items, append
   { "taskId", "addedAt", "addedBy": "agent", "reason" } to days/<today>.json.
 - Add a task: write inbox/<anything>.txt with a quick-add line, e.g.
-  "#work #appgate @2026-07-08 #team find more tasks to create".
+  "#work #acme @2026-07-08 #team find more tasks to create".
 - Complete a task: set "status": "done" and "completedAt" in its file.
 - Remind the user: set "remindAt" (local "YYYY-MM-DDTHH:MM") on the task.
   The app sends a notification then. Clear it with null.

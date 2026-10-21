@@ -99,6 +99,8 @@ catalogs:
     framer-motion: 14.1.0
     clsx: 2.1.1
     react-intl: 12.1.4
+  desktop:
+    '@tauri-apps/api': 2.12.4
   state:
     jotai: 3.0.1
     jotai-effect: 2.4.2

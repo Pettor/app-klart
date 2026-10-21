@@ -12,7 +12,7 @@ export interface SettingsAgentsSectionProps {
 }
 
 const SYNTAX: { token: string; id: string }[] = [
-  { token: "#appgate", id: "tag" },
+  { token: "#acme", id: "tag" },
   { token: "#work #brf", id: "context" },
   { token: "@2026-07-08", id: "due" },
   { token: "^09:00", id: "remind" },

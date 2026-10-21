@@ -54,7 +54,7 @@ const DEMO_TASKS: DemoTask[] = [
     id: "w1",
     title: "Review sync PR for gateway client",
     context: "work",
-    tags: ["appgate", "review"],
+    tags: ["acme", "review"],
     due: "2026-10-21",
     remindAt: "2026-10-21T14:00",
     inToday: true,
@@ -63,13 +63,13 @@ const DEMO_TASKS: DemoTask[] = [
     id: "w2",
     title: "Prepare sprint planning",
     context: "work",
-    tags: ["team", "appgate"],
+    tags: ["team", "acme"],
     due: "2026-10-22",
     remindAt: "2026-10-22T09:00",
   },
   { id: "w3", title: "1:1 prep", context: "work", tags: ["team"], inYesterday: true },
-  { id: "w4", title: "Find more tasks to create", context: "work", tags: ["appgate", "team"], due: "2026-07-08" },
-  { id: "w5", title: "Update onboarding docs", context: "work", tags: ["appgate", "docs"], inToday: true, done: true },
+  { id: "w4", title: "Find more tasks to create", context: "work", tags: ["acme", "team"], due: "2026-07-08" },
+  { id: "w5", title: "Update onboarding docs", context: "work", tags: ["acme", "docs"], inToday: true, done: true },
 ];
 
 function toTask(demo: DemoTask, index: number): Task {

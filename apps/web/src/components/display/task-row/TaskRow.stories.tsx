@@ -24,7 +24,7 @@ const defaultArgs = {
     important: false,
     due: "2026-10-21",
     remindAt: "2026-10-21T14:00",
-    tags: ["appgate", "review"],
+    tags: ["acme", "review"],
     contextName: "Work",
     contextColor: "orange",
   },

@@ -33,6 +33,7 @@
     "@tanstack/react-form": "catalog:tanstack",
     "@tanstack/react-query": "catalog:tanstack",
     "@tanstack/react-router": "catalog:tanstack",
+    "@tauri-apps/api": "catalog:desktop",
     "clsx": "catalog:ui",
     "immer": "catalog:state",
     "jotai": "catalog:state",

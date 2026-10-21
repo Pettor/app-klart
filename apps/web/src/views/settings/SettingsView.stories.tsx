@@ -22,8 +22,10 @@ const defaultArgs = {
   },
   sync: {
     now: NOW,
-    status: { state: "synced", folderName: "Klart", lastSyncedAt: "2026-10-21T09:59:00Z" },
+    status: { state: "synced", method: "folder", folderName: "Klart", lastSyncedAt: "2026-10-21T09:59:00Z" },
     isSupported: true,
+    isDesktop: false,
+    isGitSupported: false,
     deviceName: "MacBook Air",
     thisDeviceId: "macbook-air",
     devices: [
@@ -31,6 +33,8 @@ const defaultArgs = {
       { id: "work-pc", name: "Work PC", lastActiveAt: "2026-10-21T07:00:00Z" },
     ],
     onConnect: fn(),
+    onConnectGit: fn(),
+    onCloneGit: fn(),
     onReconnect: fn(),
     onDisconnect: fn(),
     onSyncNow: fn(),
@@ -80,13 +84,16 @@ export const Default: Story = {
 export const LocalOnly: Story = {
   args: {
     ...defaultArgs,
-    sync: { ...defaultArgs.sync, status: { state: "local" }, devices: [] },
+    sync: { ...defaultArgs.sync, status: { state: "local", method: "local" }, devices: [] },
     notifications: { ...defaultArgs.notifications, permission: "default" },
   },
 };
 
 export const NeedsPermission: Story = {
-  args: { ...defaultArgs, sync: { ...defaultArgs.sync, status: { state: "needs-permission", folderName: "Klart" } } },
+  args: {
+    ...defaultArgs,
+    sync: { ...defaultArgs.sync, status: { state: "needs-permission", method: "folder", folderName: "Klart" } },
+  },
   play: async ({ args, canvas, userEvent }) => {
     await userEvent.click(canvas.getByTestId("settings__sync-reconnect"));
     await expect(args.sync.onReconnect).toHaveBeenCalled();
@@ -94,7 +101,77 @@ export const NeedsPermission: Story = {
 };
 
 export const UnsupportedBrowser: Story = {
-  args: { ...defaultArgs, sync: { ...defaultArgs.sync, status: { state: "local" }, isSupported: false, devices: [] } },
+  args: {
+    ...defaultArgs,
+    sync: { ...defaultArgs.sync, status: { state: "local", method: "local" }, isSupported: false, devices: [] },
+  },
+};
+
+export const DesktopGitConnected: Story = {
+  args: {
+    ...defaultArgs,
+    sync: {
+      ...defaultArgs.sync,
+      isDesktop: true,
+      isGitSupported: true,
+      status: {
+        state: "synced",
+        method: "git",
+        folderName: "klart-data",
+        location: "/Users/petter/Developer/klart-data",
+        lastSyncedAt: "2026-10-21T09:59:00Z",
+        git: {
+          remoteUrl: "git@github.com:pettor/klart-data.git",
+          branch: "main",
+          lastSyncedAt: "2026-10-21T09:57:00Z",
+          conflicts: 1,
+        },
+      },
+    },
+  },
+};
+
+export const DesktopGitError: Story = {
+  args: {
+    ...defaultArgs,
+    sync: {
+      ...defaultArgs.sync,
+      isDesktop: true,
+      isGitSupported: true,
+      status: {
+        state: "synced",
+        method: "git",
+        folderName: "klart-data",
+        location: "/Users/petter/Developer/klart-data",
+        git: {
+          remoteUrl: "git@github.com:pettor/klart-data.git",
+          branch: "main",
+          error: "git@github.com: Permission denied (publickey).",
+        },
+      },
+    },
+  },
+};
+
+export const DesktopGitClone: Story = {
+  args: {
+    ...defaultArgs,
+    sync: { ...defaultArgs.sync, isDesktop: true, isGitSupported: true, status: { state: "local", method: "local" } },
+  },
+  play: async ({ args, canvas, userEvent }) => {
+    await userEvent.click(canvas.getByRole("radio", { name: /Git repository/ }));
+    await userEvent.type(canvas.getByTestId("settings__git-url"), "git@github.com:you/klart-data.git");
+    await userEvent.click(canvas.getByTestId("settings__git-clone"));
+    await expect(args.sync.onCloneGit).toHaveBeenCalledWith("git@github.com:you/klart-data.git");
+    await expect(args.sync.onConnect).not.toHaveBeenCalled();
+  },
+};
+
+export const DesktopWithoutGit: Story = {
+  args: {
+    ...defaultArgs,
+    sync: { ...defaultArgs.sync, isDesktop: true, isGitSupported: false, status: { state: "local", method: "local" } },
+  },
 };
 
 export const Phone: Story = {

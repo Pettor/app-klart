@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it } from "vitest";
+import { BrowserFolderBackend } from "./BrowserFolderBackend";
 import { FolderSync, serialize } from "./FolderSync";
 import { LLMS_TXT } from "./LlmsTxt";
 import type { KlartData } from "~/core/tasks/KlartData";
@@ -124,7 +125,7 @@ describe("FolderSync", () => {
 
   beforeEach(() => {
     root = new FakeDir("Klart");
-    sync = new FolderSync(root as unknown as FileSystemDirectoryHandle, "MacBook Air");
+    sync = new FolderSync(new BrowserFolderBackend(root as unknown as FileSystemDirectoryHandle), "MacBook Air");
   });
 
   it("writes the documented folder layout", async () => {
@@ -180,7 +181,7 @@ describe("FolderSync", () => {
   });
 
   it("merges an existing folder with local data on first connect", async () => {
-    const other = new FolderSync(root as unknown as FileSystemDirectoryHandle, "Work PC");
+    const other = new FolderSync(new BrowserFolderBackend(root as unknown as FileSystemDirectoryHandle), "Work PC");
     const remoteData = createEmptyData();
     const remoteTask = createTask(
       parseQuickAdd("from the other computer", {
@@ -207,7 +208,7 @@ describe("FolderSync", () => {
   });
 
   it("turns inbox files into tasks and removes them", async () => {
-    await root.write("inbox/plan.txt", "#work #appgate @2026-07-08 find more tasks\n\nbuy milk #köp\n");
+    await root.write("inbox/plan.txt", "#work #acme @2026-07-08 find more tasks\n\nbuy milk #köp\n");
     await root.write("inbox/agent.json", JSON.stringify({ title: "From an agent", tags: ["brf"], due: "2026-10-23" }));
     await root.write("inbox/notes.pdf", "binary");
 
@@ -235,7 +236,9 @@ describe("FolderSync", () => {
 
   it("records devices", async () => {
     await sync.touchDevice("2026-10-21T08:00:00Z");
-    await new FolderSync(root as unknown as FileSystemDirectoryHandle, "Work PC").touchDevice("2026-10-21T09:00:00Z");
+    await new FolderSync(new BrowserFolderBackend(root as unknown as FileSystemDirectoryHandle), "Work PC").touchDevice(
+      "2026-10-21T09:00:00Z"
+    );
     expect((await sync.listDevices()).map((device) => device.id)).toEqual(["work-pc", "macbook-air"]);
   });
 });
