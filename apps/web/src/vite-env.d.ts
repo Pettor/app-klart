@@ -7,4 +7,6 @@ interface ImportMetaEnv {
   readonly VITE_APP_BUILD: string;
   /** Short commit hash the build was made from; empty when Git isn't available. */
   readonly VITE_APP_COMMIT: string;
+  /** `"true"` seeds sample data on first start (dev server only; see `.env.development`). */
+  readonly VITE_SAMPLE_DATA?: string;
 }
