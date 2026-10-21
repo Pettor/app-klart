@@ -76,6 +76,6 @@ For phones and browsers without folder access. The user enters a GitHub username
 - Writes and removals are staged in memory. `commit()` pushes them as one commit through the Git Data API (tree → commit → fast-forward the branch). An empty repository gets its first file through the contents API.
 - When another device pushed first, the branch update is rejected: the sync refreshes, drops staged files that changed remotely, pulls (merging by `updatedAt`, losers to `.conflicts/`), pushes and commits again, up to 3 times.
 
-It syncs when the app opens, every minute while visible, 5 seconds after the last change, when the app is hidden with unpushed changes, and on "Sync now". Device check-ins (`devices/*/device.json`) happen every 30 minutes instead of every minute, to keep commits down. A GitHub-synced device and a desktop Git clone can share the same repository.
+It syncs when the app opens, every minute while visible, 5 seconds after the last change, when the app is hidden with unpushed changes, and on "Sync now". With a Git or GitHub remote, device check-ins (`devices/*/device.json`) are only written alongside real changes, so they never make a commit of their own. A GitHub-synced device and a desktop Git clone can share the same repository.
 
 Not yet built: the online OneDrive API (for computers without the OneDrive app), "Sign in with GitHub" (GitHub's OAuth endpoints don't allow browser calls, so it needs a small server), and the design's desktop-only items (menu-bar mode, open at login, notification actions).

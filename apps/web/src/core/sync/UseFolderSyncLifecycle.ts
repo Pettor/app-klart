@@ -34,8 +34,8 @@ const GIT_COMMIT_DELAY_MS = 30_000;
 /**
  * GitHub: check for new commits this often while the app is visible (an
  * unchanged branch costs one request that doesn't count against the rate
- * limit), and push this long after the last change. Device check-ins are
- * rarer so they don't add a commit every minute.
+ * limit), and push this long after the last change. The device list is
+ * re-read less often.
  */
 const GITHUB_PULL_INTERVAL_MS = 60_000;
 const GITHUB_COMMIT_DELAY_MS = 5_000;
@@ -203,7 +203,10 @@ export function useFolderSyncLifecycle(): void {
       remoteRef.current?.kind === "github" ? GITHUB_DEVICE_TOUCH_INTERVAL_MS : DEVICE_TOUCH_INTERVAL_MS;
     if (Date.now() - lastTouchRef.current > touchInterval && document.hasFocus()) {
       lastTouchRef.current = Date.now();
-      await engine.touchDevice(toUtcTimestamp(new Date()));
+      // With a Git remote a check-in alone would be a commit; it rides along with the next real change instead (see push).
+      if (!remoteRef.current) {
+        await engine.touchDevice(toUtcTimestamp(new Date()));
+      }
       setDevices(await engine.listDevices());
     }
     updateStatus(() => ({ state: "synced", error: undefined, lastSyncedAt: toUtcTimestamp(new Date()) }));
@@ -287,6 +290,7 @@ export function useFolderSyncLifecycle(): void {
       const written = await pushNow(engine);
       const remote = remoteRef.current;
       if (written > 0 && remote) {
+        await engine.touchDevice(toUtcTimestamp(new Date()));
         window.clearTimeout(gitTimerRef.current);
         const delay = remote.kind === "github" ? GITHUB_COMMIT_DELAY_MS : GIT_COMMIT_DELAY_MS;
         gitTimerRef.current = window.setTimeout(gitSync, delay);
