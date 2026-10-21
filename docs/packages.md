@@ -204,9 +204,9 @@ Each `configs/*` package is a small shared config used by apps and other package
 
 | App | Stack | Entry | Port |
 | --- | --- | --- | --- |
-| `apps/web` | React 19, Vite 8, Tailwind 4, HeroUI v3, TanStack Router | `src/main.tsx` | 5173 (HTTPS) |
-| `apps/storybook` | Storybook 10 + Vite builder | `main.ts` | 9050 |
-| `apps/e2e` | Playwright 1.58, Chromium | `src/specs/*.spec.ts` | — (runs against 5173) |
+| `apps/web` | React 19, Vite 8, Tailwind 4, HeroUI v3, TanStack Router | `src/main.tsx` | 5167 (HTTPS) |
+| `apps/storybook` | Storybook 10 + Vite builder | `main.ts` | 9089 |
+| `apps/e2e` | Playwright 1.58, Chromium | `src/specs/*.spec.ts` | — (runs against 4167) |
 | `apps/mock` | Mocks Server 4.1 | `mocks.config.js` | 3100 |
 
 For app-specific architecture, see [architecture.md](./architecture.md).

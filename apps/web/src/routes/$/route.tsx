@@ -12,7 +12,7 @@ function NotFoundPageRoute(): ReactElement {
   const navigate = useNavigate();
 
   function handleClick(): void {
-    navigate({ to: "/login" });
+    navigate({ to: "/" });
   }
 
   return (
@@ -34,9 +34,9 @@ function NotFoundPageRoute(): ReactElement {
       </p>
       <Button variant="primary" onPress={handleClick}>
         {intl.formatMessage({
-          description: "NotFoundRoute: button - go to login",
-          defaultMessage: "Go to login",
-          id: "GkSHmr",
+          description: "NotFoundRoute: button - go home",
+          defaultMessage: "Go home",
+          id: "Q5rsRu",
         })}
       </Button>
     </div>

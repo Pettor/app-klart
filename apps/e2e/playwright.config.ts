@@ -10,20 +10,17 @@ export default defineConfig({
     },
   ],
   reporter: [["list"], ["json", { outputFile: "./test-results/test-results.json" }]],
-  // The mock server is shared state — run tests serially to prevent
-  // concurrent Tokens_Refresh variant mutations causing flaky failures.
-  workers: 1,
   retries: 1,
   testDir: "src",
   use: {
-    baseURL: "https://localhost:4173",
+    baseURL: "https://localhost:4167",
     screenshot: "only-on-failure",
     video: "retain-on-failure",
     trace: "retain-on-failure",
   },
   webServer: {
     command: "pnpm -w run test:e2e:env",
-    url: "https://localhost:4173",
+    url: "https://localhost:4167",
     reuseExistingServer: true,
     ignoreHTTPSErrors: true,
     timeout: 30000,

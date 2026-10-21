@@ -18,10 +18,8 @@ This file is the **rules** layer (what you must do); `docs/` is the **reference*
 
 ### Development
 
-- `pnpm dev` - Start development server (main app at https://localhost:5173)
-- `pnpm dev:mocks` - Start development with mock server enabled (API on port 3100)
-- `pnpm dev:mocks:cli` - Start standalone mock server only
-- `pnpm storybook` - Start Storybook development server (localhost:9050)
+- `pnpm dev` - Start development server (main app at https://localhost:5167)
+- `pnpm storybook` - Start Storybook development server (localhost:9089)
 
 ### Build & Deploy
 
@@ -33,7 +31,7 @@ This file is the **rules** layer (what you must do); `docs/` is the **reference*
 
 - `pnpm test` - Run all unit/component tests with Vitest (browser-based via Playwright)
 - `pnpm test:coverage` - Run tests with Cobertura coverage report
-- `pnpm test:e2e` - Run E2E tests with Playwright UI (starts dev server + mocks automatically)
+- `pnpm test:e2e` - Run E2E tests with Playwright UI (starts dev server automatically)
 - `pnpm test:e2e:ci` - Run E2E tests headless in the terminal (used by CI)
 
 ### Code Quality
@@ -60,13 +58,10 @@ root/
 ├── apps/
 │   ├── web/          # Main React application (Vite + React 19)
 │   ├── storybook/    # Storybook configuration and stories
-│   ├── e2e/          # Playwright end-to-end tests
-│   └── mock/         # Mocks Server for API mocking
+│   └── e2e/          # Playwright end-to-end tests
 ├── packages/
 │   ├── ui/           # (@package/ui) Shared UI components
-│   ├── api/          # (@package/api) API client, auth, data fetching
 │   ├── react/        # (@package/react) Reusable React 19 hooks
-│   ├── mocks/        # (@package/mocks) Mock data and test utilities
 │   └── storybook/    # (@package/storybook) Storybook decorators
 ├── configs/
 │   ├── eslint/       # (@config/eslint) Shared ESLint configs
@@ -83,41 +78,23 @@ root/
 
 ### `apps/web` — Main React Application
 
-- **URL**: https://localhost:5173 (HTTPS enabled via `vite-plugin-basic-ssl`)
+- **URL**: https://localhost:5167 (HTTPS enabled via `vite-plugin-basic-ssl`)
 - **Stack**: React 19, React Router v6, Vite 8, Tailwind CSS 4, HeroUI, React Query 5, Jotai 2, React Intl 10, Zod 4, TanStack Form
 - **Features**: PWA (workbox), offline support, dark/light theme, i18n, hash-based routing, lazy-loaded routes
 
 ### `apps/storybook` — Component Documentation
 
-- **URL**: localhost:9050
+- **URL**: localhost:9089
 - **Stack**: Storybook 10 with React/Vite builder, addon-vitest (Playwright/Chromium), addon-a11y, addon-docs, addon-mcp
-- **MCP Server**: Available at `http://localhost:9050/mcp` when Storybook dev server is running (enables AI agents to query component docs and run story tests)
+- **MCP Server**: Available at `http://localhost:9089/mcp` when Storybook dev server is running (enables AI agents to query component docs and run story tests)
 - **Stories**: Pulls from `@app/web` and `@package/ui` node_modules
 
 ### `apps/e2e` — End-to-End Tests
 
 - **Stack**: Playwright 1.58, Chromium, JUnit XML reporter
-- **Config**: `apps/e2e/playwright.config.ts`, base URL https://localhost:5173, 1 retry, screenshots/traces on failure
-
-### `apps/mock` — API Mock Server
-
-- **Stack**: Mocks Server 4.1, runs on port 3100
-- **Activation**: `pnpm dev:mocks` sets `--mode mocks` which switches `VITE_CONNECT_PORT` to 3100
+- **Config**: `apps/e2e/playwright.config.ts`, base URL https://localhost:4167, 1 retry, screenshots/traces on failure
 
 ## Packages
-
-### `@package/api` — API Client & Authentication
-
-Key exports:
-
-- `ApiClient` — Main HTTP client that offloads requests to a **Web Worker** for non-blocking execution
-- `FetchClient` — Low-level fetch wrapper
-- `JwtToken` — JWT token type
-- `ServiceError`, `createServiceError` — Typed error handling
-
-> **Security note**: `TokenStorage` is intentionally NOT exported. The access token lives only in worker memory — `TokenStorage.ts` is excluded from the public barrel and must only be imported from worker-scope modules.
-- API endpoint services: `Login`, `Logout`, `RefreshToken`, `ForgotPassword`, `SelfRegister`, `ApplicationInfo`, `PersonalProfile`
-- Types (Zod schemas + inferred DTOs + domain types co-located in `Types.ts`), Converters, Fetch utilities
 
 ### `@package/react` — Reusable React 19 Hooks
 
@@ -128,10 +105,6 @@ Key exports: `useDocumentTitle`, `useLocalStorage`, `useMediaQuery`, `useBreakpo
 ### `@package/ui` — Shared UI Components
 
 Key exports: `Logo`, `LogoFull`, `GithubIcon`, `LinkedInIcon`, `BasicLayout`, `NavbarLayout`, `BlueFadeBackground`, `GridBackground`, `Navbar`
-
-### `@package/mocks` — Mock Data & Test Utilities
-
-Key exports: `AdminApiClient`, helpers for mock server integration (used in `apps/mock`)
 
 ### `@design/tokens` — Design System Tokens
 
@@ -177,8 +150,6 @@ ToastProvider (@heroui/react)
                           └── AppRoutes (RouterProvider from @tanstack/react-router)
 ```
 
-Auth state uses **Jotai atoms** (`core/auth/AuthAtoms.ts`) — not a React Context provider.
-
 ## Key Architectural Patterns
 
 ### Controller Pattern
@@ -203,12 +174,6 @@ Every route that has any logic splits into two files:
 
 Files prefixed with `-` are ignored by TanStack Router. Detail: [`docs/patterns.md#route-hook-pattern`](./docs/patterns.md#route-hook-pattern).
 
-### Authentication Flow
-
-- JWT-based with refresh token mechanism stored in **Web Worker memory** via `TokenStorage` (deliberately not exported from the barrel).
-- Auth state lives in Jotai atoms (`core/auth/AuthAtoms.ts`); `AuthInitializer` hydrates on mount.
-- Route guards are applied by **layout segments**: `_authenticated/route.tsx` redirects unauthenticated users, `_public/route.tsx` redirects authenticated users away from login.
-
 ### Routing Strategy
 
 - **TanStack Router** with file-based routing under `apps/web/src/routes/`.
@@ -227,12 +192,6 @@ Files prefixed with `-` are ignored by TanStack Router. Detail: [`docs/patterns.
 | Component-local state | `useState`, `useReducer` | inline |
 
 **Atoms co-locate with their consumer.** There is no central `src/atoms/` folder. See [`docs/patterns.md#atoms-co-location`](./docs/patterns.md#atoms-co-location).
-
-### API Client Pattern
-
-- API calls are delegated to a **Web Worker** (`ApiWorker`) to avoid blocking the main thread.
-- Each endpoint is a folder under `packages/api/src/Api/<EndpointName>/` with `Classes.ts`, `Schema.ts` (Zod), `Convert.ts` (DTO → domain), and `Get.ts` / `Post.ts` (service + React Query hook).
-- Errors are normalized through `ServiceErrorFactory.create()`.
 
 ### Styling Conventions
 
@@ -288,7 +247,7 @@ Files prefixed with `-` are ignored by TanStack Router. Detail: [`docs/patterns.
 
 - Located in `apps/e2e/src/**/*.spec.ts`
 - Dev server auto-starts on test run
-- Uses `https://localhost:5173` with HTTPS certificate bypass
+- Uses `https://localhost:4167` with HTTPS certificate bypass
 - Screenshots, videos, and traces captured on failure
 - Run: `pnpm test:e2e` (Playwright UI) or `pnpm test:e2e:ci` (headless, for CI)
 
@@ -314,8 +273,6 @@ Turborepo caches outputs; use `--force` to bypass cache when debugging build iss
 | Variable            | Default            | Mocks              |
 | ------------------- | ------------------ | ------------------ |
 | `VITE_APP_VERSION`  | `0.6.0`            | `0.6.0`            |
-| `VITE_CONNECT_HOST` | `http://localhost` | `http://127.0.0.1` |
-| `VITE_CONNECT_PORT` | `5000`             | `3100`             |
 
 - `.env` — development defaults
 - `.env.mocks` — overrides for mock server mode
@@ -476,9 +433,8 @@ Use these skills to follow established patterns when adding to the project:
 | Skill | Purpose |
 |---|---|
 | `/add-component` | Add a new UI component with HeroUI v3, Tailwind, React, and Storybook story |
-| `/add-e2e-test` | Add Playwright E2E tests, with optional new API services and mock definitions |
+| `/add-e2e-test` | Add Playwright E2E tests |
 | `/add-component-test` | Add component tests using Storybook play functions |
-| `/add-api-test` | Add unit tests for API schemas, converters, and utilities in `packages/api/` |
 
 ## Important Notes
 

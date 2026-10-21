@@ -19,19 +19,16 @@ export default defineConfig({
   ],
   reporter: [["list"], ["json", { outputFile: "./test-results/test-results.json" }]],
   retries: 1,
-  // The mock server is shared state — run tests serially to prevent
-  // concurrent variant mutations causing flaky failures (same as playwright.config.ts).
-  workers: 1,
   testDir: "src",
   use: {
-    baseURL: "https://localhost:4173",
+    baseURL: "https://localhost:4167",
     screenshot: "only-on-failure",
     video: "retain-on-failure",
     trace: "retain-on-failure",
   },
   webServer: {
     command: "pnpm -w run test:e2e:env:coverage",
-    url: "https://localhost:4173",
+    url: "https://localhost:4167",
     reuseExistingServer: true,
     ignoreHTTPSErrors: true,
     timeout: 30000,

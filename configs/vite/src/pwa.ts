@@ -39,8 +39,8 @@ export function createPWAConfig(options: PWAViteConfigOptions = {}): UserConfig 
     manifest: {
       background_color: manifest.backgroundColor || "#ffffff",
       display: "standalone",
-      description: manifest.description || "React Enterprise Template using Turborepo, TailwindCSS, HeroUI and Vite.",
-      name: manifest.name || "ReactEnterpriseTemplate",
+      description: manifest.description || "Klart",
+      name: manifest.name || "Klart",
       icons: [
         {
           src: "pwa-192x192.png",
@@ -59,17 +59,17 @@ export function createPWAConfig(options: PWAViteConfigOptions = {}): UserConfig 
           sizes: "690x670",
           type: "image/png",
           form_factor: "wide",
-          label: "WebTemplate on Desktop",
+          label: "Klart on Desktop",
         },
         {
           src: "screenshot-phone.png",
           sizes: "435x608",
           type: "image/png",
           form_factor: "narrow",
-          label: "WebTemplate on Phone",
+          label: "Klart on Phone",
         },
       ],
-      short_name: manifest.shortName || "WebTemplate",
+      short_name: manifest.shortName || "Klart",
       theme_color: manifest.themeColor || "#ffffff",
     },
     registerType: "autoUpdate",
