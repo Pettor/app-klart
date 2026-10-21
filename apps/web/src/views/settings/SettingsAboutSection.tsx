@@ -1,4 +1,6 @@
 import type { ReactElement, ReactNode } from "react";
+import { SparklesIcon } from "@heroicons/react/20/solid";
+import { Button } from "@heroui/react";
 import { useIntl } from "react-intl";
 import { SettingsPanel, SettingsSectionShell } from "./SettingsSectionShell";
 
@@ -8,6 +10,8 @@ export interface SettingsAboutSectionProps {
   /** CI build number; undefined for local builds. */
   build?: string;
   commit?: string;
+  /** Reopens the release notes for this version. */
+  onShowWhatsNew: () => void;
 }
 
 interface AboutRowProps {
@@ -27,7 +31,13 @@ function AboutRow({ label, value, testId }: AboutRowProps): ReactElement {
   );
 }
 
-export function SettingsAboutSection({ appName, version, build, commit }: SettingsAboutSectionProps): ReactElement {
+export function SettingsAboutSection({
+  appName,
+  version,
+  build,
+  commit,
+  onShowWhatsNew,
+}: SettingsAboutSectionProps): ReactElement {
   const intl = useIntl();
 
   return (
@@ -85,6 +95,19 @@ export function SettingsAboutSection({ appName, version, build, commit }: Settin
           />
         )}
       </SettingsPanel>
+      <Button
+        variant="secondary"
+        className="self-start"
+        onPress={onShowWhatsNew}
+        data-testid="settings__about-whats-new"
+      >
+        <SparklesIcon className="h-4 w-4" />
+        {intl.formatMessage({
+          description: "SettingsAbout - button that opens the release notes",
+          defaultMessage: "See what's new",
+          id: "nKCxbW",
+        })}
+      </Button>
     </SettingsSectionShell>
   );
 }

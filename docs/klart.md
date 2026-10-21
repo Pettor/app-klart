@@ -44,6 +44,12 @@ Klart/
 
 `NotificationPlanner.planNotifications()` is pure and decides what is due: task reminders (`remindAt`), "Plan your day", "Due today without a time", "Overdue nudge" and "End of day wrap-up", each within its time window and the context's hours. The scheduler runs every 20 s while the app is open, shows system notifications when permission is granted (via the service worker when registered) and in-app toasts otherwise. Sent keys are remembered per device. With several devices, the "last used" policy uses `devices/*/device.json`.
 
+## What's new
+
+After an update (a new PWA bundle or desktop build with a higher `version` in `apps/web/package.json`), Klart shows a "What's new" dialog once with the release notes in `core/whats-new/ReleaseNotes.ts`. The last version seen is kept per device in `localStorage` (`klart-last-seen-version`). A fresh install shows nothing; a device that already had data but no last-seen version gets the latest notes once. Settings → About → "See what's new" reopens it.
+
+To ship notes: bump the version and add an entry at the top of `RELEASE_NOTES` — a few emoji highlights, plus only the fixes people would notice. Versions without an entry are skipped quietly.
+
 ## Desktop app
 
 `apps/desktop` packages `apps/web/dist` with Tauri 2 (see CLAUDE.md for commands). The web code detects it with `isDesktop()` (`core/platform/Desktop.ts`) and calls native commands from `apps/desktop/src-tauri/src`:
