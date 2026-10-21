@@ -11,7 +11,6 @@ const router = createRouter({
   history: hashHistory,
   context: {
     queryClient: undefined!,
-    authStatus: undefined!,
   },
   defaultPreload: "intent",
   defaultPreloadStaleTime: 0,
@@ -27,5 +26,5 @@ declare module "@tanstack/react-router" {
 export function AppRoutes(): ReactElement {
   const queryClient = useQueryClient();
 
-  return <RouterProvider router={router} context={{ queryClient, authStatus: "idle" }} />;
+  return <RouterProvider router={router} context={{ queryClient }} />;
 }

@@ -2,7 +2,7 @@ export function useAppInfo(): {
   appName: string;
   appNameCapital: string;
 } {
-  const appName = "Web App";
+  const appName = "Klart";
   const appNameCapital = appName.toUpperCase();
 
   return {

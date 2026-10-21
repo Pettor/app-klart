@@ -1,6 +1,6 @@
 {
   "name": "@app/web",
-  "version": "0.7.0",
+  "version": "0.1.0",
   "description": "Web application built with React, TypeScript, and Vite",
   "license": "MIT",
   "private": true,
@@ -9,7 +9,6 @@
     "clean": "rimraf dist",
     "clean:all": "pnpm clean node_modules",
     "dev": "vite --open",
-    "dev:mocks": "vite --mode mocks",
     "lint": "eslint ./src",
     "lint:fix": "pnpm lint --fix",
     "generate:assets": "generate-assets public",
@@ -20,15 +19,14 @@
     "deploy:demo": "pnpm deploy:demo:build && pnpm deploy:move",
     "deploy:demo:build": "pnpm build:demo",
     "deploy:move": "move-cli dist \"../../output/deployment/app\" --mkdirp",
-    "test:e2e:env": "vite --mode mocks --port 4173 --strictPort",
-    "test:e2e:env:coverage": "cross-env VITE_COVERAGE=true vite --mode mocks --port 4173 --strictPort"
+    "test:e2e:env": "vite --port 4167 --strictPort",
+    "test:e2e:env:coverage": "cross-env VITE_COVERAGE=true vite --port 4167 --strictPort"
   },
   "dependencies": {
     "@config/tailwind": "workspace:*",
     "@fontsource/rubik": "catalog:ui",
     "@heroicons/react": "catalog:ui",
     "@heroui/react": "catalog:ui",
-    "@package/api": "workspace:*",
     "@package/react": "workspace:*",
     "@package/ui": "workspace:*",
     "@tanstack/react-form": "catalog:tanstack",
@@ -52,6 +50,7 @@
     "@storybook/react": "catalog:dev",
     "@tailwindcss/vite": "catalog:dev",
     "@tanstack/router-plugin": "catalog:tanstack",
+    "@vite-pwa/assets-generator": "catalog:dev",
     "@vitejs/plugin-basic-ssl": "catalog:dev",
     "@vitejs/plugin-react": "catalog:dev",
     "babel-plugin-react-compiler": "catalog:react",
@@ -60,9 +59,7 @@
     "tailwindcss": "catalog:dev",
     "typescript": "catalog:dev",
     "vite": "catalog:dev",
-    "vite-plugin-http2-proxy": "catalog:dev",
     "vite-plugin-istanbul": "catalog:dev",
-    "@vite-pwa/assets-generator": "catalog:dev",
     "vite-plugin-pwa": "catalog:dev",
     "vitest": "catalog:dev",
     "workbox-window": "catalog:dev"

@@ -1,104 +1,42 @@
-import { mocksClient } from "@package/mocks";
 import { expect, test } from "../fixtures";
 
-test.describe("general.settings", () => {
-  test.beforeEach(async () => {
-    await mocksClient.restoreRouteVariants();
-  });
-
-  test("opens settings modal, checks all sections and switches themes", async ({ page }) => {
+test.describe("general.home", () => {
+  test("renders the home view", async ({ page }) => {
     await page.goto("/");
 
     await expect(async () => {
       expect(await page.title()).toBe("Home");
     }).toPass();
 
-    // Open quick menu via avatar button, then open settings
-    await page.getByTestId("home-page__menu-button").click();
-    await page.getByTestId("quick-menu__settings-button").click();
+    await expect(page.getByRole("heading", { name: "Welcome to Klart" })).toBeVisible();
+  });
 
-    // Settings dialog should be visible
-    const dialog = page.getByRole("dialog", { name: "Settings" });
-    await expect(dialog).toBeVisible();
+  test("navigates home from the not found page", async ({ page }) => {
+    await page.goto("/#/does-not-exist");
 
-    // All three section tabs should be present
-    await expect(page.getByRole("tab", { name: "Account" })).toBeVisible();
-    await expect(page.getByRole("tab", { name: "Appearance" })).toBeVisible();
-    await expect(page.getByRole("tab", { name: "About" })).toBeVisible();
+    await expect(page.getByText("Page could not be found")).toBeVisible();
+    await page.getByRole("button", { name: "Go home" }).click();
 
-    // Navigate to Appearance tab and cycle through themes
-    await page.getByRole("tab", { name: "Appearance" }).click();
-
-    await page.getByRole("radio", { name: "Light" }).click({ force: true });
-    await expect(page.locator("html")).toHaveClass("light");
-
-    await page.getByRole("radio", { name: "Dark" }).click({ force: true });
-    await expect(page.locator("html")).toHaveClass("dark");
-
-    // Auto resolves based on system preference — verify the radio is selected
-    await page.getByRole("radio", { name: "Auto" }).click({ force: true });
-    await expect(page.getByRole("radio", { name: "Auto" })).toBeChecked();
-
-    // Navigate to Account tab and verify it becomes active
-    await page.getByRole("tab", { name: "Account" }).click();
-    await expect(page.getByRole("tab", { name: "Account" })).toHaveAttribute("aria-selected", "true");
-
-    // Navigate to About tab and verify it becomes active
-    await page.getByRole("tab", { name: "About" }).click();
-    await expect(page.getByRole("tab", { name: "About" })).toHaveAttribute("aria-selected", "true");
-
-    // Close the modal
-    await page.keyboard.press("Escape");
-    await expect(dialog).not.toBeVisible();
+    await expect(async () => {
+      expect(await page.title()).toBe("Home");
+    }).toPass();
   });
 });
 
 test.describe("general.commandpalette", () => {
-  test.beforeEach(async () => {
-    await mocksClient.restoreRouteVariants();
-  });
-
-  test("navigates to dashboard using command palette", async ({ page }) => {
+  test.beforeEach(async ({ page }) => {
     await page.goto("/");
 
     await expect(async () => {
       expect(await page.title()).toBe("Home");
     }).toPass();
 
-    // Open command palette via quick menu
-    await page.getByTestId("home-page__menu-button").click();
-    await page.getByTestId("quick-menu__search-button").click();
-
-    const search = page.getByTestId("command-palette__search");
-    await expect(search).toBeVisible();
-
-    // Search for the dashboard command and execute it
-    await search.fill("dashboard");
-    const dashboardItem = page.getByTestId("command-palette__item-goto-dashboard");
-    await expect(dashboardItem).toBeVisible();
-    await dashboardItem.click();
-
-    await expect(async () => {
-      expect(await page.title()).toBe("Dashboard");
-    }).toPass();
+    await page.keyboard.press("ControlOrMeta+K");
+    await expect(page.getByTestId("command-palette__search")).toBeVisible();
   });
 
   test("switches to dark theme via command palette", async ({ page }) => {
-    await page.goto("/");
-
-    await expect(async () => {
-      expect(await page.title()).toBe("Home");
-    }).toPass();
-
-    // Open command palette via quick menu
-    await page.getByTestId("home-page__menu-button").click();
-    await page.getByTestId("quick-menu__search-button").click();
-
-    const search = page.getByTestId("command-palette__search");
-    await expect(search).toBeVisible();
-
-    // Search for dark theme command and apply it
-    await search.fill("dark");
+    await page.getByTestId("command-palette__search").fill("dark");
     const darkItem = page.getByTestId("command-palette__item-theme-dark");
     await expect(darkItem).toBeVisible();
     await darkItem.click();
@@ -107,21 +45,7 @@ test.describe("general.commandpalette", () => {
   });
 
   test("shows no results for unmatched search query", async ({ page }) => {
-    await page.goto("/");
-
-    await expect(async () => {
-      expect(await page.title()).toBe("Home");
-    }).toPass();
-
-    // Open command palette via quick menu
-    await page.getByTestId("home-page__menu-button").click();
-    await page.getByTestId("quick-menu__search-button").click();
-
-    const search = page.getByTestId("command-palette__search");
-    await expect(search).toBeVisible();
-
-    // Type a query that matches no commands
-    await search.fill("zzznomatch");
+    await page.getByTestId("command-palette__search").fill("zzznomatch");
     await expect(page.getByText("No commands found")).toBeVisible();
   });
 });

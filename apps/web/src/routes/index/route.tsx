@@ -6,7 +6,7 @@ import { SettingsModalController } from "~/components/feedback/settings-modal/Se
 import { RouteError } from "~/core/routes/logic/RouteError";
 import { HomeView } from "~/views/home/HomeView";
 
-export const Route = createFileRoute("/_authenticated/")({
+export const Route = createFileRoute("/")({
   component: HomePageRoute,
   errorComponent: ({ error }) => <RouteError error={error} />,
 });
