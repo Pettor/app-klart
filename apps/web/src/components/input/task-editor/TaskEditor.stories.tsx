@@ -94,7 +94,7 @@ export const AddLink: Story = {
     const input = canvas.getByTestId("task-editor__new-link");
     await userEvent.type(input, "not a link{Enter}");
     await expect(args.onChange).not.toHaveBeenCalled();
-    await expect(canvas.getByText("Links must start with http:// or https://")).toBeVisible();
+    await expect(canvas.getByText("Links must start with http://, https:// or www.")).toBeVisible();
 
     await userEvent.clear(input);
     await userEvent.type(input, "https://notion.so/spec{Enter}");

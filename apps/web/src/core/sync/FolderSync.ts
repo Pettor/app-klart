@@ -151,6 +151,12 @@ export class FolderSync {
       }
     }
 
+    // Push compares against what's on disk, so a folder written by an older version gets this version's LLMS.txt.
+    const llmsModified = await this.folder.stat(LLMS_FILE);
+    if (llmsModified !== null) {
+      await this.readChanged({ path: LLMS_FILE, lastModified: llmsModified });
+    }
+
     const taskFiles = (await this.folder.list("tasks", 1)).filter((file) => file.path.endsWith(".json"));
     for (const file of taskFiles) {
       const read = await this.readChangedSafely(file);

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { TaskEditorPatch, TaskEditorTask } from "./TaskEditor";
-import { isTaskLink, toTaskLinks } from "~/core/tasks/TaskLink";
+import { toTaskLink, toTaskLinks } from "~/core/tasks/TaskLink";
 
 export interface TaskEditorDrafts {
   title: string;
@@ -68,12 +68,13 @@ export function useTaskEditor(task: TaskEditorTask, onChange: (patch: TaskEditor
   }
 
   function commitNewLink(): void {
-    const link = newLink.trim();
-    if (!link) {
+    const typed = newLink.trim();
+    if (!typed) {
       setIsNewLinkInvalid(false);
       return;
     }
-    if (!isTaskLink(link)) {
+    const link = toTaskLink(typed);
+    if (!link) {
       setIsNewLinkInvalid(true);
       return;
     }
