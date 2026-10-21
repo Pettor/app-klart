@@ -45,6 +45,9 @@ export const tagFilterAtom = atom<string | null>(null);
 
 export const searchQueryAtom = atom<string>("");
 
+/** Bumped to ask the task search field to take focus (e.g. from the `/` shortcut). */
+export const searchFocusRequestAtom = atom<number>(0);
+
 export const showSuggestionsAtom = atomWithStorage<boolean>("klart-show-suggestions", true, undefined, {
   getOnInit: true,
 });

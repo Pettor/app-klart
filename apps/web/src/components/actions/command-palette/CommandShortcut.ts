@@ -22,7 +22,8 @@ export function isMac(): boolean {
 export function matchesShortcut(event: KeyboardEvent, shortcut: CommandShortcut): boolean {
   const modPressed = isMac() ? event.metaKey : event.ctrlKey;
   if (!!shortcut.mod !== modPressed) return false;
-  if (!!shortcut.shift !== event.shiftKey) return false;
+  // Symbols like "/" need Shift on many layouts (Shift+7 on Swedish), so Shift only counts for letters and digits.
+  if (!!shortcut.shift !== event.shiftKey && (shortcut.shift || /^[a-z\d]$/i.test(shortcut.key))) return false;
   if (!!shortcut.alt !== event.altKey) return false;
   // Option+digit on macOS produces symbols (⌥1 → "¡"), so digits match on the physical key instead.
   if (/^\d$/.test(shortcut.key) && event.code?.startsWith("Digit")) {

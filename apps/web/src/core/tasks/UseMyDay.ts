@@ -6,6 +6,7 @@ import type { SmartView } from "./KlartAtoms";
 import {
   currentContextAtom,
   klartDataAtom,
+  searchFocusRequestAtom,
   searchQueryAtom,
   smartViewAtom,
   tagFilterAtom,
@@ -35,6 +36,8 @@ export interface MyDayState {
   setTag: (tag: string | null) => void;
   search: string;
   setSearch: (search: string) => void;
+  /** Changes whenever something asks the search field to take focus. */
+  searchFocusRequest: number;
   /** Open tasks for the selected smart view, in display order. */
   listTasks: Task[];
   /** Completed tasks in today's My Day. */
@@ -70,6 +73,7 @@ export function useMyDay(): MyDayState {
   const [smartView, setSmartView] = useAtom(smartViewAtom);
   const [tag, setTag] = useAtom(tagFilterAtom);
   const [search, setSearch] = useAtom(searchQueryAtom);
+  const searchFocusRequest = useAtomValue(searchFocusRequestAtom);
 
   const currentContext =
     currentContextRaw === ALL_CONTEXTS || data.contexts.some((context) => context.id === currentContextRaw)
@@ -165,6 +169,7 @@ export function useMyDay(): MyDayState {
     setTag,
     search,
     setSearch,
+    searchFocusRequest,
     ...derived,
   };
 }

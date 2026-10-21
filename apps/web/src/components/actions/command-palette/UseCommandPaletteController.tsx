@@ -3,6 +3,7 @@ import {
   Cog6ToothIcon,
   ComputerDesktopIcon,
   LightBulbIcon,
+  MagnifyingGlassIcon,
   MoonIcon,
   RectangleStackIcon,
   SunIcon,
@@ -20,6 +21,7 @@ import { useHierarchyNavigation } from "~/core/routes/UseHierarchyNavigation";
 import {
   currentContextAtom,
   klartDataAtom,
+  searchFocusRequestAtom,
   showSuggestionsAtom,
   smartViewAtom,
   tagFilterAtom,
@@ -44,6 +46,7 @@ export function useCommandPaletteController(): CommandPaletteProps {
   const setTag = useSetAtom(tagFilterAtom);
   const setSmartView = useSetAtom(smartViewAtom);
   const setShowSuggestions = useSetAtom(showSuggestionsAtom);
+  const requestSearchFocus = useSetAtom(searchFocusRequestAtom);
 
   const navigationGroup = intl.formatMessage({
     description: "CommandPaletteController: label - navigation group",
@@ -122,6 +125,22 @@ export function useCommandPaletteController(): CommandPaletteProps {
         perform: () => {
           setSmartView("day");
           goToMyDay();
+        },
+      },
+      {
+        id: "search-tasks",
+        label: intl.formatMessage({
+          description: "CommandPaletteController: label - focus the task search command",
+          defaultMessage: "Search tasks",
+          id: "1umRZP",
+        }),
+        group: navigationGroup,
+        keywords: ["search", "find", "filter", "tag"],
+        icon: <MagnifyingGlassIcon className="h-4 w-4" />,
+        shortcut: { key: "/" },
+        perform: () => {
+          goToMyDay();
+          requestSearchFocus((current) => current + 1);
         },
       },
       {
@@ -214,6 +233,7 @@ export function useCommandPaletteController(): CommandPaletteProps {
     setTag,
     setSmartView,
     setShowSuggestions,
+    requestSearchFocus,
   ]);
 
   useCommandPaletteShortcut();

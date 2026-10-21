@@ -66,6 +66,11 @@ describe("matchesShortcut", () => {
     expect(matchesShortcut(makeEvent("k", { shiftKey: true }), { key: "k" })).toBe(false);
   });
 
+  it("matches a symbol key typed with Shift, as layouts like Swedish need Shift+7 for /", () => {
+    expect(matchesShortcut(makeEvent("/", { shiftKey: true }), { key: "/" })).toBe(true);
+    expect(matchesShortcut(makeEvent("/"), { key: "/" })).toBe(true);
+  });
+
   it("matches alt + digit by physical key, as macOS turns ⌥1 into a symbol", () => {
     const event = { ...makeEvent("¡", { altKey: true }), code: "Digit1" } as KeyboardEvent;
     expect(matchesShortcut(event, { alt: true, key: "1" })).toBe(true);

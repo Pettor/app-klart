@@ -76,7 +76,7 @@ export interface MyDaySuggestionsProps {
 
 export interface MyDaySidebarProps {
   context: MyDayContextProps;
-  search: { value: string; onChange: (value: string) => void };
+  search: { value: string; onChange: (value: string) => void; focusRequest?: number };
   smartViews: { items: MyDaySmartViewItem[]; active: SmartView; onSelect: (view: SmartView) => void };
   tags: { items: MyDayTagItem[]; active: string | null; onSelect: (tag: string | null) => void };
   sync: { status: SyncStatus; onPress: () => void };
