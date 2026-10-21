@@ -9,6 +9,7 @@ import { MyDayHeader } from "./MyDayHeader";
 import { MyDayMobileBar, MyDayTagChips } from "./MyDayMobileBar";
 import { MyDaySidebar } from "./MyDaySidebar";
 import { MyDaySuggestionsPanel } from "./MyDaySuggestionsPanel";
+import { MyDayTaskEditorPanel } from "./MyDayTaskEditorPanel";
 import { MyDayTaskList } from "./MyDayTaskList";
 import type {
   MyDayQuickAddProps,
@@ -16,6 +17,7 @@ import type {
   MyDaySuggestionsProps,
   MyDayTask,
   MyDayTaskActions,
+  MyDayTaskEditorProps,
 } from "./MyDayTypes";
 import { QuickAddInput } from "~/components/input/quick-add/QuickAddInput";
 
@@ -27,6 +29,7 @@ export interface MyDayViewProps extends MyDaySidebarProps {
   taskActions: MyDayTaskActions;
   quickAdd: MyDayQuickAddProps;
   suggestions: MyDaySuggestionsProps;
+  editor: MyDayTaskEditorProps;
   agentJson: { isOpen: boolean; onToggle: () => void; json: string };
   onOpenSettings: () => void;
   onOpenNotifications: () => void;
@@ -45,12 +48,14 @@ export function MyDayView({
   taskActions,
   quickAdd,
   suggestions,
+  editor,
   agentJson,
   onOpenSettings,
   onOpenNotifications,
 }: MyDayViewProps): ReactElement {
   const intl = useIntl();
   const isPhone = !useBreakpoint("sm");
+  const isWide = useBreakpoint("xl");
 
   return (
     <div className="bg-background text-foreground flex min-h-dvh text-sm">
@@ -101,6 +106,7 @@ export function MyDayView({
           doneTasks={doneTasks}
           showContext={showContextOnTasks}
           actions={taskActions}
+          selectedTaskId={editor.task?.id}
         />
 
         <div className="sticky bottom-0 mt-auto flex flex-col gap-2 bg-(--ctx-backdrop) pt-2 pb-[env(safe-area-inset-bottom)]">
@@ -131,7 +137,16 @@ export function MyDayView({
         </div>
       </main>
 
-      <MyDaySuggestionsPanel today={today} contextColor={context.selectedColor} suggestions={suggestions} />
+      {/* On wide screens the editor takes the suggestions panel's place. */}
+      <MyDayTaskEditorPanel editor={editor} />
+      {!(isWide && editor.task) && (
+        <MyDaySuggestionsPanel
+          today={today}
+          contextColor={context.selectedColor}
+          suggestions={suggestions}
+          onOpenTask={taskActions.onOpen}
+        />
+      )}
     </div>
   );
 }

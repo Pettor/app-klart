@@ -6,13 +6,14 @@ The design lives in the Klart canvas artifact (My Day, Settings, Notifications, 
 
 ## Concepts
 
-| Concept     | Where                           | Notes                                                                                                                                             |
-| ----------- | ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Context     | `core/contexts/KlartContext.ts` | Personal, Work, … Each task belongs to one. `"all"` is a view, never stored on a task. Switch with the dropdown or ⌥0–⌥9.                         |
-| Task        | `core/tasks/Task.ts`            | Schema `klart.task/v1`. Never deleted, only `archived`. Every change stamps `updatedAt`. Optional `links`: `http(s)` URLs only (`TaskLink.ts`).   |
-| Day         | `core/tasks/Day.ts`             | `klart.day/v1`: ordered task ids in My Day for one date. Completed tasks stay and show under "Completed".                                         |
-| Quick add   | `core/tasks/QuickAdd.ts`        | `#tag` (a context's tag also routes), `@date`, `^reminder`, `!` important, `https://…` link; everything else is the title.                        |
-| Suggestions | `core/tasks/Suggestions.ts`     | Open tasks not in today, ranked: overdue, due today, left from yesterday, coming up (3 days), related (shares a non-context tag), recently added. |
+| Concept     | Where                           | Notes                                                                                                                                                                                        |
+| ----------- | ------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Context     | `core/contexts/KlartContext.ts` | Personal, Work, … Each task belongs to one. `"all"` is a view, never stored on a task. Switch with the dropdown or ⌥0–⌥9.                                                                    |
+| Task        | `core/tasks/Task.ts`            | Schema `klart.task/v1`. Never deleted, only `archived`. Every change stamps `updatedAt`. Optional `links`: `http(s)` URLs only (`TaskLink.ts`).                                              |
+| Day         | `core/tasks/Day.ts`             | `klart.day/v1`: ordered task ids in My Day for one date. Completed tasks stay and show under "Completed".                                                                                    |
+| Quick add   | `core/tasks/QuickAdd.ts`        | `#tag` (a context's tag also routes), `@date`, `^reminder`, `!` important, `https://…` link; everything else is the title.                                                                   |
+| Suggestions | `core/tasks/Suggestions.ts`     | Open tasks not in today, ranked: overdue, due today, left from yesterday, coming up (3 days), related (shares a non-context tag), recently added.                                            |
+| Task editor | `components/input/task-editor/` | Click a task (in the list or Suggestions) to edit it in place. On wide screens the editor replaces the Suggestions panel; on phones it is a bottom sheet. Text fields save on blur or Enter. |
 
 All mutations are pure functions in `KlartData.ts`, exposed through `useKlartActions()`. Derived state for the main screen comes from `useMyDay()`.
 

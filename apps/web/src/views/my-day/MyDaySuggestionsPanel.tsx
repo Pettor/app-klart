@@ -10,6 +10,7 @@ export interface MyDaySuggestionsPanelProps {
   today: string;
   contextColor: string;
   suggestions: MyDaySuggestionsProps;
+  onOpenTask?: (taskId: string) => void;
 }
 
 /** A side panel on wide screens; a bottom sheet on phones and tablets. */
@@ -17,6 +18,7 @@ export function MyDaySuggestionsPanel({
   today,
   contextColor,
   suggestions,
+  onOpenTask,
 }: MyDaySuggestionsPanelProps): ReactElement | null {
   const intl = useIntl();
   const isWide = useBreakpoint("xl");
@@ -30,6 +32,7 @@ export function MyDaySuggestionsPanel({
         onAdd={suggestions.onAdd}
         onAddAllDue={suggestions.onAddAllDue}
         hideHeading={hideHeading}
+        onOpen={onOpenTask}
       />
     );
   }

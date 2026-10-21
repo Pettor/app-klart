@@ -37,6 +37,8 @@ export interface SuggestionListProps {
   onAddAllDue: () => void;
   /** Hides the heading row, e.g. inside a drawer that has its own. */
   hideHeading?: boolean;
+  /** Makes each title pressable, e.g. to open the task editor. */
+  onOpen?: (taskId: string) => void;
 }
 
 function getGroupLabel(intl: IntlShape, reason: SuggestionReason): string {
@@ -135,6 +137,7 @@ export function SuggestionList({
   onAdd,
   onAddAllDue,
   hideHeading = false,
+  onOpen,
 }: SuggestionListProps): ReactElement {
   const intl = useIntl();
 
@@ -190,7 +193,25 @@ export function SuggestionList({
               )}
             >
               <span className="w-1 self-stretch rounded-sm bg-(--ctx)" aria-hidden />
-              <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+              <div className="relative flex min-w-0 flex-1 flex-col gap-0.5">
+                {onOpen && (
+                  // An invisible button over the whole column, so the reason line opens the task too.
+                  // It must be the pressed element itself: React Aria drops a press released outside the button's box.
+                  <Button
+                    variant="ghost"
+                    aria-label={intl.formatMessage(
+                      {
+                        description: "SuggestionList - aria-label of a suggestion's title, which opens the task editor",
+                        defaultMessage: "Edit task: {title}",
+                        id: "JF1JER",
+                      },
+                      { title: item.title }
+                    )}
+                    onPress={() => onOpen(item.id)}
+                    className="absolute inset-0 h-auto min-h-0 w-auto transform-none rounded-md p-0 data-[hovered=true]:bg-transparent data-[pressed=true]:bg-transparent"
+                    data-testid="suggestion-list__open"
+                  />
+                )}
                 <span className="text-sm">{item.title}</span>
                 <span className="text-muted flex flex-wrap gap-1.5 text-xs">
                   <span className={item.due ? DUE_TONE_CLASS[getDueTone(item.due, today)] : undefined}>

@@ -3,7 +3,7 @@ import { createDay, dayHasTask } from "./Day";
 import { toUtcTimestamp } from "./LocalDate";
 import type { ParsedQuickAdd } from "./QuickAdd";
 import type { Task } from "./Task";
-import { TASK_SCHEMA } from "./Task";
+import { TASK_SCHEMA, TaskFileSchema } from "./Task";
 import { createTaskId } from "./TaskId";
 import type { KlartContext } from "~/core/contexts/KlartContext";
 import { DEFAULT_CONTEXTS, getDefaultContextId } from "~/core/contexts/KlartContext";
@@ -21,6 +21,25 @@ export type TaskPatch = Partial<
 
 export function createEmptyData(): KlartData {
   return { contexts: DEFAULT_CONTEXTS, tasks: {}, days: {} };
+}
+
+/**
+ * Fills in fields added since the data was stored (e.g. `links`) and drops tasks that can't be read,
+ * the same way task files from the data folder are parsed.
+ */
+export function normalizeData(data: KlartData): KlartData {
+  const tasks: Record<string, Task> = {};
+  for (const [id, stored] of Object.entries(data.tasks ?? {})) {
+    const parsed = TaskFileSchema.safeParse(stored);
+    if (parsed.success) {
+      tasks[id] = parsed.data as Task;
+    }
+  }
+  return {
+    contexts: data.contexts ?? DEFAULT_CONTEXTS,
+    tasks,
+    days: data.days ?? {},
+  };
 }
 
 export function createTask(parsed: ParsedQuickAdd, now: Date, id: string = createTaskId(now.getTime())): Task {

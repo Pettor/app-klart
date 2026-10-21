@@ -6,6 +6,7 @@ import {
   createTask,
   moveContext,
   moveDayItem,
+  normalizeData,
   removeContext,
   removeFromDay,
   setTaskDone,
@@ -106,5 +107,20 @@ describe("context changes", () => {
     expect(moveContext(setup(), "work", -1).contexts.map((context) => context.id)).toEqual(["work", "personal"]);
     const data = setup();
     expect(moveContext(data, "work", 1)).toBe(data);
+  });
+});
+
+describe("normalizeData", () => {
+  it("fills in fields missing from tasks stored by an older version", () => {
+    const data = setup();
+    const { links: _links, ...oldTask } = data.tasks.T1!;
+    const stored = { ...data, tasks: { T1: oldTask } } as unknown as typeof data;
+    expect(normalizeData(stored).tasks.T1).toEqual(data.tasks.T1);
+  });
+
+  it("drops tasks that can't be read", () => {
+    const data = setup();
+    const stored = { ...data, tasks: { ...data.tasks, broken: { title: 42 } } } as unknown as typeof data;
+    expect(Object.keys(normalizeData(stored).tasks)).toEqual(["T1"]);
   });
 });

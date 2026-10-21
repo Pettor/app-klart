@@ -12,6 +12,8 @@ export interface MyDayTaskListProps {
   doneTasks: MyDayTask[];
   showContext: boolean;
   actions: MyDayTaskActions;
+  /** The task open in the editor, highlighted in the list. */
+  selectedTaskId?: string | null;
 }
 
 export function MyDayTaskList({
@@ -21,6 +23,7 @@ export function MyDayTaskList({
   doneTasks,
   showContext,
   actions,
+  selectedTaskId = null,
 }: MyDayTaskListProps): ReactElement {
   const intl = useIntl();
 
@@ -37,6 +40,8 @@ export function MyDayTaskList({
         onAddToMyDay={actions.onAddToMyDay}
         onRemoveFromMyDay={actions.onRemoveFromMyDay}
         onArchive={actions.onArchive}
+        onOpen={actions.onOpen}
+        isSelected={task.id === selectedTaskId}
       />
     );
   }

@@ -4,6 +4,7 @@ import type { MyDayTask } from "./MyDayTypes";
 import { MyDayView as Component } from "./MyDayView";
 import type { MyDayViewProps as Props } from "./MyDayView";
 import { ALL_CONTEXTS, findContext } from "~/core/contexts/KlartContext";
+import { taskPath } from "~/core/sync/FolderSync";
 import { buildTodayView } from "~/core/tasks/AgentViews";
 import { addDays } from "~/core/tasks/LocalDate";
 import { buildSuggestions, selectDueSuggestions } from "~/core/tasks/Suggestions";
@@ -95,6 +96,7 @@ function buildArgs(contextId: string): Props {
       onAddToMyDay: fn(),
       onRemoveFromMyDay: fn(),
       onArchive: fn(),
+      onOpen: fn(),
     },
     quickAdd: { value: "", onChange: fn(), onSubmit: fn(), preview: null },
     suggestions: {
@@ -112,6 +114,16 @@ function buildArgs(contextId: string): Props {
       onToggle: fn(),
       onAdd: fn(),
       onAddAllDue: fn(),
+    },
+    editor: {
+      task: null,
+      contexts: DEMO_DATA.contexts.map((context) => ({ id: context.id, name: context.name, color: context.color })),
+      onChange: fn(),
+      onToggleDone: fn(),
+      onToggleImportant: fn(),
+      onToggleMyDay: fn(),
+      onArchive: fn(),
+      onClose: fn(),
     },
     agentJson: {
       isOpen: false,
@@ -195,4 +207,51 @@ export const CompleteFromMyDay: Story = {
     await userEvent.click(firstToggle!);
     await expect(args.taskActions.onToggleDone).toHaveBeenCalledWith("p8", true);
   },
+};
+
+/** The first My Day task open in the editor, which takes the suggestions panel's place on wide screens. */
+function buildEditingArgs(): Props {
+  const args = buildArgs("personal");
+  const task = DEMO_DATA.tasks[args.tasks[0]!.id]!;
+  const row = toRow(task);
+  return {
+    ...args,
+    editor: {
+      ...args.editor,
+      task: {
+        id: task.id,
+        title: task.title,
+        done: row.done,
+        important: task.important,
+        due: task.due,
+        remindAt: task.remindAt,
+        tags: row.tags,
+        links: task.links,
+        notes: task.notes,
+        contextId: task.context,
+        contextColor: row.contextColor,
+        isInMyDay: row.isInMyDay,
+        file: taskPath(task),
+      },
+    },
+  };
+}
+
+export const Editing: Story = {
+  args: buildEditingArgs(),
+  parameters: { viewport: { value: "full" } },
+};
+
+export const OpenTaskFromList: Story = {
+  args: { ...buildArgs("personal"), suggestions: { ...buildArgs("personal").suggestions, isOpen: false } },
+  play: async ({ args, canvas, userEvent }) => {
+    const [firstOpen] = canvas.getAllByTestId("task-row__open");
+    await userEvent.click(firstOpen!);
+    await expect(args.taskActions.onOpen).toHaveBeenCalledWith("p8");
+  },
+};
+
+export const EditingPhone: Story = {
+  args: { ...buildEditingArgs(), suggestions: { ...buildEditingArgs().suggestions, isOpen: false } },
+  globals: { viewport: { value: "iphonex" } },
 };

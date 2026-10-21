@@ -5,17 +5,21 @@ import { useAtom } from "jotai";
 import { useIntl } from "react-intl";
 import type { ContextSwitcherOption } from "~/components/actions/context-switcher/ContextSwitcher";
 import type { SuggestionListGroup } from "~/components/display/suggestion-list/SuggestionList";
+import type { TaskEditorTask } from "~/components/input/task-editor/TaskEditor";
 import type { KlartContext } from "~/core/contexts/KlartContext";
 import { ALL_CONTEXTS, findContext } from "~/core/contexts/KlartContext";
 import type { SettingsSectionId } from "~/core/settings/SettingsSection";
+import { taskPath } from "~/core/sync/FolderSync";
 import { useFolderSync } from "~/core/sync/UseFolderSync";
 import { showAgentJsonAtom, showSuggestionsAtom } from "~/core/tasks/KlartAtoms";
+import type { TaskPatch } from "~/core/tasks/KlartData";
 import { parseQuickAdd } from "~/core/tasks/QuickAdd";
 import { selectDueSuggestions } from "~/core/tasks/Suggestions";
 import type { Task } from "~/core/tasks/Task";
 import { useKlartActions } from "~/core/tasks/UseKlartActions";
 import { useMyDay } from "~/core/tasks/UseMyDay";
-import type { MyDayTask } from "~/views/my-day/MyDayTypes";
+import { useTask } from "~/core/tasks/UseTask";
+import type { MyDayTask, MyDayTaskEditorProps } from "~/views/my-day/MyDayTypes";
 import type { MyDayViewProps } from "~/views/my-day/MyDayView";
 
 /** Suggestion groups longer than this are truncated in the panel (the agent file keeps everything). */
@@ -38,6 +42,25 @@ function toMyDayTask(task: Task, contexts: KlartContext[], inTodayIds: Set<strin
   };
 }
 
+function toEditorTask(task: Task, contexts: KlartContext[], inTodayIds: Set<string>): TaskEditorTask {
+  const context = findContext(contexts, task.context);
+  return {
+    id: task.id,
+    title: task.title,
+    done: task.status === "done",
+    important: task.important,
+    due: task.due,
+    remindAt: task.remindAt,
+    tags: task.tags.filter((tag) => tag !== context?.tag),
+    links: task.links,
+    notes: task.notes,
+    contextId: task.context,
+    contextColor: context?.color ?? "blue",
+    isInMyDay: inTodayIds.has(task.id),
+    file: taskPath(task),
+  };
+}
+
 export function useMyDayRoute(): MyDayViewProps {
   const intl = useIntl();
   const navigate = useNavigate();
@@ -49,6 +72,8 @@ export function useMyDayRoute(): MyDayViewProps {
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [showJson, setShowJson] = useAtom(showAgentJsonAtom);
   const [draft, setDraft] = useState("");
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const editingTask = useTask(editingId);
 
   const { contexts, currentContext, today, inTodayIds } = myDay;
   const selected = findContext(contexts, currentContext);
@@ -96,6 +121,47 @@ export function useMyDayRoute(): MyDayViewProps {
   );
   const dueSuggestions = selectDueSuggestions(myDay.suggestionGroups);
 
+  const editor: MyDayTaskEditorProps = {
+    task: editingTask ? toEditorTask(editingTask, contexts, inTodayIds) : null,
+    contexts: contexts.map((context) => ({ id: context.id, name: context.name, color: context.color })),
+    onChange: ({ contextId, ...rest }) => {
+      if (!editingTask) {
+        return;
+      }
+      const context = findContext(contexts, editingTask.context);
+      // The editor hides the context's routing tag; keep it on the task unless the task moves context.
+      const keepsTag = !contextId && !!context && editingTask.tags.includes(context.tag);
+      const patch: TaskPatch = { ...rest };
+      if (rest.tags) {
+        patch.tags = keepsTag ? [context.tag, ...rest.tags.filter((tag) => tag !== context.tag)] : rest.tags;
+      }
+      if (contextId && contextId !== editingTask.context) {
+        patch.context = contextId;
+        patch.tags = (patch.tags ?? editingTask.tags).filter((tag) => tag !== context?.tag);
+      }
+      actions.updateTask(editingTask.id, patch);
+    },
+    onToggleDone: () => editingTask && actions.setDone(editingTask.id, editingTask.status !== "done"),
+    onToggleImportant: () => editingTask && actions.toggleImportant(editingTask.id),
+    onToggleMyDay: () => {
+      if (!editingTask) {
+        return;
+      }
+      if (inTodayIds.has(editingTask.id)) {
+        actions.removeFromToday(editingTask.id);
+      } else {
+        actions.addToToday([{ taskId: editingTask.id, reason: null, addedBy: "user" }]);
+      }
+    },
+    onArchive: () => {
+      if (editingTask) {
+        actions.archive(editingTask.id);
+        setEditingId(null);
+      }
+    },
+    onClose: () => setEditingId(null),
+  };
+
   const parsed = draft.trim() ? parseQuickAdd(draft, { today, contexts, currentContext }) : null;
   const parsedContext = parsed ? findContext(contexts, parsed.context) : undefined;
 
@@ -137,7 +203,16 @@ export function useMyDayRoute(): MyDayViewProps {
       onToggleImportant: actions.toggleImportant,
       onAddToMyDay: (taskId) => actions.addToToday([{ taskId, reason: null, addedBy: "user" }]),
       onRemoveFromMyDay: actions.removeFromToday,
-      onArchive: actions.archive,
+      onArchive: (taskId) => {
+        actions.archive(taskId);
+        if (taskId === editingId) {
+          setEditingId(null);
+        }
+      },
+      onOpen: (taskId) => {
+        setEditingId(taskId);
+        setIsSheetOpen(false);
+      },
     },
     quickAdd: {
       value: draft,
@@ -164,11 +239,22 @@ export function useMyDayRoute(): MyDayViewProps {
       groups: suggestionGroups,
       count: suggestionGroups.reduce((sum, group) => sum + group.total, 0),
       dueCount: dueSuggestions.length,
-      isOpen: isWide ? showSuggestions : isSheetOpen,
-      onToggle: () => (isWide ? setShowSuggestions(!showSuggestions) : setIsSheetOpen(!isSheetOpen)),
+      // On wide screens the editor replaces the panel, so the toggle closes the editor and brings suggestions back.
+      isOpen: isWide ? showSuggestions && !editor.task : isSheetOpen,
+      onToggle: () => {
+        if (!isWide) {
+          setIsSheetOpen(!isSheetOpen);
+        } else if (editor.task) {
+          setEditingId(null);
+          setShowSuggestions(true);
+        } else {
+          setShowSuggestions(!showSuggestions);
+        }
+      },
       onAdd: (taskId, reason) => actions.addToToday([{ taskId, reason }]),
       onAddAllDue: () => actions.addToToday(dueSuggestions.map(({ task, reason }) => ({ taskId: task.id, reason }))),
     },
+    editor,
     agentJson: {
       isOpen: showJson,
       onToggle: () => setShowJson(!showJson),

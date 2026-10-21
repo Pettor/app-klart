@@ -94,3 +94,15 @@ export const CompleteAndStar: Story = {
     await expect(args.onToggleImportant).toHaveBeenCalledWith("w1");
   },
 };
+
+export const Selected: Story = {
+  args: { ...defaultArgs, onOpen: fn(), isSelected: true },
+};
+
+export const OpenEditor: Story = {
+  args: { ...defaultArgs, onOpen: fn() },
+  play: async ({ args, canvas, userEvent }) => {
+    await userEvent.click(canvas.getByRole("button", { name: `Edit task: ${defaultArgs.task.title}` }));
+    await expect(args.onOpen).toHaveBeenCalledWith("w1");
+  },
+};
