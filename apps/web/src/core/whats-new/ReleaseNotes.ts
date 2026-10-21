@@ -15,6 +15,20 @@ export interface ReleaseNote {
   fixes: ReleaseNoteItem[];
 }
 
+const v020 = defineMessages({
+  resizeTitle: {
+    description: "ReleaseNotes 0.2.0 - highlight title: resizable side panel",
+    defaultMessage: "Stretch the side panel",
+    id: "2OvMyY",
+  },
+  resizeDescription: {
+    description: "ReleaseNotes 0.2.0 - highlight text: resizable side panel",
+    defaultMessage:
+      "Drag the left edge of suggestions or the task editor to make room for long notes. Klart remembers the width, and a double-click puts it back.",
+    id: "CiKK/a",
+  },
+});
+
 const v010 = defineMessages({
   editTitle: {
     description: "ReleaseNotes 0.1.0 - highlight title: edit tasks",
@@ -84,6 +98,11 @@ const v010 = defineMessages({
  * entry here; people who update see every entry newer than the last one they saw.
  */
 export const RELEASE_NOTES: ReleaseNote[] = [
+  {
+    version: "0.2.0",
+    highlights: [{ emoji: "↔️", title: v020.resizeTitle, description: v020.resizeDescription }],
+    fixes: [],
+  },
   {
     version: "0.1.0",
     highlights: [

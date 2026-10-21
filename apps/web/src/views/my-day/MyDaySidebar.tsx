@@ -113,7 +113,7 @@ export function MyDaySidebar({
             defaultMessage: "Tags",
             id: "MOwKhu",
           })}
-          className="flex min-h-0 flex-col gap-0.5 overflow-y-auto"
+          className="-mx-1 -mb-1 flex min-h-0 flex-col gap-0.5 overflow-y-auto px-1 pb-1"
         >
           <span className="text-muted px-2.5 pb-1 text-[11px] font-semibold tracking-wider uppercase">
             {intl.formatMessage({
