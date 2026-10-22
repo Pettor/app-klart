@@ -11,6 +11,7 @@ import type {
 import type { ContextColor } from "~/core/contexts/KlartContext";
 import type { SyncStatus } from "~/core/sync/SyncAtoms";
 import type { SuggestionReason } from "~/core/tasks/Day";
+import type { DisplayOptions } from "~/core/tasks/DisplayOptions";
 import type { SmartView } from "~/core/tasks/KlartAtoms";
 
 export interface MyDayTask extends TaskRowTask {
@@ -83,4 +84,16 @@ export interface MyDaySidebarProps {
   smartViews: { items: MyDaySmartViewItem[]; active: SmartView; onSelect: (view: SmartView) => void };
   tags: { items: MyDayTagItem[]; active: string | null; onSelect: (tag: string | null) => void };
   sync: { status: SyncStatus; onPress: () => void };
+}
+
+export interface MyDayDisplayProps {
+  options: DisplayOptions;
+  onChange: (options: DisplayOptions) => void;
+}
+
+export interface MyDaySidebarCollapseProps {
+  isCollapsed: boolean;
+  onToggle: () => void;
+  /** Expands the sidebar and focuses its search field. */
+  onSearch: () => void;
 }

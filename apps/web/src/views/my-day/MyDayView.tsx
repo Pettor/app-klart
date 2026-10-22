@@ -8,11 +8,14 @@ import { MyDayAgentJson } from "./MyDayAgentJson";
 import { MyDayHeader } from "./MyDayHeader";
 import { MyDayMobileBar, MyDayTagChips } from "./MyDayMobileBar";
 import { MyDaySidebar } from "./MyDaySidebar";
+import { MyDaySidebarRail } from "./MyDaySidebarRail";
 import { MyDaySuggestionsPanel } from "./MyDaySuggestionsPanel";
 import { MyDayTaskEditorPanel } from "./MyDayTaskEditorPanel";
 import { MyDayTaskList } from "./MyDayTaskList";
 import type {
+  MyDayDisplayProps,
   MyDayQuickAddProps,
+  MyDaySidebarCollapseProps,
   MyDaySidebarProps,
   MyDaySuggestionsProps,
   MyDayTask,
@@ -31,9 +34,11 @@ export interface MyDayViewProps extends MyDaySidebarProps {
   quickAdd: MyDayQuickAddProps;
   suggestions: MyDaySuggestionsProps;
   editor: MyDayTaskEditorProps;
-  agentJson: { isOpen: boolean; onToggle: () => void; json: string };
-  /** Shows every task's tags instead of only on hover or focus. */
-  taskTags: { isShown: boolean; onChange: (isShown: boolean) => void };
+  /** Today as `views/today.json`, shown when the Display menu's Agent JSON option is on. */
+  agentJson: string;
+  /** What My Day shows besides task titles. */
+  display: MyDayDisplayProps;
+  sidebar: MyDaySidebarCollapseProps;
   onOpenSettings: () => void;
   onOpenNotifications: () => void;
 }
@@ -53,7 +58,8 @@ export function MyDayView({
   suggestions,
   editor,
   agentJson,
-  taskTags,
+  display,
+  sidebar,
   onOpenSettings,
   onOpenNotifications,
 }: MyDayViewProps): ReactElement {
@@ -61,17 +67,35 @@ export function MyDayView({
   const isPhone = !useBreakpoint("sm");
   const isWide = useBreakpoint("xl");
   const pane = useMyDayPaneWidth();
+  const { options } = display;
+  // A tag picked elsewhere (search, a task) keeps the list visible so it can be cleared.
+  const showTagFilter = options.tagFilter || !!tags.active;
 
   return (
     <div className="bg-background text-foreground flex min-h-dvh text-sm">
+      {/* Stays mounted while collapsed, so its search field keeps its state. */}
       <MyDaySidebar
         context={context}
         search={search}
         smartViews={smartViews}
         tags={tags}
         sync={sync}
-        className="sticky top-0 hidden h-dvh lg:flex"
+        collapse={sidebar}
+        showTags={showTagFilter}
+        className={clsx("sticky top-0 hidden h-dvh", !sidebar.isCollapsed && "lg:flex")}
       />
+      {sidebar.isCollapsed && (
+        <MyDaySidebarRail
+          context={context}
+          search={search}
+          smartViews={smartViews}
+          tags={tags}
+          sync={sync}
+          collapse={sidebar}
+          showTags={showTagFilter}
+          className="sticky top-0 hidden h-dvh lg:flex"
+        />
+      )}
 
       <main
         className={clsx(
@@ -97,16 +121,16 @@ export function MyDayView({
           suggestionCount={suggestions.count}
           isSuggestionsOpen={suggestions.isOpen}
           onToggleSuggestions={suggestions.onToggle}
-          isJsonOpen={agentJson.isOpen}
-          onToggleJson={agentJson.onToggle}
           onOpenNotifications={onOpenNotifications}
-          showTags={taskTags.isShown}
-          onShowTagsChange={taskTags.onChange}
+          display={display}
+          contextColor={context.selectedColor}
         />
 
-        <MyDayTagChips tags={tags.items} active={tags.active} onSelect={tags.onSelect} className="lg:hidden" />
+        {options.tagFilter && (
+          <MyDayTagChips tags={tags.items} active={tags.active} onSelect={tags.onSelect} className="lg:hidden" />
+        )}
 
-        {agentJson.isOpen && <MyDayAgentJson json={agentJson.json} />}
+        {options.agentJson && <MyDayAgentJson json={agentJson} className="max-lg:hidden" />}
 
         <MyDayTaskList
           today={today}
@@ -116,7 +140,11 @@ export function MyDayView({
           showContext={showContextOnTasks}
           actions={taskActions}
           selectedTaskId={editor.task?.id}
-          showTags={taskTags.isShown}
+          showTags={options.taskTags}
+          showMeta={options.details}
+          showLinks={options.links}
+          isCompletedExpanded={options.completed}
+          onToggleCompleted={() => display.onChange({ ...options, completed: !options.completed })}
         />
 
         <div className="sticky bottom-0 mt-auto flex flex-col gap-2 bg-(--ctx-backdrop) pt-2 pb-[env(safe-area-inset-bottom)]">

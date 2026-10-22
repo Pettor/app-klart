@@ -1,5 +1,4 @@
-import type { ReactElement, ReactNode } from "react";
-import { ComputerDesktopIcon, MoonIcon, SparklesIcon, SunIcon } from "@heroicons/react/20/solid";
+import type { ReactElement } from "react";
 import { Radio, RadioGroup } from "@heroui/react";
 import clsx from "clsx";
 import { useIntl } from "react-intl";
@@ -10,104 +9,66 @@ export interface ThemeSelectorProps {
   onSelect: (mode: ThemeMode) => void;
 }
 
+/** Colors of a theme's miniature: sidebar, backdrop, task card, the card's edge and the accent. */
+interface ThemeSwatch {
+  side: string;
+  main: string;
+  card: string;
+  edge: string;
+  accent: string;
+}
+
+const SWATCHES: Record<ThemeMode, ThemeSwatch> = {
+  auto: { side: "#eceef1", main: "#111d3b", card: "#1d2640", edge: "#0a0e19", accent: "#5b8cff" },
+  light: { side: "#f5f6f8", main: "#e8f0fb", card: "#ffffff", edge: "#d3d8e1", accent: "#2f74d9" },
+  dark: { side: "#1b1c20", main: "#1d2a3b", card: "#2b2d33", edge: "#17181c", accent: "#5ea2ff" },
+  midnight: { side: "#0e1220", main: "#111d3b", card: "#1d2640", edge: "#0a0e19", accent: "#5b8cff" },
+};
+
 interface ThemeOptionProps {
   value: ThemeMode;
   label: string;
-  icon: ReactNode;
-  preview: ReactNode;
+  hint: string;
 }
 
-function ThemeOption({ value, label, icon, preview }: ThemeOptionProps): ReactElement {
+/** A miniature of My Day in the theme's colors: sidebar, two task cards and an accent bar. */
+function ThemePreview({ swatch }: { swatch: ThemeSwatch }): ReactElement {
+  const card = { background: swatch.card, boxShadow: `0 2px 0 ${swatch.edge}` };
+  return (
+    <span
+      aria-hidden
+      className="flex h-[76px] w-full self-stretch overflow-hidden rounded-[9px] border border-black/8 dark:border-white/8"
+    >
+      <span className="w-[30%]" style={{ background: swatch.side }} />
+      <span className="flex flex-1 flex-col gap-1.5 px-2 py-2.5" style={{ background: swatch.main }}>
+        <span className="h-3 rounded" style={card} />
+        <span className="h-3 rounded" style={card} />
+        <span className="h-3 w-3/5 rounded" style={{ background: swatch.accent }} />
+      </span>
+    </span>
+  );
+}
+
+function ThemeOption({ value, label, hint }: ThemeOptionProps): ReactElement {
   return (
     <Radio
       value={value}
       aria-label={label}
       className={clsx(
-        "group relative flex-col items-center gap-1.5 rounded-xl border-2 border-transparent p-1 transition-all",
-        "data-[selected=true]:border-accent data-[selected=true]:bg-accent/10",
-        "data-[focus-visible=true]:border-accent data-[focus-visible=true]:bg-accent/10"
+        // A ring, not a border: a global border-color rule outside any layer beats Tailwind's border colors.
+        "bg-surface ring-separator flex-col items-stretch gap-2.5 rounded-[14px] p-2.5 text-left ring-2 transition ring-inset",
+        "hover:-translate-y-0.5 motion-reduce:hover:translate-y-0",
+        "data-selected:ring-accent data-selected:bg-accent/8 data-focus-visible:ring-accent"
       )}
     >
-      <Radio.Control className="absolute top-1 right-1 size-4">
-        <Radio.Indicator />
-      </Radio.Control>
-      <Radio.Content className="flex flex-col items-center gap-1.5">
-        <div className="h-14 w-18 overflow-hidden rounded-md">{preview}</div>
-        <div className="text-default-500 group-data-[selected=true]:text-accent flex items-center gap-1 text-xs">
-          {icon}
-          <span>{label}</span>
-        </div>
+      <Radio.Content className="flex w-full flex-col gap-2.5">
+        <ThemePreview swatch={SWATCHES[value]} />
+        <span className="flex flex-col gap-0.5 px-0.5">
+          <span className="font-semibold">{label}</span>
+          <span className="text-muted text-xs">{hint}</span>
+        </span>
       </Radio.Content>
     </Radio>
-  );
-}
-
-function LightPreview(): ReactElement {
-  return (
-    <div className="flex h-full w-full flex-col bg-white">
-      <div className="h-1.5 w-full bg-gray-100" />
-      <div className="flex flex-1 gap-1 p-1.5">
-        <div className="w-1/3 rounded-sm bg-gray-100" />
-        <div className="flex flex-1 flex-col gap-1">
-          <div className="h-1.5 w-3/4 rounded-sm bg-gray-200" />
-          <div className="h-1 w-1/2 rounded-sm bg-gray-100" />
-          <div className="h-1 w-2/3 rounded-sm bg-gray-100" />
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function DarkPreview(): ReactElement {
-  return (
-    <div className="flex h-full w-full flex-col bg-zinc-900">
-      <div className="h-1.5 w-full bg-zinc-800" />
-      <div className="flex flex-1 gap-1 p-1.5">
-        <div className="w-1/3 rounded-sm bg-zinc-800" />
-        <div className="flex flex-1 flex-col gap-1">
-          <div className="h-1.5 w-3/4 rounded-sm bg-zinc-700" />
-          <div className="h-1 w-1/2 rounded-sm bg-zinc-800" />
-          <div className="h-1 w-2/3 rounded-sm bg-zinc-800" />
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function MidnightPreview(): ReactElement {
-  return (
-    <div className="flex h-full w-full flex-col bg-[#0e1220]">
-      <div className="h-1.5 w-full bg-[#161c2c]" />
-      <div className="flex flex-1 gap-1 p-1.5">
-        <div className="w-1/3 rounded-sm bg-[#161c2c]" />
-        <div className="flex flex-1 flex-col gap-1">
-          <div className="h-1.5 w-3/4 rounded-sm bg-[#2b3550]" />
-          <div className="h-1 w-1/2 rounded-sm bg-[#1d2640]" />
-          <div className="h-1 w-2/3 rounded-sm bg-[#5b8cff]/60" />
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function AutoPreview(): ReactElement {
-  return (
-    <div className="flex h-full w-full">
-      <div className="flex w-1/2 flex-col overflow-hidden bg-white">
-        <div className="h-1.5 w-full bg-gray-100" />
-        <div className="flex flex-1 flex-col gap-1 p-1.5">
-          <div className="h-1.5 w-3/4 rounded-sm bg-gray-200" />
-          <div className="h-1 w-1/2 rounded-sm bg-gray-100" />
-        </div>
-      </div>
-      <div className="flex w-1/2 flex-col overflow-hidden bg-zinc-900">
-        <div className="h-1.5 w-full bg-zinc-800" />
-        <div className="flex flex-1 flex-col gap-1 p-1.5">
-          <div className="h-1.5 w-3/4 rounded-sm bg-zinc-700" />
-          <div className="h-1 w-1/2 rounded-sm bg-zinc-800" />
-        </div>
-      </div>
-    </div>
   );
 }
 
@@ -124,17 +85,20 @@ export function ThemeSelector({ mode, onSelect }: ThemeSelectorProps): ReactElem
         defaultMessage: "Theme",
         id: "aTH1qx",
       })}
-      className="flex flex-wrap gap-2"
+      className="grid grid-cols-[repeat(auto-fit,minmax(150px,1fr))] gap-3"
     >
       <ThemeOption
         value="auto"
         label={intl.formatMessage({
-          description: "ThemeSelector: label - auto option",
-          defaultMessage: "Auto",
-          id: "0nOfE7",
+          description: "ThemeSelector: label - system option, following the device's light or dark mode",
+          defaultMessage: "System",
+          id: "kn0Zt+",
         })}
-        icon={<ComputerDesktopIcon className="h-3 w-3" />}
-        preview={<AutoPreview />}
+        hint={intl.formatMessage({
+          description: "ThemeSelector: hint - system option",
+          defaultMessage: "Follows your device's light or dark mode",
+          id: "2SRn+c",
+        })}
       />
       <ThemeOption
         value="light"
@@ -143,8 +107,11 @@ export function ThemeSelector({ mode, onSelect }: ThemeSelectorProps): ReactElem
           defaultMessage: "Light",
           id: "34xMGO",
         })}
-        icon={<SunIcon className="h-3 w-3" />}
-        preview={<LightPreview />}
+        hint={intl.formatMessage({
+          description: "ThemeSelector: hint - light option",
+          defaultMessage: "White tiles, soft shadows",
+          id: "855fyS",
+        })}
       />
       <ThemeOption
         value="dark"
@@ -153,8 +120,11 @@ export function ThemeSelector({ mode, onSelect }: ThemeSelectorProps): ReactElem
           defaultMessage: "Dark",
           id: "yqsqER",
         })}
-        icon={<MoonIcon className="h-3 w-3" />}
-        preview={<DarkPreview />}
+        hint={intl.formatMessage({
+          description: "ThemeSelector: hint - dark option",
+          defaultMessage: "Graphite, easy on the eyes",
+          id: "M51hxh",
+        })}
       />
       <ThemeOption
         value="midnight"
@@ -163,8 +133,11 @@ export function ThemeSelector({ mode, onSelect }: ThemeSelectorProps): ReactElem
           defaultMessage: "Midnight",
           id: "RsHeiT",
         })}
-        icon={<SparklesIcon className="h-3 w-3" />}
-        preview={<MidnightPreview />}
+        hint={intl.formatMessage({
+          description: "ThemeSelector: hint - midnight option",
+          defaultMessage: "Navy, with glowing accents",
+          id: "+oSpv2",
+        })}
       />
     </RadioGroup>
   );

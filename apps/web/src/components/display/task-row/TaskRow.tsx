@@ -14,7 +14,7 @@ import clsx from "clsx";
 import { useIntl } from "react-intl";
 import { DUE_TONE_CLASS, formatDue, formatReminder, getDueTone } from "./TaskDateFormat";
 import type { TaskRowReorder } from "./UseTaskReorder";
-import { REORDER_ID_ATTRIBUTE } from "./UseTaskReorder";
+import { REORDER_HANDLE_ATTRIBUTE, REORDER_ID_ATTRIBUTE } from "./UseTaskReorder";
 import type { ContextColor } from "~/core/contexts/KlartContext";
 import { formatTaskLink } from "~/core/tasks/TaskLink";
 
@@ -51,7 +51,14 @@ export interface TaskRowProps {
   onOpen?: (taskId: string) => void;
   /** Highlights the row, e.g. while it's open in the editor. */
   isSelected?: boolean;
-  /** Adds a grip to drag the row, from `useTaskReorder`. Ignored for completed tasks. */
+  /** Shows the due date, reminder and note marker under the title. */
+  showMeta?: boolean;
+  /** Shows a button per link that opens it in a new tab. */
+  showLinks?: boolean;
+  /**
+   * Makes the row draggable, from `useTaskReorder`: press and drag it with a mouse, or by its grip on touch
+   * screens. Ignored for completed tasks.
+   */
   reorder?: TaskRowReorder;
 }
 
@@ -81,22 +88,27 @@ export function TaskRow({
   onArchive,
   onOpen,
   isSelected = false,
+  showMeta = true,
+  showLinks = true,
   reorder: reorderProp,
 }: TaskRowProps): ReactElement {
   const intl = useIntl();
   const hasMenu = !!onArchive || (isInMyDay && !!onRemoveFromMyDay);
   const reorder = task.done ? undefined : reorderProp;
-  const hasMeta = showContext || !!task.due || !!task.remindAt || !!task.hasNotes;
+  const hasMeta = showMeta && (showContext || !!task.due || !!task.remindAt || !!task.hasNotes);
 
   return (
     <div
       data-testid="task-row"
       {...{ [REORDER_ID_ATTRIBUTE]: task.id }}
+      {...reorder?.rowProps}
       className={clsx(
         `ctx-${task.contextColor}`,
-        "group flex items-center gap-1.5 pr-2.5",
-        task.done ? "slab-done min-h-12 py-1.5 pl-[26px]" : "slab py-2.5",
-        !task.done && (reorderProp ? "pl-1" : "pl-2"),
+        "group flex flex-col pr-2.5",
+        task.done
+          ? "slab-done compact:min-h-10 compact:py-0.5 min-h-12 justify-center py-1.5 pl-[26px]"
+          : "slab compact:py-1 py-2.5 pl-2",
+        reorder && "slab-draggable select-none",
         reorder?.isLifted && "slab-lifted",
         reorder?.isSettled && "slab-settled",
         isSelected && "outline-2 outline-offset-2 outline-(color:--ctx)"
@@ -113,246 +125,264 @@ export function TaskRow({
         />
       )}
 
-      {reorder && (
-        <span className="slab-reveal flex shrink-0 touch-none" {...reorder.gripProps}>
-          <Button
-            isIconOnly
-            variant="ghost"
-            size="sm"
-            aria-label={intl.formatMessage(
-              {
-                description: "TaskRow - aria-label of the grip that drags a task to reorder My Day",
-                defaultMessage: "Move {title}. Drag, or use the arrow up and down keys.",
-                id: "KyPo/v",
-              },
-              { title: task.title }
-            )}
-            onKeyDown={reorder.onGripKeyDown}
-            className="text-muted h-11 w-[22px] min-w-0 cursor-grab rounded-md active:cursor-grabbing sm:h-9"
-            data-testid="task-row__grip"
-          >
-            <GripIcon />
-          </Button>
-        </span>
-      )}
-
-      <Button
-        isIconOnly
-        variant="ghost"
-        aria-label={
-          task.done
-            ? intl.formatMessage({
-                description: "TaskRow - aria-label for marking a completed task as not completed",
-                defaultMessage: "Mark not completed",
-                id: "lq+lgm",
-              })
-            : intl.formatMessage({
-                description: "TaskRow - aria-label for completing a task",
-                defaultMessage: "Complete task",
-                id: "GcMmcK",
-              })
-        }
-        data-testid="task-row__toggle"
-        onPress={() => onToggleDone(task.id, !task.done)}
-        className="slab-check size-10 shrink-0 rounded-full"
-      >
-        {task.done ? (
-          <span className="grid size-5 place-items-center rounded-full bg-(--ctx)">
-            <CheckIcon className="text-background size-3.5" />
-          </span>
-        ) : (
-          <span
-            className="slab-check-ring relative block size-[22px] rounded-full border-2 shadow-(--slab-check-inset)"
-            // Inline: a global `* { border-color }` rule outside any layer beats Tailwind's border utilities.
-            style={{ borderColor: "var(--ctx)" }}
-          >
-            <span className="slab-check-fill absolute inset-[3px] rounded-full bg-(--ctx) opacity-0 transition-opacity" />
+      {/* The checkbox, title, link and star sit on one line that never moves; tags open up below it. */}
+      <div className="flex items-center gap-1.5">
+        {reorder && (
+          <span className="slab-grip -mr-1.5 shrink-0 touch-none" {...reorder.gripProps}>
+            <Button
+              isIconOnly
+              variant="ghost"
+              size="sm"
+              aria-label={intl.formatMessage(
+                {
+                  description: "TaskRow - aria-label of the grip that drags a task to reorder My Day",
+                  defaultMessage: "Move {title}. Hold and drag, or use the arrow up and down keys.",
+                  id: "pOpSzP",
+                },
+                { title: task.title }
+              )}
+              onKeyDown={reorder.onGripKeyDown}
+              className="text-muted h-11 w-7 min-w-0 rounded-md"
+              data-testid="task-row__grip"
+            >
+              <GripIcon />
+            </Button>
           </span>
         )}
-      </Button>
 
-      <div className="relative flex min-w-0 flex-1 flex-col gap-1 py-1">
-        {onOpen && (
-          // An invisible button over the whole column, so the meta line opens the task too.
-          // It must be the pressed element itself: React Aria drops a press released outside the button's box.
-          <Button
-            variant="ghost"
-            aria-label={intl.formatMessage(
-              {
-                description: "TaskRow - aria-label of the task title, which opens the task editor",
-                defaultMessage: "Edit task: {title}",
-                id: "KEvGdJ",
-              },
-              { title: task.title }
-            )}
-            onPress={() => onOpen(task.id)}
-            className="absolute inset-0 h-auto min-h-0 w-auto transform-none rounded-md p-0 data-[hovered=true]:bg-transparent data-[pressed=true]:bg-transparent"
-            data-testid="task-row__open"
-          />
-        )}
-        <span
-          className={clsx(
-            task.done ? "text-muted text-sm line-through" : "text-[15px] font-semibold tracking-[-0.005em]"
-          )}
-          data-testid="task-row__title"
-        >
-          {task.title}
-        </span>
-        {!task.done && hasMeta && (
-          <span className="text-muted flex flex-wrap items-center gap-x-2.5 gap-y-0.5 text-xs">
-            {showContext && (
-              <span className="inline-flex items-center gap-1.5">
-                <span className="size-1.5 rounded-full bg-(--ctx)" aria-hidden />
-                {task.contextName}
-              </span>
-            )}
-            {task.due && (
-              <span className={clsx("font-semibold", DUE_TONE_CLASS[getDueTone(task.due, today)])}>
-                {formatDue(intl, task.due, today)}
-              </span>
-            )}
-            {task.remindAt && (
-              <span className="inline-flex items-center gap-1">
-                <BellIcon className="size-3" aria-hidden />
-                {formatReminder(intl, task.remindAt, today)}
-              </span>
-            )}
-            {task.hasNotes && (
-              <span className="inline-flex items-center gap-1">
-                <Bars3BottomLeftIcon className="size-3" aria-hidden />
-                {intl.formatMessage({
-                  description: "TaskRow - marker shown when a task has a note",
-                  defaultMessage: "Note",
-                  id: "necy86",
-                })}
-              </span>
-            )}
-          </span>
-        )}
-        {!task.done && task.tags.length > 0 && (
-          <span className="slab-tags flex flex-wrap gap-1.5" data-testid="task-row__tags">
-            {task.tags.map((tag) => (
-              <span
-                key={tag}
-                className="h-[22px] rounded-full bg-(--tag)/14 px-[9px] text-xs leading-[22px] font-medium text-(--tag)"
-              >
-                #{tag}
-              </span>
-            ))}
-          </span>
-        )}
-      </div>
-
-      {!task.done &&
-        task.links.map((link) => (
-          <Link
-            key={link}
-            href={link}
-            target="_blank"
-            rel="noreferrer"
-            aria-label={intl.formatMessage(
-              {
-                description: "TaskRow - aria-label for a link to the task's source, opened in a new tab",
-                defaultMessage: "Open link to {host}",
-                id: "ahIXxO",
-              },
-              { host: formatTaskLink(link) }
-            )}
-            data-testid="task-row__link"
-            className="relative z-10 grid size-9 shrink-0 place-items-center rounded-[10px] bg-(--tag)/14 text-(--tag) no-underline transition hover:scale-106 hover:bg-(--tag)/28"
-          >
-            <ArrowTopRightOnSquareIcon className="size-4" aria-hidden />
-          </Link>
-        ))}
-
-      {!task.done && onAddToMyDay && !isInMyDay && (
         <Button
           isIconOnly
           variant="ghost"
-          size="sm"
-          aria-label={intl.formatMessage({
-            description: "TaskRow - aria-label for adding a task to My Day",
-            defaultMessage: "Add to My Day",
-            id: "86HuCS",
-          })}
-          onPress={() => onAddToMyDay(task.id)}
+          aria-label={
+            task.done
+              ? intl.formatMessage({
+                  description: "TaskRow - aria-label for marking a completed task as not completed",
+                  defaultMessage: "Mark not completed",
+                  id: "lq+lgm",
+                })
+              : intl.formatMessage({
+                  description: "TaskRow - aria-label for completing a task",
+                  defaultMessage: "Complete task",
+                  id: "GcMmcK",
+                })
+          }
+          data-testid="task-row__toggle"
+          onPress={() => onToggleDone(task.id, !task.done)}
+          className="slab-check size-10 shrink-0 rounded-full"
         >
-          <SunIcon className="size-4" />
-        </Button>
-      )}
-
-      {!task.done && (
-        <ToggleButton
-          isIconOnly
-          variant="ghost"
-          size="sm"
-          isSelected={task.important}
-          onChange={() => onToggleImportant(task.id)}
-          aria-label={intl.formatMessage({
-            description: "TaskRow - aria-label for the important toggle",
-            defaultMessage: "Mark important",
-            id: "es9TNB",
-          })}
-          data-testid="task-row__important"
-          className={clsx(
-            "size-9 data-[selected=true]:bg-transparent",
-            task.important ? "text-(--star)" : "text-muted"
+          {task.done ? (
+            <span className="grid size-5 place-items-center rounded-full bg-(--ctx)">
+              <CheckIcon className="text-background size-3.5" />
+            </span>
+          ) : (
+            <span
+              className="slab-check-ring relative block size-[22px] rounded-full border-2 shadow-(--slab-check-inset)"
+              // Inline: a global `* { border-color }` rule outside any layer beats Tailwind's border utilities.
+              style={{ borderColor: "var(--ctx)" }}
+            >
+              <span className="slab-check-fill absolute inset-[3px] rounded-full bg-(--ctx) opacity-0 transition-opacity" />
+            </span>
           )}
-        >
-          {task.important ? <StarIcon className="size-[18px]" /> : <StarOutlineIcon className="size-[18px]" />}
-        </ToggleButton>
-      )}
+        </Button>
 
-      {hasMenu && (
-        <Dropdown>
+        <div className="relative flex min-w-0 flex-1 flex-col gap-1 py-1">
+          {onOpen && (
+            // An invisible button over the whole column, so the meta line opens the task too.
+            // It must be the pressed element itself: React Aria drops a press released outside the button's box.
+            <Button
+              variant="ghost"
+              aria-label={
+                reorder
+                  ? intl.formatMessage(
+                      {
+                        description:
+                          "TaskRow - aria-label of the task title, which opens the task editor, in a reorderable list",
+                        defaultMessage: "Edit task: {title}. Drag, or press Alt and arrow up or down, to reorder.",
+                        id: "RsrGjL",
+                      },
+                      { title: task.title }
+                    )
+                  : intl.formatMessage(
+                      {
+                        description: "TaskRow - aria-label of the task title, which opens the task editor",
+                        defaultMessage: "Edit task: {title}",
+                        id: "KEvGdJ",
+                      },
+                      { title: task.title }
+                    )
+              }
+              onPress={() => !reorder?.isDropping() && onOpen(task.id)}
+              onKeyDown={reorder?.onRowKeyDown}
+              {...{ [REORDER_HANDLE_ATTRIBUTE]: "" }}
+              className="absolute inset-0 h-auto min-h-0 w-auto transform-none rounded-md p-0 data-[hovered=true]:bg-transparent data-[pressed=true]:bg-transparent"
+              data-testid="task-row__open"
+            />
+          )}
+          <span
+            className={clsx(
+              task.done ? "text-muted text-sm line-through" : "text-[15px] font-semibold tracking-[-0.005em]"
+            )}
+            data-testid="task-row__title"
+          >
+            {task.title}
+          </span>
+          {!task.done && hasMeta && (
+            <span className="text-muted flex flex-wrap items-center gap-x-2.5 gap-y-0.5 text-xs">
+              {showContext && (
+                <span className="inline-flex items-center gap-1.5">
+                  <span className="size-1.5 rounded-full bg-(--ctx)" aria-hidden />
+                  {task.contextName}
+                </span>
+              )}
+              {task.due && (
+                <span className={clsx("font-semibold", DUE_TONE_CLASS[getDueTone(task.due, today)])}>
+                  {formatDue(intl, task.due, today)}
+                </span>
+              )}
+              {task.remindAt && (
+                <span className="inline-flex items-center gap-1">
+                  <BellIcon className="size-3" aria-hidden />
+                  {formatReminder(intl, task.remindAt, today)}
+                </span>
+              )}
+              {task.hasNotes && (
+                <span className="inline-flex items-center gap-1">
+                  <Bars3BottomLeftIcon className="size-3" aria-hidden />
+                  {intl.formatMessage({
+                    description: "TaskRow - marker shown when a task has a note",
+                    defaultMessage: "Note",
+                    id: "necy86",
+                  })}
+                </span>
+              )}
+            </span>
+          )}
+        </div>
+
+        {!task.done &&
+          showLinks &&
+          task.links.map((link) => (
+            <Link
+              key={link}
+              href={link}
+              target="_blank"
+              rel="noreferrer"
+              aria-label={intl.formatMessage(
+                {
+                  description: "TaskRow - aria-label for a link to the task's source, opened in a new tab",
+                  defaultMessage: "Open link to {host}",
+                  id: "ahIXxO",
+                },
+                { host: formatTaskLink(link) }
+              )}
+              data-testid="task-row__link"
+              className="relative z-10 grid size-9 shrink-0 place-items-center rounded-[10px] bg-(--tag)/14 text-(--tag) no-underline transition hover:scale-106 hover:bg-(--tag)/28"
+            >
+              <ArrowTopRightOnSquareIcon className="size-4" aria-hidden />
+            </Link>
+          ))}
+
+        {!task.done && onAddToMyDay && !isInMyDay && (
           <Button
             isIconOnly
             variant="ghost"
             size="sm"
-            className="slab-reveal text-muted"
             aria-label={intl.formatMessage({
-              description: "TaskRow - aria-label for the task actions menu",
-              defaultMessage: "Task actions",
-              id: "CKmqfO",
+              description: "TaskRow - aria-label for adding a task to My Day",
+              defaultMessage: "Add to My Day",
+              id: "86HuCS",
             })}
+            onPress={() => onAddToMyDay(task.id)}
           >
-            <EllipsisHorizontalIcon className="size-4" />
+            <SunIcon className="size-4" />
           </Button>
-          <Dropdown.Popover>
-            <Dropdown.Menu
-              onAction={(key) => {
-                if (key === "remove") {
-                  onRemoveFromMyDay?.(task.id);
-                } else if (key === "archive") {
-                  onArchive?.(task.id);
-                }
-              }}
+        )}
+
+        {!task.done && (
+          <ToggleButton
+            isIconOnly
+            variant="ghost"
+            size="sm"
+            isSelected={task.important}
+            onChange={() => onToggleImportant(task.id)}
+            aria-label={intl.formatMessage({
+              description: "TaskRow - aria-label for the important toggle",
+              defaultMessage: "Mark important",
+              id: "es9TNB",
+            })}
+            data-testid="task-row__important"
+            className={clsx(
+              "size-9 data-[selected=true]:bg-transparent",
+              task.important ? "text-(--star)" : "text-muted"
+            )}
+          >
+            {task.important ? <StarIcon className="size-[18px]" /> : <StarOutlineIcon className="size-[18px]" />}
+          </ToggleButton>
+        )}
+
+        {hasMenu && (
+          <Dropdown>
+            <Button
+              isIconOnly
+              variant="ghost"
+              size="sm"
+              className="slab-reveal text-muted"
+              aria-label={intl.formatMessage({
+                description: "TaskRow - aria-label for the task actions menu",
+                defaultMessage: "Task actions",
+                id: "CKmqfO",
+              })}
             >
-              {isInMyDay && onRemoveFromMyDay ? (
-                <Dropdown.Item id="remove" textValue="remove">
-                  <Label>
-                    {intl.formatMessage({
-                      description: "TaskRow - menu item removing a task from My Day",
-                      defaultMessage: "Remove from My Day",
-                      id: "XaqG4n",
-                    })}
-                  </Label>
-                </Dropdown.Item>
-              ) : null}
-              {onArchive ? (
-                <Dropdown.Item id="archive" textValue="archive" variant="danger">
-                  <Label>
-                    {intl.formatMessage({
-                      description: "TaskRow - menu item archiving (deleting) a task",
-                      defaultMessage: "Delete task",
-                      id: "S01fgv",
-                    })}
-                  </Label>
-                </Dropdown.Item>
-              ) : null}
-            </Dropdown.Menu>
-          </Dropdown.Popover>
-        </Dropdown>
+              <EllipsisHorizontalIcon className="size-4" />
+            </Button>
+            <Dropdown.Popover>
+              <Dropdown.Menu
+                onAction={(key) => {
+                  if (key === "remove") {
+                    onRemoveFromMyDay?.(task.id);
+                  } else if (key === "archive") {
+                    onArchive?.(task.id);
+                  }
+                }}
+              >
+                {isInMyDay && onRemoveFromMyDay ? (
+                  <Dropdown.Item id="remove" textValue="remove">
+                    <Label>
+                      {intl.formatMessage({
+                        description: "TaskRow - menu item removing a task from My Day",
+                        defaultMessage: "Remove from My Day",
+                        id: "XaqG4n",
+                      })}
+                    </Label>
+                  </Dropdown.Item>
+                ) : null}
+                {onArchive ? (
+                  <Dropdown.Item id="archive" textValue="archive" variant="danger">
+                    <Label>
+                      {intl.formatMessage({
+                        description: "TaskRow - menu item archiving (deleting) a task",
+                        defaultMessage: "Delete task",
+                        id: "S01fgv",
+                      })}
+                    </Label>
+                  </Dropdown.Item>
+                ) : null}
+              </Dropdown.Menu>
+            </Dropdown.Popover>
+          </Dropdown>
+        )}
+      </div>
+      {!task.done && task.tags.length > 0 && (
+        <span className="slab-tags flex flex-wrap gap-1.5 pl-[46px]" data-testid="task-row__tags">
+          {task.tags.map((tag) => (
+            <span
+              key={tag}
+              className="h-[22px] rounded-full bg-(--tag)/14 px-[9px] text-xs leading-[22px] font-medium text-(--tag)"
+            >
+              #{tag}
+            </span>
+          ))}
+        </span>
       )}
     </div>
   );

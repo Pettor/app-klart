@@ -1,8 +1,8 @@
 import type { ReactElement } from "react";
 import { ChevronRightIcon, CloudIcon, ComputerDesktopIcon, ExclamationTriangleIcon } from "@heroicons/react/24/outline";
-import { Button } from "@heroui/react";
+import { Button, Tooltip } from "@heroui/react";
 import clsx from "clsx";
-import { FormattedRelativeTime, useIntl } from "react-intl";
+import { useIntl } from "react-intl";
 import type { SyncStatus } from "~/core/sync/SyncAtoms";
 
 export interface SyncStatusCardProps {
@@ -10,13 +10,20 @@ export interface SyncStatusCardProps {
   onPress: () => void;
   /** Rendered at this time; injected so stories are stable. */
   now?: number;
+  /** `icon` is the square button in the collapsed sidebar, with the status in a tooltip. */
+  variant?: "card" | "icon";
 }
 
-export function SyncStatusCard({ status, onPress, now = Date.now() }: SyncStatusCardProps): ReactElement {
+export function SyncStatusCard({
+  status,
+  onPress,
+  now = Date.now(),
+  variant = "card",
+}: SyncStatusCardProps): ReactElement {
   const intl = useIntl();
 
   let icon = <ComputerDesktopIcon className="text-muted size-[18px]" aria-hidden />;
-  let title: ReactElement | string = intl.formatMessage({
+  let title = intl.formatMessage({
     description: "SyncStatusCard - title when data is only stored in this browser",
     defaultMessage: "Only on this device",
     id: "1rX5M5",
@@ -46,32 +53,46 @@ export function SyncStatusCard({ status, onPress, now = Date.now() }: SyncStatus
   } else if (status.state === "syncing" || status.state === "synced") {
     icon = <CloudIcon className="text-success size-[18px]" aria-hidden />;
     const seconds = status.lastSyncedAt ? Math.round((Date.parse(status.lastSyncedAt) - now) / 1000) : null;
-    title =
-      seconds === null ? (
-        intl.formatMessage({
-          description: "SyncStatusCard - title while syncing",
-          defaultMessage: "Syncing…",
-          id: "eP7ub+",
-        })
-      ) : (
-        <>
-          {intl.formatMessage({
-            description: "SyncStatusCard - prefix before the relative time",
-            defaultMessage: "Synced",
-            id: "UFubm9",
-          })}{" "}
-          {seconds > -60 ? (
-            intl.formatMessage({
+    if (seconds === null) {
+      title = intl.formatMessage({
+        description: "SyncStatusCard - title while syncing",
+        defaultMessage: "Syncing…",
+        id: "eP7ub+",
+      });
+    } else {
+      const ago =
+        seconds > -60
+          ? intl.formatMessage({
               description: "SyncStatusCard - synced moments ago",
               defaultMessage: "just now",
               id: "WaaNo8",
             })
-          ) : (
-            <FormattedRelativeTime value={Math.round(seconds / 60)} unit="minute" numeric="auto" />
-          )}
-        </>
-      );
+          : intl.formatRelativeTime(Math.round(seconds / 60), "minute", { numeric: "auto" });
+      title = `${intl.formatMessage({
+        description: "SyncStatusCard - prefix before the relative time",
+        defaultMessage: "Synced",
+        id: "UFubm9",
+      })} ${ago}`;
+    }
     subtitle = status.folderName ?? "";
+  }
+
+  if (variant === "icon") {
+    return (
+      <Tooltip delay={300}>
+        <Button
+          isIconOnly
+          variant="ghost"
+          onPress={onPress}
+          aria-label={subtitle ? `${title}. ${subtitle}` : title}
+          data-testid="sync-status-card"
+          className="size-10 rounded-[10px] [&_svg]:size-5"
+        >
+          {icon}
+        </Button>
+        <Tooltip.Content placement="right">{title}</Tooltip.Content>
+      </Tooltip>
+    );
   }
 
   return (

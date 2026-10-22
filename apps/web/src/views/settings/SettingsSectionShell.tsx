@@ -12,9 +12,10 @@ export function SettingsSectionShell({ id, title, description, children }: Setti
   return (
     <section id={id} aria-labelledby={`${id}-heading`} className="flex scroll-mt-6 flex-col gap-3.5">
       <div className="flex flex-col gap-1">
-        <h2 id={`${id}-heading`} className="text-xl font-bold">
+        {/* Settings shows one section at a time, so its heading is the page's. */}
+        <h1 id={`${id}-heading`} className="text-[26px] font-bold tracking-tight">
           {title}
-        </h2>
+        </h1>
         {description && <p className="text-muted leading-relaxed">{description}</p>}
       </div>
       {children}

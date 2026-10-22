@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, fn } from "storybook/test";
+import { expect, fn, screen, within } from "storybook/test";
 import { SettingsView as Component } from "./SettingsView";
 import type { SettingsViewProps as Props } from "./SettingsView";
 import {
@@ -7,6 +7,7 @@ import {
   DEFAULT_NOTIFICATION_SETTINGS,
 } from "~/core/notifications/NotificationSettings";
 import { LLMS_TXT } from "~/core/sync/LlmsTxt";
+import { DEFAULT_SUGGESTION_SETTINGS } from "~/core/tasks/SuggestionSettings";
 import { DEMO_CONTEXTS } from "~/storybook/data/KlartDemoData";
 
 const NOW = Date.parse("2026-10-21T10:00:00Z");
@@ -63,7 +64,21 @@ const defaultArgs = {
     onChange: fn(),
     onContextChange: fn(),
   },
-  appearance: { themeSelector: { mode: "auto", onSelect: fn() } },
+  general: {
+    startContext: "last",
+    contexts: DEMO_CONTEXTS.map(({ id, name, color }) => ({ id, name, color })),
+    onStartContextChange: fn(),
+  },
+  appearance: {
+    themeSelector: { mode: "auto", onSelect: fn() },
+    density: "comfortable",
+    onDensityChange: fn(),
+    tintByContext: true,
+    onTintByContextChange: fn(),
+    motion: "system",
+    onMotionChange: fn(),
+  },
+  suggestions: { settings: DEFAULT_SUGGESTION_SETTINGS, onChange: fn() },
   about: { appName: "Klart", version: "0.1.0", build: "42", commit: "447df5b", onShowWhatsNew: fn() },
 } satisfies Props;
 
@@ -84,7 +99,7 @@ export const Default: Story = {
 };
 
 export const About: Story = {
-  args: defaultArgs,
+  args: { ...defaultArgs, initialSection: "about" },
   play: async ({ args, canvas, userEvent }) => {
     await expect(canvas.getByTestId("settings__about-version")).toHaveTextContent("0.1.0");
     await expect(canvas.getByTestId("settings__about-build")).toHaveTextContent("42");
@@ -95,7 +110,11 @@ export const About: Story = {
 };
 
 export const AboutLocalBuild: Story = {
-  args: { ...defaultArgs, about: { appName: "Klart", version: "0.1.0", onShowWhatsNew: fn() } },
+  args: {
+    ...defaultArgs,
+    initialSection: "about",
+    about: { appName: "Klart", version: "0.1.0", onShowWhatsNew: fn() },
+  },
   play: async ({ canvas }) => {
     await expect(canvas.getByTestId("settings__about-build")).toHaveTextContent("Local build");
     await expect(canvas.queryByTestId("settings__about-commit")).toBeNull();
@@ -105,6 +124,7 @@ export const AboutLocalBuild: Story = {
 export const LocalOnly: Story = {
   args: {
     ...defaultArgs,
+    initialSection: "sync",
     sync: { ...defaultArgs.sync, status: { state: "local", method: "local" }, devices: [] },
     notifications: { ...defaultArgs.notifications, permission: "default" },
   },
@@ -113,6 +133,7 @@ export const LocalOnly: Story = {
 export const NeedsPermission: Story = {
   args: {
     ...defaultArgs,
+    initialSection: "sync",
     sync: { ...defaultArgs.sync, status: { state: "needs-permission", method: "folder", folderName: "Klart" } },
   },
   play: async ({ args, canvas, userEvent }) => {
@@ -124,6 +145,7 @@ export const NeedsPermission: Story = {
 export const UnsupportedBrowser: Story = {
   args: {
     ...defaultArgs,
+    initialSection: "sync",
     sync: { ...defaultArgs.sync, status: { state: "local", method: "local" }, isSupported: false, devices: [] },
   },
 };
@@ -131,6 +153,7 @@ export const UnsupportedBrowser: Story = {
 export const DesktopGitConnected: Story = {
   args: {
     ...defaultArgs,
+    initialSection: "sync",
     sync: {
       ...defaultArgs.sync,
       isDesktop: true,
@@ -155,6 +178,7 @@ export const DesktopGitConnected: Story = {
 export const DesktopGitError: Story = {
   args: {
     ...defaultArgs,
+    initialSection: "sync",
     sync: {
       ...defaultArgs.sync,
       isDesktop: true,
@@ -177,6 +201,7 @@ export const DesktopGitError: Story = {
 export const DesktopGitClone: Story = {
   args: {
     ...defaultArgs,
+    initialSection: "sync",
     sync: { ...defaultArgs.sync, isDesktop: true, isGitSupported: true, status: { state: "local", method: "local" } },
   },
   play: async ({ args, canvas, userEvent }) => {
@@ -191,6 +216,7 @@ export const DesktopGitClone: Story = {
 export const DesktopWithoutGit: Story = {
   args: {
     ...defaultArgs,
+    initialSection: "sync",
     sync: { ...defaultArgs.sync, isDesktop: true, isGitSupported: false, status: { state: "local", method: "local" } },
   },
 };
@@ -198,6 +224,7 @@ export const DesktopWithoutGit: Story = {
 export const GitHubSetup: Story = {
   args: {
     ...defaultArgs,
+    initialSection: "sync",
     sync: { ...defaultArgs.sync, isSupported: false, status: { state: "local", method: "local" }, devices: [] },
   },
   play: async ({ args, canvas, userEvent }) => {
@@ -219,6 +246,7 @@ export const GitHubSetup: Story = {
 export const GitHubConnected: Story = {
   args: {
     ...defaultArgs,
+    initialSection: "sync",
     sync: {
       ...defaultArgs.sync,
       isSupported: false,
@@ -242,6 +270,7 @@ export const GitHubConnected: Story = {
 export const GitHubTokenRejected: Story = {
   args: {
     ...defaultArgs,
+    initialSection: "sync",
     sync: {
       ...defaultArgs.sync,
       status: {
@@ -273,10 +302,49 @@ export const PhoneGitHub: Story = {
 };
 
 export const CreateContext: Story = {
-  args: defaultArgs,
+  args: { ...defaultArgs, initialSection: "contexts" },
   play: async ({ args, canvas, userEvent }) => {
     await userEvent.type(canvas.getByTestId("settings__new-context-name"), "Side project");
     await userEvent.click(canvas.getByTestId("settings__new-context"));
     await expect(args.contexts.onCreate).toHaveBeenCalledWith("Side project", "teal");
+  },
+};
+
+export const General: Story = {
+  args: defaultArgs,
+  play: async ({ args, canvas, userEvent }) => {
+    await userEvent.click(within(canvas.getByTestId("settings__start-context")).getByRole("button"));
+    await userEvent.click(await screen.findByRole("option", { name: /Work/ }));
+    await expect(args.general.onStartContextChange).toHaveBeenCalledWith("work");
+  },
+};
+
+export const Appearance: Story = {
+  args: { ...defaultArgs, initialSection: "appearance" },
+  play: async ({ args, canvas, userEvent }) => {
+    await userEvent.click(canvas.getByRole("radio", { name: "Compact" }));
+    await expect(args.appearance.onDensityChange).toHaveBeenCalledWith("compact");
+    await userEvent.click(canvas.getByRole("radio", { name: "Reduced" }));
+    await expect(args.appearance.onMotionChange).toHaveBeenCalledWith("reduced");
+  },
+};
+
+export const Suggestions: Story = {
+  args: { ...defaultArgs, initialSection: "suggestions" },
+  play: async ({ args, canvas, userEvent }) => {
+    await userEvent.click(within(canvas.getByTestId("settings__suggest-recently_added")).getByRole("switch"));
+    await expect(args.suggestions.onChange).toHaveBeenCalledWith({
+      ...DEFAULT_SUGGESTION_SETTINGS,
+      disabled: ["recently_added"],
+    });
+  },
+};
+
+/** Picking a section in the nav swaps the pane. */
+export const SwitchSections: Story = {
+  args: defaultArgs,
+  play: async ({ canvas, userEvent }) => {
+    await userEvent.click(canvas.getByTestId("settings__nav-sync"));
+    await expect(canvas.getByRole("heading", { level: 1, name: "Sync" })).toBeVisible();
   },
 };

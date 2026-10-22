@@ -1,5 +1,6 @@
 import type { DayFile, SuggestionReason } from "./Day";
 import { addDays } from "./LocalDate";
+import type { SuggestionSettings } from "./SuggestionSettings";
 import type { Task } from "./Task";
 import { compareByDue, isOpen } from "./Task";
 
@@ -16,9 +17,11 @@ export interface SuggestionInput {
   yesterdayDay?: DayFile;
   /** Tags that only route to a context (e.g. `work`); ignored for "related to today". */
   contextTags?: string[];
+  /** Groups switched off and the "coming up" window, from settings. */
+  settings?: SuggestionSettings;
 }
 
-/** How many days ahead counts as "coming up". */
+/** How many days ahead counts as "coming up", unless settings say otherwise. */
 export const COMING_UP_DAYS = 3;
 
 function newestFirst(a: Task, b: Task): number {
@@ -36,6 +39,7 @@ export function buildSuggestions({
   todayDay,
   yesterdayDay,
   contextTags = [],
+  settings,
 }: SuggestionInput): SuggestionGroup[] {
   const inToday = new Set(todayDay?.items.map((item) => item.taskId));
   const inYesterday = new Set(yesterdayDay?.items.map((item) => item.taskId));
@@ -46,7 +50,8 @@ export function buildSuggestions({
       .flatMap((task) => task.tags)
       .filter((tag) => !ignoredTags.has(tag))
   );
-  const comingUpLimit = addDays(today, COMING_UP_DAYS);
+  const comingUpLimit = addDays(today, settings?.comingUpDays ?? COMING_UP_DAYS);
+  const disabled = new Set(settings?.disabled);
 
   const rules: { reason: SuggestionReason; matches: (task: Task) => boolean; sort: (a: Task, b: Task) => number }[] = [
     { reason: "overdue", matches: (task) => !!task.due && task.due < today, sort: compareByDue },
@@ -64,7 +69,7 @@ export function buildSuggestions({
   let pool = tasks.filter((task) => isOpen(task) && !inToday.has(task.id));
   const groups: SuggestionGroup[] = [];
 
-  for (const rule of rules) {
+  for (const rule of rules.filter((candidate) => !disabled.has(candidate.reason))) {
     const matched = pool.filter(rule.matches);
     if (matched.length > 0) {
       groups.push({ reason: rule.reason, tasks: matched.sort(rule.sort) });

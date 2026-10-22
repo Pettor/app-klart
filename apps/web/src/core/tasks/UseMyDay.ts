@@ -9,6 +9,7 @@ import {
   searchFocusRequestAtom,
   searchQueryAtom,
   smartViewAtom,
+  suggestionSettingsAtom,
   tagFilterAtom,
   todayAtom,
 } from "./KlartAtoms";
@@ -76,6 +77,7 @@ export function useMyDay(): MyDayState {
   const [tag, setTag] = useAtom(tagFilterAtom);
   const [search, setSearch] = useAtom(searchQueryAtom);
   const searchFocusRequest = useAtomValue(searchFocusRequestAtom);
+  const suggestionSettings = useAtomValue(suggestionSettingsAtom);
 
   const currentContext =
     currentContextRaw === ALL_CONTEXTS || data.contexts.some((context) => context.id === currentContextRaw)
@@ -154,6 +156,7 @@ export function useMyDay(): MyDayState {
       todayDay,
       yesterdayDay: data.days[addDays(today, -1)],
       contextTags,
+      settings: suggestionSettings,
     });
 
     const fullView = buildTodayView(data, today, toUtcTimestamp(new Date()));
@@ -170,7 +173,7 @@ export function useMyDay(): MyDayState {
       inTodayIds,
       todayView,
     };
-  }, [data, today, currentContext, tag, search, smartView]);
+  }, [data, today, currentContext, tag, search, smartView, suggestionSettings]);
 
   return {
     today,
