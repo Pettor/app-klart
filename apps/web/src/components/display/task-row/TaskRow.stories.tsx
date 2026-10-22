@@ -61,11 +61,58 @@ export const WithLinks: Story = {
   play: async ({ canvas }) => {
     const links = canvas.getAllByTestId("task-row__link");
     await expect(links).toHaveLength(2);
-    await expect(links[0]).toHaveTextContent("github.com");
+    await expect(links[0]).toHaveAccessibleName("Open link to github.com");
     await expect(links[0]).toHaveAttribute("href", "https://github.com/acme/gateway-client/pull/412");
     await expect(links[0]).toHaveAttribute("target", "_blank");
-    await expect(links[1]).toHaveTextContent("notion.so");
+    await expect(links[1]).toHaveAccessibleName("Open link to notion.so");
   },
+};
+
+/** Tags are hidden until the row is hovered or focused, unless an ancestor has `slab-tags-on`. */
+export const TagsShown: Story = {
+  args: defaultArgs,
+  decorators: [
+    (Story) => (
+      <div className="slab-tags-on">
+        <Story />
+      </div>
+    ),
+  ],
+};
+
+export const WithNote: Story = {
+  args: { ...defaultArgs, task: { ...defaultArgs.task, hasNotes: true } },
+};
+
+/** With a grip from `useTaskReorder`: drag it, or focus it and press arrow up or down. */
+export const Reorderable: Story = {
+  args: {
+    ...defaultArgs,
+    reorder: {
+      isLifted: false,
+      offsetY: 0,
+      dropIndicator: null,
+      isSettled: false,
+      gripProps: { onPointerDownCapture: fn(), onPointerMove: fn(), onPointerUp: fn(), onPointerCancel: fn() },
+      onGripKeyDown: fn(),
+    },
+  },
+  play: async ({ args, canvas, userEvent }) => {
+    canvas.getByTestId("task-row__grip").focus();
+    await userEvent.keyboard("{ArrowUp}");
+    await expect(args.reorder!.onGripKeyDown).toHaveBeenCalled();
+  },
+};
+
+export const DropIndicator: Story = {
+  args: { ...Reorderable.args!, reorder: { ...Reorderable.args!.reorder!, dropIndicator: "before" } },
+  decorators: [
+    (Story) => (
+      <div className="pt-4">
+        <Story />
+      </div>
+    ),
+  ],
 };
 
 export const WithContext: Story = {

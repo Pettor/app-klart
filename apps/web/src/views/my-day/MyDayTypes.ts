@@ -1,6 +1,7 @@
 import type { ContextSwitcherOption } from "~/components/actions/context-switcher/ContextSwitcher";
 import type { SuggestionListGroup } from "~/components/display/suggestion-list/SuggestionList";
 import type { TaskRowTask } from "~/components/display/task-row/TaskRow";
+import type { TaskDropPosition } from "~/components/display/task-row/UseTaskReorder";
 import type { QuickAddPreview } from "~/components/input/quick-add/QuickAddInput";
 import type {
   TaskEditorContextOption,
@@ -43,6 +44,8 @@ export interface MyDayTaskActions {
   onArchive: (taskId: string) => void;
   /** Opens the task in the editor. */
   onOpen: (taskId: string) => void;
+  /** Reorders My Day: puts a task just before or after another one. */
+  onMoveInMyDay: (taskId: string, targetId: string, position: TaskDropPosition) => void;
 }
 
 export interface MyDayTaskEditorProps {

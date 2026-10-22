@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect } from "storybook/test";
+import { expect, fn } from "storybook/test";
 import { ThemeSelector as Component } from "./ThemeSelector";
 import type { ThemeSelectorProps as Props } from "./ThemeSelector";
 
@@ -43,5 +43,17 @@ export const SelectDark: Story = {
     const darkOption = canvas.getByRole("radio", { name: "Dark" });
     await expect(darkOption).toBeInTheDocument();
     await userEvent.click(darkOption);
+  },
+};
+
+export const Midnight: Story = {
+  args: { ...defaultArgs, mode: "midnight" },
+};
+
+export const SelectMidnight: Story = {
+  args: { ...defaultArgs, mode: "dark", onSelect: fn() },
+  play: async ({ args, canvas, userEvent }) => {
+    await userEvent.click(canvas.getByRole("radio", { name: "Midnight" }));
+    await expect(args.onSelect).toHaveBeenCalledWith("midnight");
   },
 };

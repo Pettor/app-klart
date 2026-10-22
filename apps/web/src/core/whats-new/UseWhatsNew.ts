@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo } from "react";
 import { useAtom } from "jotai";
 import type { ReleaseNote } from "./ReleaseNotes";
 import { RELEASE_NOTES } from "./ReleaseNotes";
-import { compareVersions, getUnseenReleaseNotes } from "./WhatsNew";
+import { compareVersions, getNewerVersion, getUnseenReleaseNotes } from "./WhatsNew";
 import { lastSeenVersionAtom, whatsNewRequestedAtom } from "./WhatsNewAtoms";
 
 /** Read before anything writes, so a brand-new install isn't mistaken for an update. */
@@ -40,8 +40,9 @@ export function useWhatsNew(): WhatsNewState {
   );
 
   // Nothing to announce (fresh install, or no notes for this version): remember the version quietly.
+  // Only ever forward: an older build in another tab must not undo what a newer one marked as seen.
   useEffect(() => {
-    if (unseen.length === 0 && lastSeenVersion !== currentVersion) {
+    if (unseen.length === 0 && getNewerVersion(currentVersion, lastSeenVersion) !== lastSeenVersion) {
       setLastSeenVersion(currentVersion);
     }
   }, [currentVersion, lastSeenVersion, setLastSeenVersion, unseen.length]);
@@ -55,7 +56,7 @@ export function useWhatsNew(): WhatsNewState {
 
   const close = useCallback(() => {
     setRequested(false);
-    setLastSeenVersion(currentVersion);
+    setLastSeenVersion((stored) => getNewerVersion(currentVersion, stored));
   }, [currentVersion, setLastSeenVersion, setRequested]);
 
   return { isOpen: releases.length > 0, releases, open, close };

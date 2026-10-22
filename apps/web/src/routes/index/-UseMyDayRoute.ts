@@ -11,7 +11,7 @@ import { useHierarchyNavigation } from "~/core/routes/UseHierarchyNavigation";
 import type { SettingsSectionId } from "~/core/settings/SettingsSection";
 import { taskPath } from "~/core/sync/FolderSync";
 import { useFolderSync } from "~/core/sync/UseFolderSync";
-import { showAgentJsonAtom, showSuggestionsAtom } from "~/core/tasks/KlartAtoms";
+import { showAgentJsonAtom, showSuggestionsAtom, showTaskTagsAtom } from "~/core/tasks/KlartAtoms";
 import type { TaskPatch } from "~/core/tasks/KlartData";
 import { parseQuickAdd } from "~/core/tasks/QuickAdd";
 import { selectDueSuggestions } from "~/core/tasks/Suggestions";
@@ -36,6 +36,7 @@ function toMyDayTask(task: Task, contexts: KlartContext[], inTodayIds: Set<strin
     remindAt: task.remindAt,
     tags: task.tags.filter((tag) => tag !== context?.tag),
     links: task.links,
+    hasNotes: !!task.notes.trim(),
     contextName: context?.name ?? task.context,
     contextColor: context?.color ?? "blue",
     isInMyDay: inTodayIds.has(task.id),
@@ -71,6 +72,7 @@ export function useMyDayRoute(editingId: string | null): MyDayViewProps {
   const [showSuggestions, setShowSuggestions] = useAtom(showSuggestionsAtom);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [showJson, setShowJson] = useAtom(showAgentJsonAtom);
+  const [showTaskTags, setShowTaskTags] = useAtom(showTaskTagsAtom);
   const [draft, setDraft] = useState("");
   const editingTask = useTask(editingId);
 
@@ -232,6 +234,7 @@ export function useMyDayRoute(editingId: string | null): MyDayViewProps {
         openTask(taskId);
         setIsSheetOpen(false);
       },
+      onMoveInMyDay: actions.moveInToday,
     },
     quickAdd: {
       value: draft,
@@ -279,6 +282,7 @@ export function useMyDayRoute(editingId: string | null): MyDayViewProps {
       onToggle: () => setShowJson(!showJson),
       json: JSON.stringify(myDay.todayView, null, 2),
     },
+    taskTags: { isShown: showTaskTags, onChange: setShowTaskTags },
     onOpenSettings: () => openSettings(),
     onOpenNotifications: () => openSettings("notifications"),
   };

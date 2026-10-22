@@ -6,6 +6,7 @@ import {
   createTask,
   moveContext,
   moveDayItem,
+  moveDayItemNextTo,
   normalizeData,
   removeContext,
   removeFromDay,
@@ -88,6 +89,28 @@ describe("day changes", () => {
 
     data = removeFromDay(data, TODAY, "T2");
     expect(data.days[TODAY]?.items.map((item) => item.taskId)).toEqual(["T1"]);
+  });
+
+  it("moves an item next to another one", () => {
+    let data = addToDay(
+      setup(),
+      TODAY,
+      ["A", "B", "C", "D"].map((taskId) => ({ taskId, addedBy: "user" as const, reason: null })),
+      LATER
+    );
+    function order(): string[] {
+      return data.days[TODAY]!.items.map((item) => item.taskId);
+    }
+
+    data = moveDayItemNextTo(data, TODAY, "A", "C", "after");
+    expect(order()).toEqual(["B", "C", "A", "D"]);
+
+    data = moveDayItemNextTo(data, TODAY, "D", "B", "before");
+    expect(order()).toEqual(["D", "B", "C", "A"]);
+
+    const unchanged = data;
+    expect(moveDayItemNextTo(data, TODAY, "A", "missing", "before")).toBe(unchanged);
+    expect(moveDayItemNextTo(data, TODAY, "A", "A", "before")).toBe(unchanged);
   });
 });
 

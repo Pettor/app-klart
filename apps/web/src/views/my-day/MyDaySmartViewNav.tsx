@@ -10,8 +10,8 @@ import type { SmartView } from "~/core/tasks/KlartAtoms";
 const SMART_VIEW_ICONS: Record<SmartView, ReactElement> = {
   day: <SunIcon className="size-[18px] text-(--ctx)" />,
   important: <StarIcon className="size-[18px] text-(--star)" />,
-  planned: <CalendarDaysIcon className="size-[18px] text-[#0b7285] dark:text-[#7fd1c8]" />,
-  tasks: <HomeModernIcon className="size-[18px] text-[#6741d9] dark:text-[#b39dfa]" />,
+  planned: <CalendarDaysIcon className="midnight:text-[#3ddcc0] size-[18px] text-[#0b7285] dark:text-[#7fd1c8]" />,
+  tasks: <HomeModernIcon className="midnight:text-[#a78bfa] size-[18px] text-[#6741d9] dark:text-[#b39dfa]" />,
 };
 
 export interface MyDaySmartViewNavProps {

@@ -1,3 +1,4 @@
+import type { Page } from "@playwright/test";
 import { expect, test } from "../fixtures";
 
 test.describe("myday.quickadd", () => {
@@ -105,5 +106,44 @@ test.describe("myday.back", () => {
 
     await page.goBack();
     await expect(page.getByTestId("task-editor")).toHaveCount(0);
+  });
+});
+
+test.describe("myday.reorder", () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto("/");
+    const input = page.getByTestId("quick-add__input");
+    for (const title of ["first task", "second task", "third task"]) {
+      await input.fill(title);
+      await input.press("Enter");
+    }
+  });
+
+  function titles(page: Page): Promise<string[]> {
+    return page.getByTestId("my-day__tasks").getByTestId("task-row__title").allTextContents();
+  }
+
+  test("drags a task by its grip and keeps the order after a reload", async ({ page }) => {
+    const first = page.getByTestId("task-row").filter({ hasText: "First task" });
+    const third = page.getByTestId("task-row").filter({ hasText: "Third task" });
+    await first.hover();
+    const grip = await first.getByTestId("task-row__grip").boundingBox();
+    const target = await third.boundingBox();
+
+    await page.mouse.move(grip!.x + grip!.width / 2, grip!.y + grip!.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(grip!.x + grip!.width / 2, target!.y + target!.height - 4, { steps: 8 });
+    await page.mouse.up();
+
+    await expect.poll(() => titles(page)).toEqual(["Second task", "Third task", "First task"]);
+    await page.reload();
+    await expect.poll(() => titles(page)).toEqual(["Second task", "Third task", "First task"]);
+  });
+
+  test("moves a task with the arrow keys", async ({ page }) => {
+    await page.getByTestId("task-row").filter({ hasText: "Third task" }).getByTestId("task-row__grip").focus();
+    await page.keyboard.press("ArrowUp");
+
+    await expect.poll(() => titles(page)).toEqual(["First task", "Third task", "Second task"]);
   });
 });

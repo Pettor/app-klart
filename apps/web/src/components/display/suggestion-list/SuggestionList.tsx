@@ -155,7 +155,10 @@ export function SuggestionList({
         )}
         <Button
           size="sm"
-          className={clsx("text-background bg-(--ctx)", hideHeading && "ml-auto")}
+          className={clsx(
+            "text-background h-8 rounded-lg bg-(--ctx) px-3 text-[13px] font-semibold",
+            hideHeading && "ml-auto"
+          )}
           isDisabled={dueCount === 0}
           onPress={onAddAllDue}
           data-testid="suggestion-list__add-all-due"
@@ -179,7 +182,7 @@ export function SuggestionList({
       )}
 
       {groups.map((group) => (
-        <section key={group.reason} className="flex flex-col gap-1.5" aria-label={getGroupLabel(intl, group.reason)}>
+        <section key={group.reason} className="flex flex-col gap-2.5" aria-label={getGroupLabel(intl, group.reason)}>
           <h3 className="text-foreground/85 flex items-center gap-2 text-[13px] font-semibold">
             {getGroupLabel(intl, group.reason)}
             <span className="text-muted font-medium">{group.total}</span>
@@ -187,10 +190,7 @@ export function SuggestionList({
           {group.items.map((item) => (
             <div
               key={item.id}
-              className={clsx(
-                `ctx-${item.contextColor}`,
-                "bg-surface-secondary hover:bg-surface-tertiary flex min-h-14 items-center gap-2.5 rounded-lg py-1.5 pr-1.5 pl-3"
-              )}
+              className={clsx(`ctx-${item.contextColor}`, "slab flex min-h-14 items-center gap-2.5 py-1.5 pr-1.5 pl-3")}
             >
               <span className="w-1 self-stretch rounded-sm bg-(--ctx)" aria-hidden />
               <div className="relative flex min-w-0 flex-1 flex-col gap-0.5">

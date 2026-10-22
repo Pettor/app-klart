@@ -9,6 +9,7 @@ import {
   archiveTask,
   createTask,
   moveContext,
+  moveDayItemNextTo,
   removeContext,
   removeFromDay,
   setTaskDone,
@@ -29,6 +30,8 @@ export interface KlartActions {
   archive: (taskId: string) => void;
   addToToday: (items: { taskId: string; reason: SuggestionReason | null; addedBy?: DayItemSource }[]) => void;
   removeFromToday: (taskId: string) => void;
+  /** Reorders today's My Day: puts a task just before or after another one. */
+  moveInToday: (taskId: string, targetId: string, position: "before" | "after") => void;
   createContext: (name: string, color: ContextColor) => KlartContext;
   updateContext: (id: string, patch: Partial<Omit<KlartContext, "id">>) => void;
   removeContext: (id: string) => void;
@@ -83,6 +86,8 @@ export function useKlartActions(): KlartActions {
           )
         ),
       removeFromToday: (taskId) => change((current) => removeFromDay(current, today, taskId)),
+      moveInToday: (taskId, targetId, position) =>
+        change((current) => moveDayItemNextTo(current, today, taskId, targetId, position)),
       createContext: (name, color) => {
         const context: KlartContext = {
           id: createContextId(name, data.contexts),

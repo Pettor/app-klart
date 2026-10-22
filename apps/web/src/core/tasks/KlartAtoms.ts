@@ -63,4 +63,9 @@ export const showSuggestionsAtom = atomWithStorage<boolean>("klart-show-suggesti
   getOnInit: true,
 });
 
+/** Shows every task's tags under its title. Off, tags appear on hover or focus. Remembered per device. */
+export const showTaskTagsAtom = atomWithStorage<boolean>("klart-show-task-tags", false, undefined, {
+  getOnInit: true,
+});
+
 export const showAgentJsonAtom = atom<boolean>(false);

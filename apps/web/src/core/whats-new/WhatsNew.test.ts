@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { ReleaseNote } from "./ReleaseNotes";
-import { compareVersions, getUnseenReleaseNotes } from "./WhatsNew";
+import { compareVersions, getNewerVersion, getUnseenReleaseNotes } from "./WhatsNew";
 
 function note(version: string): ReleaseNote {
   return { version, highlights: [], fixes: [] };
@@ -72,5 +72,16 @@ describe("getUnseenReleaseNotes", () => {
       hasExistingData: true,
     });
     expect(versions(result)).toEqual(["0.2.0"]);
+  });
+});
+
+describe("getNewerVersion", () => {
+  it("moves forward", () => {
+    expect(getNewerVersion("0.3.0", null)).toBe("0.3.0");
+    expect(getNewerVersion("0.3.0", "0.2.0")).toBe("0.3.0");
+  });
+
+  it("never goes back, so an older tab can't bring notes back for a newer one", () => {
+    expect(getNewerVersion("0.2.0", "0.3.0")).toBe("0.3.0");
   });
 });

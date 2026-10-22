@@ -13,6 +13,14 @@ export function compareVersions(a: string, b: string): number {
   return 0;
 }
 
+/**
+ * The version to remember as seen: never older than what's stored. A tab still running an older
+ * build would otherwise lower it, and every newer tab would show its notes again.
+ */
+export function getNewerVersion(version: string, lastSeenVersion: string | null): string {
+  return lastSeenVersion !== null && compareVersions(lastSeenVersion, version) > 0 ? lastSeenVersion : version;
+}
+
 export interface WhatsNewInput {
   notes: ReleaseNote[];
   currentVersion: string;

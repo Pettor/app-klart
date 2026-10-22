@@ -1,0 +1,163 @@
+{
+  "color": {
+    "theme": {
+      "midnight": {
+        "background": {
+          "$type": "color",
+          "$value": "#0e1220",
+          "$description": "Background color for midnight theme"
+        },
+        "foreground": {
+          "$type": "color",
+          "$value": "#eef2fb",
+          "$description": "Foreground color for midnight theme"
+        },
+        "surface": {
+          "DEFAULT": {
+            "$type": "color",
+            "$value": "#161c2c",
+            "$description": "Surface background for midnight theme"
+          },
+          "foreground": {
+            "$type": "color",
+            "$value": "#eef2fb",
+            "$description": "Surface foreground for midnight theme"
+          }
+        },
+        "surface-secondary": {
+          "DEFAULT": {
+            "$type": "color",
+            "$value": "#1c2438",
+            "$description": "Secondary surface background for midnight theme"
+          },
+          "foreground": {
+            "$type": "color",
+            "$value": "#eef2fb",
+            "$description": "Secondary surface foreground for midnight theme"
+          }
+        },
+        "surface-tertiary": {
+          "DEFAULT": {
+            "$type": "color",
+            "$value": "#222b42",
+            "$description": "Tertiary surface background for midnight theme"
+          },
+          "foreground": {
+            "$type": "color",
+            "$value": "#eef2fb",
+            "$description": "Tertiary surface foreground for midnight theme"
+          }
+        },
+        "overlay": {
+          "DEFAULT": {
+            "$type": "color",
+            "$value": "#1b2234",
+            "$description": "Overlay background for midnight theme"
+          },
+          "foreground": {
+            "$type": "color",
+            "$value": "#eef2fb",
+            "$description": "Overlay foreground for midnight theme"
+          }
+        },
+        "muted": {
+          "$type": "color",
+          "$value": "#97a3bf",
+          "$description": "Muted text color for midnight theme"
+        },
+        "default": {
+          "DEFAULT": {
+            "$type": "color",
+            "$value": "#1c2438",
+            "$description": "Default color for midnight theme"
+          },
+          "foreground": {
+            "$type": "color",
+            "$value": "#eef2fb",
+            "$description": "Default foreground color for midnight theme"
+          }
+        },
+        "accent": {
+          "DEFAULT": {
+            "$type": "color",
+            "$value": "#12b886",
+            "$description": "Accent color for midnight theme"
+          },
+          "foreground": {
+            "$type": "color",
+            "$value": "#0b0f1a",
+            "$description": "Accent foreground color for midnight theme"
+          }
+        },
+        "success": {
+          "DEFAULT": {
+            "$type": "color",
+            "$value": "#3ddc97",
+            "$description": "Success color for midnight theme"
+          },
+          "foreground": {
+            "$type": "color",
+            "$value": "#0b0f1a",
+            "$description": "Success foreground color for midnight theme"
+          }
+        },
+        "warning": {
+          "DEFAULT": {
+            "$type": "color",
+            "$value": "#ffa94d",
+            "$description": "Warning color for midnight theme"
+          },
+          "foreground": {
+            "$type": "color",
+            "$value": "#0b0f1a",
+            "$description": "Warning foreground color for midnight theme"
+          }
+        },
+        "danger": {
+          "DEFAULT": {
+            "$type": "color",
+            "$value": "#ff6b81",
+            "$description": "Danger color for midnight theme"
+          },
+          "foreground": {
+            "$type": "color",
+            "$value": "#0b0f1a",
+            "$description": "Danger foreground color for midnight theme"
+          }
+        },
+        "focus": {
+          "$type": "color",
+          "$value": "#9db8ff",
+          "$description": "Focus ring color for midnight theme"
+        },
+        "border": {
+          "$type": "color",
+          "$value": "#273049",
+          "$description": "Border color for midnight theme"
+        },
+        "separator": {
+          "$type": "color",
+          "$value": "#1b2234",
+          "$description": "Separator color for midnight theme"
+        },
+        "field": {
+          "background": {
+            "$type": "color",
+            "$value": "#171d2d",
+            "$description": "Form field background for midnight theme"
+          },
+          "foreground": {
+            "$type": "color",
+            "$value": "#eef2fb",
+            "$description": "Form field foreground for midnight theme"
+          },
+          "placeholder": {
+            "$type": "color",
+            "$value": "#7d89a6",
+            "$description": "Form field placeholder for midnight theme"
+          }
+        }
+      }
+    }
+  }
+}

@@ -99,6 +99,52 @@
     --disabled-opacity: var(--layout-disabled-opacity);
   }
 
+  /* Midnight: a navy dark theme. Applied together with `.dark`, so `dark:` variants still match. */
+  .midnight,
+  [data-theme="midnight"] {
+    --background: var(--color-theme-midnight-background);
+    --foreground: var(--color-theme-midnight-foreground);
+
+    --surface: var(--color-theme-midnight-surface-default);
+    --surface-foreground: var(--color-theme-midnight-surface-foreground);
+
+    --surface-secondary: var(--color-theme-midnight-surface-secondary-default);
+    --surface-secondary-foreground: var(--color-theme-midnight-surface-secondary-foreground);
+
+    --surface-tertiary: var(--color-theme-midnight-surface-tertiary-default);
+    --surface-tertiary-foreground: var(--color-theme-midnight-surface-tertiary-foreground);
+
+    --overlay: var(--color-theme-midnight-overlay-default);
+    --overlay-foreground: var(--color-theme-midnight-overlay-foreground);
+
+    --muted: var(--color-theme-midnight-muted);
+
+    --default: var(--color-theme-midnight-default-default);
+    --default-foreground: var(--color-theme-midnight-default-foreground);
+
+    --accent: var(--color-theme-midnight-accent-default);
+    --accent-foreground: var(--color-theme-midnight-accent-foreground);
+
+    --success: var(--color-theme-midnight-success-default);
+    --success-foreground: var(--color-theme-midnight-success-foreground);
+
+    --warning: var(--color-theme-midnight-warning-default);
+    --warning-foreground: var(--color-theme-midnight-warning-foreground);
+
+    --danger: var(--color-theme-midnight-danger-default);
+    --danger-foreground: var(--color-theme-midnight-danger-foreground);
+
+    --focus: var(--color-theme-midnight-focus);
+    --border: var(--color-theme-midnight-border);
+    --separator: var(--color-theme-midnight-separator);
+
+    --field-background: var(--color-theme-midnight-field-background);
+    --field-foreground: var(--color-theme-midnight-field-foreground);
+    --field-placeholder: var(--color-theme-midnight-field-placeholder);
+
+    --disabled-opacity: var(--layout-disabled-opacity);
+  }
+
   html {
     background-color: var(--background);
   }

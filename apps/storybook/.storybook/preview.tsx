@@ -15,6 +15,7 @@ const preview: Preview = {
       themes: {
         light: "light",
         dark: "dark",
+        midnight: "dark midnight",
       },
       defaultTheme: "light",
     }),

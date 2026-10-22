@@ -66,7 +66,7 @@ export function ContextSwitcher({
           `ctx-${selected?.color ?? "all"}`,
           "text-foreground",
           variant === "sidebar"
-            ? "h-11 w-full justify-start gap-2.5 rounded-xl px-3 text-left"
+            ? "border-border bg-surface hover:bg-surface-secondary h-11 w-full justify-start gap-2.5 rounded-[10px] border px-3 text-left"
             : "h-9 rounded-full px-3.5"
         )}
       >
@@ -84,6 +84,12 @@ export function ContextSwitcher({
           </span>
         ) : (
           <span className="text-sm font-semibold">{selected?.name}</span>
+        )}
+        {variant === "sidebar" && selected?.shortcut && (
+          <span className="text-muted text-xs font-normal" aria-hidden>
+            {isMac() ? "⌥" : "Alt+"}
+            {selected.shortcut}
+          </span>
         )}
         <ChevronDownIcon className="text-muted size-4 shrink-0" aria-hidden />
       </Button>
