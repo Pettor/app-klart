@@ -133,6 +133,29 @@ export function moveDayItem(data: KlartData, date: string, taskId: string, toInd
   return { ...data, days: { ...data.days, [date]: { ...day, items } } };
 }
 
+/**
+ * Moves a My Day item to just before or after another one. Lets a filtered list (one context, a tag)
+ * reorder its visible tasks without knowing where the hidden ones sit.
+ */
+export function moveDayItemNextTo(
+  data: KlartData,
+  date: string,
+  taskId: string,
+  targetId: string,
+  position: "before" | "after"
+): KlartData {
+  const day = data.days[date];
+  if (!day || taskId === targetId || !dayHasTask(day, taskId)) {
+    return data;
+  }
+  const rest = day.items.filter((item) => item.taskId !== taskId);
+  const targetIndex = rest.findIndex((item) => item.taskId === targetId);
+  if (targetIndex < 0) {
+    return data;
+  }
+  return moveDayItem(data, date, taskId, position === "before" ? targetIndex : targetIndex + 1);
+}
+
 export function addContext(data: KlartData, context: KlartContext): KlartData {
   return { ...data, contexts: [...data.contexts, context] };
 }

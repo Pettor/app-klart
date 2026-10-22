@@ -6,6 +6,7 @@ import {
   MagnifyingGlassIcon,
   MoonIcon,
   RectangleStackIcon,
+  SparklesIcon,
   SunIcon,
 } from "@heroicons/react/20/solid";
 import { useRouter } from "@tanstack/react-router";
@@ -217,6 +218,18 @@ export function useCommandPaletteController(): CommandPaletteProps {
         icon: <MoonIcon className="h-4 w-4" />,
         shortcut: { mod: true, shift: true, key: "k" },
         perform: () => setTheme("dark"),
+      },
+      {
+        id: "theme-midnight",
+        label: intl.formatMessage({
+          description: "CommandPaletteController: label - theme midnight command, a navy dark theme",
+          defaultMessage: "Theme: Midnight",
+          id: "LnKMuE",
+        }),
+        group: appearanceGroup,
+        keywords: ["midnight", "navy", "blue", "dark", "theme"],
+        icon: <SparklesIcon className="h-4 w-4" />,
+        perform: () => setTheme("midnight"),
       },
     ];
   }, [

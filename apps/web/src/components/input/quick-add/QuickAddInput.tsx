@@ -124,9 +124,9 @@ export function QuickAddInput({
         })}
         className="w-full"
       >
-        <InputGroup className="h-13 rounded-xl">
+        <InputGroup className="h-13 rounded-[10px]">
           <InputGroupPrefix>
-            <PlusIcon className={clsx("size-5", preview ? "text-(--ctx)" : "text-accent")} aria-hidden />
+            <PlusIcon className="size-5 text-(--ctx)" aria-hidden />
           </InputGroupPrefix>
           <InputGroupInput
             ref={inputRef}
@@ -152,7 +152,7 @@ export function QuickAddInput({
           />
           {!compact && (
             <InputGroupSuffix>
-              <Kbd className="text-xs">
+              <Kbd className="text-muted bg-transparent text-xs font-normal shadow-none">
                 <Kbd.Abbr keyValue="enter" />
                 <Kbd.Content>
                   {intl.formatMessage({

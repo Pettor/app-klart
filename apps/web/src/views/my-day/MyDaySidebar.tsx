@@ -26,7 +26,7 @@ export function MyDaySidebar({
     <aside
       className={clsx(
         `ctx-${context.selectedColor}`,
-        "border-separator flex w-64 shrink-0 flex-col gap-4 border-r px-3 pt-10 pb-4",
+        "border-separator flex w-60 shrink-0 flex-col gap-4 border-r px-3 pt-10 pb-4",
         className
       )}
     >

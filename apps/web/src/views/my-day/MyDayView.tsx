@@ -32,6 +32,8 @@ export interface MyDayViewProps extends MyDaySidebarProps {
   suggestions: MyDaySuggestionsProps;
   editor: MyDayTaskEditorProps;
   agentJson: { isOpen: boolean; onToggle: () => void; json: string };
+  /** Shows every task's tags instead of only on hover or focus. */
+  taskTags: { isShown: boolean; onChange: (isShown: boolean) => void };
   onOpenSettings: () => void;
   onOpenNotifications: () => void;
 }
@@ -51,6 +53,7 @@ export function MyDayView({
   suggestions,
   editor,
   agentJson,
+  taskTags,
   onOpenSettings,
   onOpenNotifications,
 }: MyDayViewProps): ReactElement {
@@ -97,6 +100,8 @@ export function MyDayView({
           isJsonOpen={agentJson.isOpen}
           onToggleJson={agentJson.onToggle}
           onOpenNotifications={onOpenNotifications}
+          showTags={taskTags.isShown}
+          onShowTagsChange={taskTags.onChange}
         />
 
         <MyDayTagChips tags={tags.items} active={tags.active} onSelect={tags.onSelect} className="lg:hidden" />
@@ -111,6 +116,7 @@ export function MyDayView({
           showContext={showContextOnTasks}
           actions={taskActions}
           selectedTaskId={editor.task?.id}
+          showTags={taskTags.isShown}
         />
 
         <div className="sticky bottom-0 mt-auto flex flex-col gap-2 bg-(--ctx-backdrop) pt-2 pb-[env(safe-area-inset-bottom)]">

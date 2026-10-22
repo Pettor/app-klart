@@ -57,7 +57,7 @@ export function SearchField({
           <HeroSearchField.SearchIcon>
             <MagnifyingGlassIcon className="text-default-500 h-4 w-4" />
           </HeroSearchField.SearchIcon>
-          <HeroSearchField.Input ref={inputRef} placeholder={placeholder} />
+          <HeroSearchField.Input ref={inputRef} placeholder={placeholder} className="min-w-0" />
           {shortcutHint && !value && (
             <Kbd aria-hidden className="mr-2 text-xs">
               <Kbd.Content>{shortcutHint}</Kbd.Content>

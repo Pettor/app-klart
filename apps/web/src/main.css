@@ -16,6 +16,9 @@
 @source "../node_modules/@package/storybook";
 
 /* Fonts */
+/* `midnight:` styles apply under the Midnight theme, which also has `.dark`. */
+@custom-variant midnight (&:is(.midnight *));
+
 @theme {
   --font-sans: "Inter", system-ui, -apple-system, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
@@ -25,24 +28,296 @@
  * Context colors. A `.ctx-<color>` class sets `--ctx` (the accent) and
  * `--ctx-backdrop` (the tinted My Day background) for everything inside it.
  */
-.ctx-all { --ctx: #6b7078; --ctx-backdrop: #eef0f3; }
-.ctx-blue { --ctx: #2f74d9; --ctx-backdrop: #e8f0fb; }
-.ctx-orange { --ctx: #b8600f; --ctx-backdrop: #fbf0e2; }
-.ctx-green { --ctx: #2b8a4b; --ctx-backdrop: #e7f4ec; }
-.ctx-teal { --ctx: #0b7285; --ctx-backdrop: #e3f4f2; }
-.ctx-violet { --ctx: #6741d9; --ctx-backdrop: #efeafc; }
-.ctx-pink { --ctx: #c2255c; --ctx-backdrop: #fbe9f0; }
-.ctx-red { --ctx: #c92a2a; --ctx-backdrop: #fbeaea; }
+.ctx-all {
+  --ctx: #6b7078;
+  --ctx-backdrop: #eef0f3;
+}
+.ctx-blue {
+  --ctx: #2f74d9;
+  --ctx-backdrop: #e8f0fb;
+}
+.ctx-orange {
+  --ctx: #b8600f;
+  --ctx-backdrop: #fbf0e2;
+}
+.ctx-green {
+  --ctx: #2b8a4b;
+  --ctx-backdrop: #e7f4ec;
+}
+.ctx-teal {
+  --ctx: #0b7285;
+  --ctx-backdrop: #e3f4f2;
+}
+.ctx-violet {
+  --ctx: #6741d9;
+  --ctx-backdrop: #efeafc;
+}
+.ctx-pink {
+  --ctx: #c2255c;
+  --ctx-backdrop: #fbe9f0;
+}
+.ctx-red {
+  --ctx: #c92a2a;
+  --ctx-backdrop: #fbeaea;
+}
 
-.dark .ctx-all, .dark.ctx-all { --ctx: #b8bcc4; --ctx-backdrop: #24262b; }
-.dark .ctx-blue, .dark.ctx-blue { --ctx: #5ea2ff; --ctx-backdrop: #1d2a3b; }
-.dark .ctx-orange, .dark.ctx-orange { --ctx: #f0a347; --ctx-backdrop: #2e261d; }
-.dark .ctx-green, .dark.ctx-green { --ctx: #7fd19b; --ctx-backdrop: #1d2b24; }
-.dark .ctx-teal, .dark.ctx-teal { --ctx: #63d2c6; --ctx-backdrop: #1b2a2a; }
-.dark .ctx-violet, .dark.ctx-violet { --ctx: #b39dfa; --ctx-backdrop: #251f35; }
-.dark .ctx-pink, .dark.ctx-pink { --ctx: #f783ac; --ctx-backdrop: #33202a; }
-.dark .ctx-red, .dark.ctx-red { --ctx: #ff8a80; --ctx-backdrop: #352020; }
+.dark .ctx-all,
+.dark.ctx-all {
+  --ctx: #b8bcc4;
+  --ctx-backdrop: #24262b;
+}
+.dark .ctx-blue,
+.dark.ctx-blue {
+  --ctx: #5ea2ff;
+  --ctx-backdrop: #1d2a3b;
+}
+.dark .ctx-orange,
+.dark.ctx-orange {
+  --ctx: #f0a347;
+  --ctx-backdrop: #2e261d;
+}
+.dark .ctx-green,
+.dark.ctx-green {
+  --ctx: #7fd19b;
+  --ctx-backdrop: #1d2b24;
+}
+.dark .ctx-teal,
+.dark.ctx-teal {
+  --ctx: #63d2c6;
+  --ctx-backdrop: #1b2a2a;
+}
+.dark .ctx-violet,
+.dark.ctx-violet {
+  --ctx: #b39dfa;
+  --ctx-backdrop: #251f35;
+}
+.dark .ctx-pink,
+.dark.ctx-pink {
+  --ctx: #f783ac;
+  --ctx-backdrop: #33202a;
+}
+.dark .ctx-red,
+.dark.ctx-red {
+  --ctx: #ff8a80;
+  --ctx-backdrop: #352020;
+}
 
 /* Tag and due-date text colors from the design */
-:root { --tag: #1f5fbf; --due-today: #1f5fbf; --star: #d98c0a; }
-.dark { --tag: #9cc4ff; --due-today: #9cc4ff; --star: #f6c58a; }
+:root {
+  --tag: #1f5fbf;
+  --due-today: #1f5fbf;
+  --star: #d98c0a;
+}
+.dark {
+  --tag: #9cc4ff;
+  --due-today: #9cc4ff;
+  --star: #f6c58a;
+}
+
+/*
+ * Slab task cards from the design: a raised card that lifts on hover and presses down on click.
+ * `.slab-tags` (a row of tag chips) and `.slab-reveal` (the drag grip) stay hidden until the card is
+ * hovered or focused, or a `.slab-tags-on` ancestor asks for tags on every card.
+ */
+:root {
+  --slab: #ffffff;
+  --slab-hover: #ffffff;
+  --slab-done: rgb(255 255 255 / 0.55);
+  --slab-shadow:
+    inset 0 1px 0 #ffffff, 0 3px 0 #d3d8e1, 0 4px 6px rgb(15 23 42 / 0.06), 0 14px 24px -10px rgb(15 23 42 / 0.22);
+  --slab-shadow-hover:
+    inset 0 1px 0 #ffffff, 0 5px 0 #d3d8e1, 0 8px 12px rgb(15 23 42 / 0.08), 0 24px 36px -14px rgb(15 23 42 / 0.3);
+  --slab-shadow-press:
+    inset 0 1px 0 #ffffff, 0 1px 0 #d3d8e1, 0 2px 3px rgb(15 23 42 / 0.1), 0 6px 10px -6px rgb(15 23 42 / 0.18);
+  --slab-check-inset: inset 0 1px 2px rgb(15 23 42 / 0.15);
+}
+.dark {
+  --slab: #2b2d33;
+  --slab-hover: #30323a;
+  --slab-done: rgb(23 24 28 / 0.55);
+  --slab-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.07), 0 3px 0 #17181c, 0 4px 6px rgb(0 0 0 / 0.25),
+    0 14px 24px -10px rgb(0 0 0 / 0.55);
+  --slab-shadow-hover:
+    inset 0 1px 0 rgb(255 255 255 / 0.09), 0 5px 0 #17181c, 0 8px 12px rgb(0 0 0 / 0.3),
+    0 24px 36px -14px rgb(0 0 0 / 0.65);
+  --slab-shadow-press:
+    inset 0 1px 0 rgb(255 255 255 / 0.05), 0 1px 0 #17181c, 0 2px 3px rgb(0 0 0 / 0.3), 0 6px 10px -6px rgb(0 0 0 / 0.5);
+  --slab-check-inset: inset 0 1px 2px rgb(0 0 0 / 0.5);
+}
+
+/*
+ * Midnight, a navy dark theme from the design. `<html>` has both `.dark` and `.midnight`,
+ * so these override the dark values above.
+ */
+.midnight .ctx-all,
+.midnight.ctx-all {
+  --ctx: #a5b4fc;
+  --ctx-backdrop: #121a2c;
+}
+.midnight .ctx-blue,
+.midnight.ctx-blue {
+  --ctx: #5b8cff;
+  --ctx-backdrop: #111d3b;
+}
+.midnight .ctx-orange,
+.midnight.ctx-orange {
+  --ctx: #ffa94d;
+  --ctx-backdrop: #271a10;
+}
+.midnight .ctx-green,
+.midnight.ctx-green {
+  --ctx: #3ddc97;
+  --ctx-backdrop: #0d2620;
+}
+.midnight .ctx-teal,
+.midnight.ctx-teal {
+  --ctx: #3ddcc0;
+  --ctx-backdrop: #0c2428;
+}
+.midnight .ctx-violet,
+.midnight.ctx-violet {
+  --ctx: #a78bfa;
+  --ctx-backdrop: #1c1638;
+}
+.midnight .ctx-pink,
+.midnight.ctx-pink {
+  --ctx: #f472b6;
+  --ctx-backdrop: #2a1225;
+}
+.midnight .ctx-red,
+.midnight.ctx-red {
+  --ctx: #ff6b81;
+  --ctx-backdrop: #2a1219;
+}
+.midnight {
+  --tag: #9db8ff;
+  --due-today: #9db8ff;
+  --star: #ffc56b;
+  --slab: #1d2640;
+  --slab-hover: #232d4b;
+  --slab-done: rgb(10 14 25 / 0.55);
+  /* Like dark, plus a faint 1px rim so cards read against the navy backdrop. */
+  --slab-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.08), 0 0 0 1px rgb(255 255 255 / 0.05), 0 3px 0 #0a0e19,
+    0 4px 6px rgb(0 0 0 / 0.25), 0 14px 24px -10px rgb(0 0 0 / 0.55);
+  --slab-shadow-hover:
+    inset 0 1px 0 rgb(255 255 255 / 0.1), 0 0 0 1px rgb(255 255 255 / 0.08), 0 5px 0 #0a0e19,
+    0 8px 12px rgb(0 0 0 / 0.3), 0 24px 36px -14px rgb(0 0 0 / 0.65);
+  --slab-shadow-press:
+    inset 0 1px 0 rgb(255 255 255 / 0.06), 0 0 0 1px rgb(255 255 255 / 0.05), 0 1px 0 #0a0e19,
+    0 2px 3px rgb(0 0 0 / 0.3), 0 6px 10px -6px rgb(0 0 0 / 0.5);
+}
+/* The completion ring glows in its context color on hover. */
+.midnight .slab-check-ring {
+  transition: box-shadow 0.2s;
+}
+.midnight .slab-check:hover .slab-check-ring {
+  box-shadow:
+    var(--slab-check-inset),
+    0 0 16px -2px var(--ctx);
+}
+
+.slab {
+  position: relative;
+  border-radius: 12px;
+  background: var(--slab);
+  box-shadow: var(--slab-shadow);
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    transform 0.24s cubic-bezier(0.2, 0.9, 0.25, 1.2),
+    box-shadow 0.24s cubic-bezier(0.2, 0.9, 0.25, 1.2),
+    opacity 0.2s,
+    background 0.2s;
+}
+@media (hover: hover) {
+  .slab:hover {
+    background: var(--slab-hover);
+    box-shadow: var(--slab-shadow-hover);
+    transform: translateY(-2px);
+  }
+}
+.slab:active {
+  box-shadow: var(--slab-shadow-press);
+  transform: translateY(2px);
+  transition-duration: 0.08s;
+}
+/* Follows the pointer while dragged by its grip; `--slab-dy` is the distance moved. */
+.slab.slab-lifted {
+  z-index: 5;
+  background: var(--slab-hover);
+  box-shadow: var(--slab-shadow-hover);
+  transform: translateY(var(--slab-dy, 0px)) scale(1.02);
+  transition: none;
+}
+.slab.slab-settled {
+  animation: slab-settle 0.62s cubic-bezier(0.2, 0.9, 0.25, 1.2);
+}
+@keyframes slab-settle {
+  0% {
+    transform: translateY(-8px) scale(1.025);
+  }
+  55% {
+    transform: translateY(2px) scale(0.995);
+  }
+  100% {
+    transform: none;
+  }
+}
+.slab-done {
+  border-radius: 12px;
+  background: var(--slab-done);
+}
+
+.slab-tags {
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition:
+    max-height 0.28s ease,
+    opacity 0.2s ease,
+    margin 0.28s ease;
+}
+.slab-tags-on .slab-tags,
+.slab:focus-within .slab-tags {
+  max-height: 28px;
+  margin-top: 4px;
+  opacity: 1;
+}
+@media (hover: hover) {
+  .slab:hover .slab-tags {
+    max-height: 28px;
+    margin-top: 4px;
+    opacity: 1;
+  }
+  .slab-reveal {
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+  /* The design shows only the link and star; the actions menu appears like the grip. */
+  .slab:hover .slab-reveal,
+  .slab-done:hover .slab-reveal,
+  .slab-reveal:focus-within,
+  .slab-reveal[aria-expanded="true"],
+  .slab-lifted .slab-reveal {
+    opacity: 1;
+  }
+}
+.slab-check:hover .slab-check-fill {
+  opacity: 0.35;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .slab,
+  .slab-tags,
+  .slab-reveal {
+    transition: none;
+  }
+  .slab.slab-settled {
+    animation: none;
+  }
+  .slab:not(.slab-lifted):hover,
+  .slab:not(.slab-lifted):active {
+    transform: none;
+  }
+}

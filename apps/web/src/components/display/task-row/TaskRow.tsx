@@ -1,10 +1,20 @@
-import type { ReactElement } from "react";
-import { BellIcon, CheckIcon, EllipsisHorizontalIcon, LinkIcon, StarIcon, SunIcon } from "@heroicons/react/20/solid";
+import type { CSSProperties, ReactElement } from "react";
+import {
+  ArrowTopRightOnSquareIcon,
+  Bars3BottomLeftIcon,
+  BellIcon,
+  CheckIcon,
+  EllipsisHorizontalIcon,
+  StarIcon,
+  SunIcon,
+} from "@heroicons/react/20/solid";
 import { StarIcon as StarOutlineIcon } from "@heroicons/react/24/outline";
 import { Button, Dropdown, Label, Link, ToggleButton } from "@heroui/react";
 import clsx from "clsx";
 import { useIntl } from "react-intl";
 import { DUE_TONE_CLASS, formatDue, formatReminder, getDueTone } from "./TaskDateFormat";
+import type { TaskRowReorder } from "./UseTaskReorder";
+import { REORDER_ID_ATTRIBUTE } from "./UseTaskReorder";
 import type { ContextColor } from "~/core/contexts/KlartContext";
 import { formatTaskLink } from "~/core/tasks/TaskLink";
 
@@ -20,6 +30,8 @@ export interface TaskRowTask {
   tags: string[];
   /** `http(s)://` links to the task's source; each opens in a new tab. */
   links: string[];
+  /** Shows a "Note" marker in the meta line. */
+  hasNotes?: boolean;
   contextName: string;
   contextColor: ContextColor;
 }
@@ -39,6 +51,22 @@ export interface TaskRowProps {
   onOpen?: (taskId: string) => void;
   /** Highlights the row, e.g. while it's open in the editor. */
   isSelected?: boolean;
+  /** Adds a grip to drag the row, from `useTaskReorder`. Ignored for completed tasks. */
+  reorder?: TaskRowReorder;
+}
+
+/** Six dots. Heroicons has no grip icon. */
+function GripIcon(): ReactElement {
+  return (
+    <svg width="10" height="16" viewBox="0 0 10 16" fill="currentColor" aria-hidden>
+      <circle cx="2" cy="3" r="1.5" />
+      <circle cx="8" cy="3" r="1.5" />
+      <circle cx="2" cy="8" r="1.5" />
+      <circle cx="8" cy="8" r="1.5" />
+      <circle cx="2" cy="13" r="1.5" />
+      <circle cx="8" cy="13" r="1.5" />
+    </svg>
+  );
 }
 
 export function TaskRow({
@@ -53,24 +81,64 @@ export function TaskRow({
   onArchive,
   onOpen,
   isSelected = false,
+  reorder: reorderProp,
 }: TaskRowProps): ReactElement {
   const intl = useIntl();
   const hasMenu = !!onArchive || (isInMyDay && !!onRemoveFromMyDay);
+  const reorder = task.done ? undefined : reorderProp;
+  const hasMeta = showContext || !!task.due || !!task.remindAt || !!task.hasNotes;
 
   return (
     <div
       data-testid="task-row"
+      {...{ [REORDER_ID_ATTRIBUTE]: task.id }}
       className={clsx(
         `ctx-${task.contextColor}`,
-        "group flex items-center gap-2 rounded-lg px-2 py-1.5 transition-colors sm:gap-3 sm:px-3",
-        task.done ? "bg-surface-secondary/80 min-h-12" : "bg-surface-secondary hover:bg-surface-tertiary min-h-13",
-        isSelected && "ring-2 ring-(--ctx) ring-inset"
+        "group flex items-center gap-1.5 pr-2.5",
+        task.done ? "slab-done min-h-12 py-1.5 pl-[26px]" : "slab py-2.5",
+        !task.done && (reorderProp ? "pl-1" : "pl-2"),
+        reorder?.isLifted && "slab-lifted",
+        reorder?.isSettled && "slab-settled",
+        isSelected && "outline-2 outline-offset-2 outline-(color:--ctx)"
       )}
+      style={reorder?.isLifted ? ({ "--slab-dy": `${reorder.offsetY}px` } as CSSProperties) : undefined}
     >
+      {reorder?.dropIndicator && (
+        <span
+          aria-hidden
+          className={clsx(
+            "pointer-events-none absolute inset-x-2 h-[3px] rounded-sm bg-(--ctx) shadow-[0_0_10px_var(--ctx)]",
+            reorder.dropIndicator === "before" ? "-top-2" : "-bottom-[9px]"
+          )}
+        />
+      )}
+
+      {reorder && (
+        <span className="slab-reveal flex shrink-0 touch-none" {...reorder.gripProps}>
+          <Button
+            isIconOnly
+            variant="ghost"
+            size="sm"
+            aria-label={intl.formatMessage(
+              {
+                description: "TaskRow - aria-label of the grip that drags a task to reorder My Day",
+                defaultMessage: "Move {title}. Drag, or use the arrow up and down keys.",
+                id: "KyPo/v",
+              },
+              { title: task.title }
+            )}
+            onKeyDown={reorder.onGripKeyDown}
+            className="text-muted h-11 w-[22px] min-w-0 cursor-grab rounded-md active:cursor-grabbing sm:h-9"
+            data-testid="task-row__grip"
+          >
+            <GripIcon />
+          </Button>
+        </span>
+      )}
+
       <Button
         isIconOnly
         variant="ghost"
-        size="sm"
         aria-label={
           task.done
             ? intl.formatMessage({
@@ -86,20 +154,26 @@ export function TaskRow({
         }
         data-testid="task-row__toggle"
         onPress={() => onToggleDone(task.id, !task.done)}
-        className="shrink-0 rounded-full"
+        className="slab-check size-10 shrink-0 rounded-full"
       >
         {task.done ? (
           <span className="grid size-5 place-items-center rounded-full bg-(--ctx)">
             <CheckIcon className="text-background size-3.5" />
           </span>
         ) : (
-          <span className="block size-[18px] rounded-full border-2" style={{ borderColor: "var(--ctx)" }} />
+          <span
+            className="slab-check-ring relative block size-[22px] rounded-full border-2 shadow-(--slab-check-inset)"
+            // Inline: a global `* { border-color }` rule outside any layer beats Tailwind's border utilities.
+            style={{ borderColor: "var(--ctx)" }}
+          >
+            <span className="slab-check-fill absolute inset-[3px] rounded-full bg-(--ctx) opacity-0 transition-opacity" />
+          </span>
         )}
       </Button>
 
-      <div className="relative flex min-w-0 flex-1 flex-col gap-0.5">
+      <div className="relative flex min-w-0 flex-1 flex-col gap-1 py-1">
         {onOpen && (
-          // An invisible button over the whole column, so the meta line opens the task too, while links sit above it.
+          // An invisible button over the whole column, so the meta line opens the task too.
           // It must be the pressed element itself: React Aria drops a press released outside the button's box.
           <Button
             variant="ghost"
@@ -116,53 +190,80 @@ export function TaskRow({
             data-testid="task-row__open"
           />
         )}
-        <span className={clsx("text-sm", task.done && "text-muted line-through")}>{task.title}</span>
-        {!task.done && (
-          <span className="text-muted flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-xs">
+        <span
+          className={clsx(
+            task.done ? "text-muted text-sm line-through" : "text-[15px] font-semibold tracking-[-0.005em]"
+          )}
+          data-testid="task-row__title"
+        >
+          {task.title}
+        </span>
+        {!task.done && hasMeta && (
+          <span className="text-muted flex flex-wrap items-center gap-x-2.5 gap-y-0.5 text-xs">
             {showContext && (
-              <span className="inline-flex items-center gap-1">
+              <span className="inline-flex items-center gap-1.5">
                 <span className="size-1.5 rounded-full bg-(--ctx)" aria-hidden />
                 {task.contextName}
               </span>
             )}
             {task.due && (
-              <span className={DUE_TONE_CLASS[getDueTone(task.due, today)]}>{formatDue(intl, task.due, today)}</span>
+              <span className={clsx("font-semibold", DUE_TONE_CLASS[getDueTone(task.due, today)])}>
+                {formatDue(intl, task.due, today)}
+              </span>
             )}
             {task.remindAt && (
-              <span className="text-foreground/80 inline-flex items-center gap-1">
+              <span className="inline-flex items-center gap-1">
                 <BellIcon className="size-3" aria-hidden />
                 {formatReminder(intl, task.remindAt, today)}
               </span>
             )}
+            {task.hasNotes && (
+              <span className="inline-flex items-center gap-1">
+                <Bars3BottomLeftIcon className="size-3" aria-hidden />
+                {intl.formatMessage({
+                  description: "TaskRow - marker shown when a task has a note",
+                  defaultMessage: "Note",
+                  id: "necy86",
+                })}
+              </span>
+            )}
+          </span>
+        )}
+        {!task.done && task.tags.length > 0 && (
+          <span className="slab-tags flex flex-wrap gap-1.5" data-testid="task-row__tags">
             {task.tags.map((tag) => (
-              <span key={tag} className="text-(--tag)">
+              <span
+                key={tag}
+                className="h-[22px] rounded-full bg-(--tag)/14 px-[9px] text-xs leading-[22px] font-medium text-(--tag)"
+              >
                 #{tag}
               </span>
-            ))}
-            {task.links.map((link) => (
-              <Link
-                key={link}
-                href={link}
-                target="_blank"
-                rel="noreferrer"
-                aria-label={intl.formatMessage(
-                  {
-                    description: "TaskRow - aria-label for a link to the task's source, opened in a new tab",
-                    defaultMessage: "Open link to {host}",
-                    id: "ahIXxO",
-                  },
-                  { host: formatTaskLink(link) }
-                )}
-                data-testid="task-row__link"
-                className="text-accent relative z-10 inline-flex max-w-48 items-center gap-1 text-xs no-underline hover:underline"
-              >
-                <LinkIcon className="size-3 shrink-0" aria-hidden />
-                <span className="truncate">{formatTaskLink(link)}</span>
-              </Link>
             ))}
           </span>
         )}
       </div>
+
+      {!task.done &&
+        task.links.map((link) => (
+          <Link
+            key={link}
+            href={link}
+            target="_blank"
+            rel="noreferrer"
+            aria-label={intl.formatMessage(
+              {
+                description: "TaskRow - aria-label for a link to the task's source, opened in a new tab",
+                defaultMessage: "Open link to {host}",
+                id: "ahIXxO",
+              },
+              { host: formatTaskLink(link) }
+            )}
+            data-testid="task-row__link"
+            className="relative z-10 grid size-9 shrink-0 place-items-center rounded-[10px] bg-(--tag)/14 text-(--tag) no-underline transition hover:scale-106 hover:bg-(--tag)/28"
+          >
+            <ArrowTopRightOnSquareIcon className="size-4" aria-hidden />
+          </Link>
+        ))}
 
       {!task.done && onAddToMyDay && !isInMyDay && (
         <Button
@@ -193,7 +294,10 @@ export function TaskRow({
             id: "es9TNB",
           })}
           data-testid="task-row__important"
-          className={clsx("data-[selected=true]:bg-transparent", task.important ? "text-(--star)" : "text-muted")}
+          className={clsx(
+            "size-9 data-[selected=true]:bg-transparent",
+            task.important ? "text-(--star)" : "text-muted"
+          )}
         >
           {task.important ? <StarIcon className="size-[18px]" /> : <StarOutlineIcon className="size-[18px]" />}
         </ToggleButton>
@@ -205,7 +309,7 @@ export function TaskRow({
             isIconOnly
             variant="ghost"
             size="sm"
-            className="text-muted"
+            className="slab-reveal text-muted"
             aria-label={intl.formatMessage({
               description: "TaskRow - aria-label for the task actions menu",
               defaultMessage: "Task actions",

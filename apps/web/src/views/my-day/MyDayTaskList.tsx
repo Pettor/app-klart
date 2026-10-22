@@ -1,8 +1,10 @@
 import type { ReactElement } from "react";
 import { Chip } from "@heroui/react";
+import clsx from "clsx";
 import { useIntl } from "react-intl";
 import type { MyDayTask, MyDayTaskActions } from "./MyDayTypes";
 import { TaskRow } from "~/components/display/task-row/TaskRow";
+import { useTaskReorder } from "~/components/display/task-row/UseTaskReorder";
 import type { SmartView } from "~/core/tasks/KlartAtoms";
 
 export interface MyDayTaskListProps {
@@ -14,6 +16,8 @@ export interface MyDayTaskListProps {
   actions: MyDayTaskActions;
   /** The task open in the editor, highlighted in the list. */
   selectedTaskId?: string | null;
+  /** Shows every task's tags; otherwise they appear on hover or focus. */
+  showTags?: boolean;
 }
 
 export function MyDayTaskList({
@@ -24,8 +28,15 @@ export function MyDayTaskList({
   showContext,
   actions,
   selectedTaskId = null,
+  showTags = false,
 }: MyDayTaskListProps): ReactElement {
   const intl = useIntl();
+  // Only My Day has an order of its own; the other views sort by due date.
+  const canReorder = smartView === "day";
+  const getReorder = useTaskReorder(
+    tasks.map((task) => task.id),
+    actions.onMoveInMyDay
+  );
 
   function renderRow(task: MyDayTask): ReactElement {
     return (
@@ -42,6 +53,7 @@ export function MyDayTaskList({
         onArchive={actions.onArchive}
         onOpen={actions.onOpen}
         isSelected={task.id === selectedTaskId}
+        reorder={canReorder && !task.done ? getReorder(task.id) : undefined}
       />
     );
   }
@@ -54,7 +66,7 @@ export function MyDayTaskList({
           defaultMessage: "Tasks",
           id: "EvrxWO",
         })}
-        className="flex flex-col gap-1"
+        className={clsx("flex flex-col gap-3", showTags && "slab-tags-on")}
         data-testid="my-day__tasks"
       >
         {tasks.length === 0 && (
@@ -83,9 +95,13 @@ export function MyDayTaskList({
             defaultMessage: "Completed",
             id: "/gk/jd",
           })}
-          className="flex flex-col gap-1"
+          className="flex flex-col gap-2"
         >
-          <Chip size="sm" variant="soft" className="self-start bg-black/10 font-semibold dark:bg-black/30">
+          <Chip
+            size="sm"
+            variant="soft"
+            className="text-foreground h-auto self-start rounded-md bg-white/75 px-2.5 py-1 text-[13px] font-semibold dark:bg-black/30"
+          >
             {intl.formatMessage(
               {
                 description: "MyDayTaskList - completed section heading with count",

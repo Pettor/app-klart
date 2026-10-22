@@ -1,5 +1,5 @@
 import type { ReactElement, ReactNode } from "react";
-import { ComputerDesktopIcon, MoonIcon, SunIcon } from "@heroicons/react/20/solid";
+import { ComputerDesktopIcon, MoonIcon, SparklesIcon, SunIcon } from "@heroicons/react/20/solid";
 import { Radio, RadioGroup } from "@heroui/react";
 import clsx from "clsx";
 import { useIntl } from "react-intl";
@@ -74,6 +74,22 @@ function DarkPreview(): ReactElement {
   );
 }
 
+function MidnightPreview(): ReactElement {
+  return (
+    <div className="flex h-full w-full flex-col bg-[#0e1220]">
+      <div className="h-1.5 w-full bg-[#161c2c]" />
+      <div className="flex flex-1 gap-1 p-1.5">
+        <div className="w-1/3 rounded-sm bg-[#161c2c]" />
+        <div className="flex flex-1 flex-col gap-1">
+          <div className="h-1.5 w-3/4 rounded-sm bg-[#2b3550]" />
+          <div className="h-1 w-1/2 rounded-sm bg-[#1d2640]" />
+          <div className="h-1 w-2/3 rounded-sm bg-[#5b8cff]/60" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function AutoPreview(): ReactElement {
   return (
     <div className="flex h-full w-full">
@@ -108,7 +124,7 @@ export function ThemeSelector({ mode, onSelect }: ThemeSelectorProps): ReactElem
         defaultMessage: "Theme",
         id: "aTH1qx",
       })}
-      className="flex gap-2"
+      className="flex flex-wrap gap-2"
     >
       <ThemeOption
         value="auto"
@@ -139,6 +155,16 @@ export function ThemeSelector({ mode, onSelect }: ThemeSelectorProps): ReactElem
         })}
         icon={<MoonIcon className="h-3 w-3" />}
         preview={<DarkPreview />}
+      />
+      <ThemeOption
+        value="midnight"
+        label={intl.formatMessage({
+          description: "ThemeSelector: label - midnight option, a navy dark theme",
+          defaultMessage: "Midnight",
+          id: "RsHeiT",
+        })}
+        icon={<SparklesIcon className="h-3 w-3" />}
+        preview={<MidnightPreview />}
       />
     </RadioGroup>
   );

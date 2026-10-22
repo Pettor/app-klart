@@ -97,6 +97,7 @@ function buildArgs(contextId: string): Props {
       onRemoveFromMyDay: fn(),
       onArchive: fn(),
       onOpen: fn(),
+      onMoveInMyDay: fn(),
     },
     quickAdd: { value: "", onChange: fn(), onSubmit: fn(), preview: null },
     suggestions: {
@@ -130,6 +131,7 @@ function buildArgs(contextId: string): Props {
       onToggle: fn(),
       json: JSON.stringify(buildTodayView(DEMO_DATA, DEMO_TODAY, "2026-10-21T10:00:00Z"), null, 2),
     },
+    taskTags: { isShown: false, onChange: fn() },
     onOpenSettings: fn(),
     onOpenNotifications: fn(),
   };
@@ -162,6 +164,22 @@ export const AllContexts: Story = {
 
 export const WithAgentJson: Story = {
   args: { ...buildArgs("work"), agentJson: { ...buildArgs("work").agentJson, isOpen: true } },
+};
+
+/** Every task's tags shown, as with the header's Tags switch on. Off, they appear on hover or focus. */
+export const WithTags: Story = {
+  args: { ...buildArgs("personal"), taskTags: { isShown: true, onChange: fn() } },
+};
+
+/** The grip moves a task with the arrow keys as well as by dragging. */
+export const ReorderWithKeyboard: Story = {
+  args: { ...buildArgs(ALL_CONTEXTS), suggestions: { ...buildArgs(ALL_CONTEXTS).suggestions, isOpen: false } },
+  play: async ({ args, canvas, userEvent }) => {
+    const [firstGrip] = canvas.getAllByTestId("task-row__grip");
+    firstGrip!.focus();
+    await userEvent.keyboard("{ArrowDown}");
+    await expect(args.taskActions.onMoveInMyDay).toHaveBeenCalledWith(args.tasks[0]!.id, args.tasks[1]!.id, "after");
+  },
 };
 
 export const WithQuickAddPreview: Story = {
