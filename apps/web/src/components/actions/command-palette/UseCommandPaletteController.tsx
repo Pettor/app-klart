@@ -8,6 +8,7 @@ import {
   RectangleStackIcon,
   SparklesIcon,
   SunIcon,
+  ViewColumnsIcon,
 } from "@heroicons/react/20/solid";
 import { useRouter } from "@tanstack/react-router";
 import { useAtomValue, useSetAtom } from "jotai";
@@ -24,6 +25,7 @@ import {
   klartDataAtom,
   searchFocusRequestAtom,
   showSuggestionsAtom,
+  sidebarCollapsedAtom,
   smartViewAtom,
   tagFilterAtom,
 } from "~/core/tasks/KlartAtoms";
@@ -48,6 +50,7 @@ export function useCommandPaletteController(): CommandPaletteProps {
   const setSmartView = useSetAtom(smartViewAtom);
   const setShowSuggestions = useSetAtom(showSuggestionsAtom);
   const requestSearchFocus = useSetAtom(searchFocusRequestAtom);
+  const setSidebarCollapsed = useSetAtom(sidebarCollapsedAtom);
 
   const navigationGroup = intl.formatMessage({
     description: "CommandPaletteController: label - navigation group",
@@ -141,8 +144,23 @@ export function useCommandPaletteController(): CommandPaletteProps {
         shortcut: { key: "/" },
         perform: () => {
           goToMyDay();
+          // The search field lives in the full sidebar.
+          setSidebarCollapsed(false);
           requestSearchFocus((current) => current + 1);
         },
+      },
+      {
+        id: "toggle-sidebar",
+        label: intl.formatMessage({
+          description: "CommandPaletteController: label - collapse or expand the sidebar command",
+          defaultMessage: "Toggle sidebar",
+          id: "ELfDoL",
+        }),
+        group: navigationGroup,
+        keywords: ["sidebar", "menu", "collapse", "expand", "navigation"],
+        icon: <ViewColumnsIcon className="h-4 w-4" />,
+        shortcut: { mod: true, key: "\\" },
+        perform: () => setSidebarCollapsed((current) => !current),
       },
       {
         id: "goto-settings",
@@ -247,6 +265,7 @@ export function useCommandPaletteController(): CommandPaletteProps {
     setSmartView,
     setShowSuggestions,
     requestSearchFocus,
+    setSidebarCollapsed,
   ]);
 
   useCommandPaletteShortcut();

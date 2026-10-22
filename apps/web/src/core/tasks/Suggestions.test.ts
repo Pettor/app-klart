@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { DayFile } from "./Day";
+import { addDays } from "./LocalDate";
 import { buildSuggestions, selectDueSuggestions } from "./Suggestions";
 import type { Task } from "./Task";
 
@@ -91,6 +92,15 @@ describe("buildSuggestions", () => {
       contextTags: ["work"],
     });
     expect(result.map((group) => group.reason)).toEqual(["recently_added"]);
+  });
+
+  it("leaves out groups switched off in settings and widens coming up", () => {
+    const result = buildSuggestions({
+      tasks: [task("soon", { due: addDays(TODAY, 5) }), task("loose")],
+      today: TODAY,
+      settings: { disabled: ["recently_added"], comingUpDays: 7 },
+    });
+    expect(result.map((group) => [group.reason, group.tasks.map((t) => t.id)])).toEqual([["coming_up", ["soon"]]]);
   });
 
   it("selects overdue and due-today tasks for Add all due", () => {

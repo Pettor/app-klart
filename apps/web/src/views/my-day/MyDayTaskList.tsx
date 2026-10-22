@@ -1,5 +1,6 @@
 import type { ReactElement } from "react";
-import { Chip } from "@heroui/react";
+import { ChevronRightIcon } from "@heroicons/react/20/solid";
+import { Button } from "@heroui/react";
 import clsx from "clsx";
 import { useIntl } from "react-intl";
 import type { MyDayTask, MyDayTaskActions } from "./MyDayTypes";
@@ -18,6 +19,13 @@ export interface MyDayTaskListProps {
   selectedTaskId?: string | null;
   /** Shows every task's tags; otherwise they appear on hover or focus. */
   showTags?: boolean;
+  /** Shows due dates, reminders and note markers under titles. */
+  showMeta?: boolean;
+  /** Shows a button per task link. */
+  showLinks?: boolean;
+  /** Lists the completed tasks; otherwise only their count shows, as a button that expands them. */
+  isCompletedExpanded?: boolean;
+  onToggleCompleted?: () => void;
 }
 
 export function MyDayTaskList({
@@ -29,6 +37,10 @@ export function MyDayTaskList({
   actions,
   selectedTaskId = null,
   showTags = false,
+  showMeta = true,
+  showLinks = true,
+  isCompletedExpanded = true,
+  onToggleCompleted,
 }: MyDayTaskListProps): ReactElement {
   const intl = useIntl();
   // Only My Day has an order of its own; the other views sort by due date.
@@ -53,6 +65,8 @@ export function MyDayTaskList({
         onArchive={actions.onArchive}
         onOpen={actions.onOpen}
         isSelected={task.id === selectedTaskId}
+        showMeta={showMeta}
+        showLinks={showLinks}
         reorder={canReorder && !task.done ? getReorder(task.id) : undefined}
       />
     );
@@ -66,7 +80,7 @@ export function MyDayTaskList({
           defaultMessage: "Tasks",
           id: "EvrxWO",
         })}
-        className={clsx("flex flex-col gap-3", showTags && "slab-tags-on")}
+        className={clsx("compact:gap-2 flex flex-col gap-3", showTags && "slab-tags-on")}
         data-testid="my-day__tasks"
       >
         {tasks.length === 0 && (
@@ -97,11 +111,17 @@ export function MyDayTaskList({
           })}
           className="flex flex-col gap-2"
         >
-          <Chip
-            size="sm"
-            variant="soft"
-            className="text-foreground h-auto self-start rounded-md bg-white/75 px-2.5 py-1 text-[13px] font-semibold dark:bg-black/30"
+          <Button
+            variant="ghost"
+            onPress={onToggleCompleted}
+            aria-expanded={isCompletedExpanded}
+            data-testid="my-day__toggle-completed"
+            className="text-foreground h-[30px] min-w-0 gap-1.5 self-start rounded-lg bg-white/75 pr-2.5 pl-1.5 text-[13px] font-semibold hover:bg-white dark:bg-black/30 dark:hover:bg-black/40"
           >
+            <ChevronRightIcon
+              aria-hidden
+              className={clsx("size-3.5 transition-transform", isCompletedExpanded && "rotate-90")}
+            />
             {intl.formatMessage(
               {
                 description: "MyDayTaskList - completed section heading with count",
@@ -110,8 +130,8 @@ export function MyDayTaskList({
               },
               { count: doneTasks.length }
             )}
-          </Chip>
-          {doneTasks.map(renderRow)}
+          </Button>
+          {isCompletedExpanded && doneTasks.map(renderRow)}
         </section>
       )}
     </>

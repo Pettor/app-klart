@@ -1,11 +1,13 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, fn, screen } from "storybook/test";
+import { expect, fn, screen, within } from "storybook/test";
 import type { MyDayTask } from "./MyDayTypes";
 import { MyDayView as Component } from "./MyDayView";
 import type { MyDayViewProps as Props } from "./MyDayView";
 import { ALL_CONTEXTS, findContext } from "~/core/contexts/KlartContext";
 import { taskPath } from "~/core/sync/FolderSync";
 import { buildTodayView } from "~/core/tasks/AgentViews";
+import type { DisplayOptions } from "~/core/tasks/DisplayOptions";
+import { MINIMAL_DISPLAY_OPTIONS } from "~/core/tasks/DisplayOptions";
 import { addDays } from "~/core/tasks/LocalDate";
 import { buildSuggestions, selectDueSuggestions } from "~/core/tasks/Suggestions";
 import type { Task } from "~/core/tasks/Task";
@@ -126,12 +128,9 @@ function buildArgs(contextId: string): Props {
       onArchive: fn(),
       onClose: fn(),
     },
-    agentJson: {
-      isOpen: false,
-      onToggle: fn(),
-      json: JSON.stringify(buildTodayView(DEMO_DATA, DEMO_TODAY, "2026-10-21T10:00:00Z"), null, 2),
-    },
-    taskTags: { isShown: false, onChange: fn() },
+    agentJson: JSON.stringify(buildTodayView(DEMO_DATA, DEMO_TODAY, "2026-10-21T10:00:00Z"), null, 2),
+    display: { options: MINIMAL_DISPLAY_OPTIONS, onChange: fn() },
+    sidebar: { isCollapsed: false, onToggle: fn(), onSearch: fn() },
     onOpenSettings: fn(),
     onOpenNotifications: fn(),
   };
@@ -162,22 +161,66 @@ export const AllContexts: Story = {
   args: buildArgs(ALL_CONTEXTS),
 };
 
+function withDisplay(context: string, options: Partial<DisplayOptions>): Props {
+  const args = buildArgs(context);
+  return { ...args, display: { ...args.display, options: { ...MINIMAL_DISPLAY_OPTIONS, ...options } } };
+}
+
 export const WithAgentJson: Story = {
-  args: { ...buildArgs("work"), agentJson: { ...buildArgs("work").agentJson, isOpen: true } },
+  args: withDisplay("work", { agentJson: true }),
 };
 
-/** Every task's tags shown, as with the header's Tags switch on. Off, they appear on hover or focus. */
+/** Every task's tags shown, as with Display › Tags on tasks. Off, they appear on hover or focus. */
 export const WithTags: Story = {
-  args: { ...buildArgs("personal"), taskTags: { isShown: true, onChange: fn() } },
+  args: withDisplay("personal", { taskTags: true }),
 };
 
-/** The grip moves a task with the arrow keys as well as by dragging. */
+/** Display › Tag filter on: the tag list in the sidebar, or the chips on phones. */
+export const WithTagFilter: Story = {
+  args: withDisplay("personal", { tagFilter: true }),
+};
+
+/** Display › Dates & reminders and Link buttons off: just titles. */
+export const TitlesOnly: Story = {
+  args: withDisplay("work", { details: false, links: false }),
+};
+
+/** The Display menu flips an option and resets to the minimal view. */
+export const DisplayMenu: Story = {
+  // Closed so the suggestions sheet doesn't cover the page at narrow test viewports.
+  args: { ...buildArgs("personal"), suggestions: { ...buildArgs("personal").suggestions, isOpen: false } },
+  play: async ({ args, canvas, userEvent }) => {
+    await userEvent.click(canvas.getByTestId("my-day__display"));
+    const option = await screen.findByTestId("my-day__display-taskTags");
+    await userEvent.click(within(option).getByRole("switch"));
+    await expect(args.display.onChange).toHaveBeenCalledWith({ ...MINIMAL_DISPLAY_OPTIONS, taskTags: true });
+    await userEvent.click(screen.getByTestId("my-day__display-minimal"));
+    await expect(args.display.onChange).toHaveBeenLastCalledWith(MINIMAL_DISPLAY_OPTIONS);
+  },
+};
+
+/** The completed list starts folded; its button expands it via Display › Completed tasks. */
+export const CompletedFolded: Story = {
+  args: { ...buildArgs("personal"), suggestions: { ...buildArgs("personal").suggestions, isOpen: false } },
+  play: async ({ args, canvas, userEvent }) => {
+    await userEvent.click(canvas.getByTestId("my-day__toggle-completed"));
+    await expect(args.display.onChange).toHaveBeenCalledWith({ ...MINIMAL_DISPLAY_OPTIONS, completed: true });
+  },
+};
+
+/** The sidebar folded to a rail of icons, with ⌘\ or its own button. Desktop widths only. */
+export const CollapsedSidebar: Story = {
+  args: { ...buildArgs("personal"), sidebar: { isCollapsed: true, onToggle: fn(), onSearch: fn() } },
+  parameters: { viewport: { value: "full" } },
+};
+
+/** Alt with arrow up or down on a task's title moves it, as does pressing and dragging it. */
 export const ReorderWithKeyboard: Story = {
   args: { ...buildArgs(ALL_CONTEXTS), suggestions: { ...buildArgs(ALL_CONTEXTS).suggestions, isOpen: false } },
   play: async ({ args, canvas, userEvent }) => {
-    const [firstGrip] = canvas.getAllByTestId("task-row__grip");
-    firstGrip!.focus();
-    await userEvent.keyboard("{ArrowDown}");
+    const [firstTitle] = canvas.getAllByTestId("task-row__open");
+    firstTitle!.focus();
+    await userEvent.keyboard("{Alt>}{ArrowDown}{/Alt}");
     await expect(args.taskActions.onMoveInMyDay).toHaveBeenCalledWith(args.tasks[0]!.id, args.tasks[1]!.id, "after");
   },
 };

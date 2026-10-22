@@ -12,3 +12,8 @@ export const THEME_CLASSES: Record<ResolvedThemeMode, string> = {
   dark: "dark",
   midnight: "dark midnight",
 };
+
+export type Density = "comfortable" | "compact";
+
+/** `system` follows the OS "reduce motion" setting; `full` and `reduced` override it. */
+export type MotionPreference = "full" | "reduced" | "system";

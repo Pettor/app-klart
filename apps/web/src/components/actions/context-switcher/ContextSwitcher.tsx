@@ -23,8 +23,8 @@ export interface ContextSwitcherProps {
   selectedId: string;
   onSelect: (id: string) => void;
   onManage: () => void;
-  /** `compact` is the pill used in the mobile top bar. */
-  variant?: "sidebar" | "compact";
+  /** `compact` is the pill used in the mobile top bar; `rail` is the square in the collapsed sidebar. */
+  variant?: "sidebar" | "compact" | "rail";
 }
 
 const MANAGE_KEY = "__manage";
@@ -65,13 +65,21 @@ export function ContextSwitcher({
         className={clsx(
           `ctx-${selected?.color ?? "all"}`,
           "text-foreground",
-          variant === "sidebar"
-            ? "border-border bg-surface hover:bg-surface-secondary h-11 w-full justify-start gap-2.5 rounded-[10px] border px-3 text-left"
-            : "h-9 rounded-full px-3.5"
+          variant === "sidebar" &&
+            "border-border bg-surface hover:bg-surface-secondary h-11 w-full justify-start gap-2.5 rounded-[10px] border px-3 text-left",
+          variant === "compact" && "h-9 rounded-full px-3.5",
+          variant === "rail" &&
+            "border-border bg-surface hover:bg-surface-secondary size-10 min-w-0 rounded-[10px] border p-0"
         )}
       >
-        <span className="size-2.5 shrink-0 rounded-full bg-(--ctx)" aria-hidden />
-        {variant === "sidebar" ? (
+        <span
+          className={clsx(
+            "shrink-0 rounded-full bg-(--ctx)",
+            variant === "rail" ? "size-3 shadow-[0_0_10px_var(--ctx)]" : "size-2.5"
+          )}
+          aria-hidden
+        />
+        {variant === "rail" ? null : variant === "sidebar" ? (
           <span className="flex min-w-0 flex-1 flex-col">
             <span className="text-muted text-[11px] font-normal">
               {intl.formatMessage({
@@ -91,9 +99,9 @@ export function ContextSwitcher({
             {selected.shortcut}
           </span>
         )}
-        <ChevronDownIcon className="text-muted size-4 shrink-0" aria-hidden />
+        {variant !== "rail" && <ChevronDownIcon className="text-muted size-4 shrink-0" aria-hidden />}
       </Button>
-      <Dropdown.Popover className="min-w-60">
+      <Dropdown.Popover className="min-w-60" placement={variant === "rail" ? "right top" : undefined}>
         <Dropdown.Menu
           aria-label={intl.formatMessage({
             description: "ContextSwitcher - aria-label of the menu",

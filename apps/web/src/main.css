@@ -18,6 +18,8 @@
 /* Fonts */
 /* `midnight:` styles apply under the Midnight theme, which also has `.dark`. */
 @custom-variant midnight (&:is(.midnight *));
+/* `compact:` styles apply with Settings › Appearance › Density set to Compact. */
+@custom-variant compact (&:where([data-density="compact"] *));
 
 @theme {
   --font-sans: "Inter", system-ui, -apple-system, sans-serif;
@@ -116,8 +118,9 @@
 
 /*
  * Slab task cards from the design: a raised card that lifts on hover and presses down on click.
- * `.slab-tags` (a row of tag chips) and `.slab-reveal` (the drag grip) stay hidden until the card is
- * hovered or focused, or a `.slab-tags-on` ancestor asks for tags on every card.
+ * `.slab-tags` (a line of tag chips under the title) stays closed until the card is hovered or focused,
+ * or a `.slab-tags-on` ancestor asks for tags on every card. `.slab-reveal` (the actions menu) fades in on
+ * hover. A `.slab-draggable` card is dragged by pressing it with a mouse; touch screens show `.slab-grip`.
  */
 :root {
   --slab: #ffffff;
@@ -281,25 +284,41 @@
 .slab-tags-on .slab-tags,
 .slab:focus-within .slab-tags {
   max-height: 28px;
-  margin-top: 4px;
+  margin-top: 8px;
   opacity: 1;
+}
+.slab-draggable {
+  cursor: grab;
+}
+.slab-draggable.slab-lifted {
+  cursor: grabbing;
+}
+/* With a mouse the whole card is the handle; the grip is for touch, where a swipe on the card scrolls. */
+@media (hover: hover) {
+  .slab-grip {
+    display: none;
+  }
+}
+@media (hover: none) {
+  .slab-draggable .slab-tags {
+    padding-left: 74px;
+  }
 }
 @media (hover: hover) {
   .slab:hover .slab-tags {
     max-height: 28px;
-    margin-top: 4px;
+    margin-top: 8px;
     opacity: 1;
   }
   .slab-reveal {
     opacity: 0;
     transition: opacity 0.15s;
   }
-  /* The design shows only the link and star; the actions menu appears like the grip. */
+  /* The design shows only the link and star; the actions menu fades in on hover. */
   .slab:hover .slab-reveal,
   .slab-done:hover .slab-reveal,
   .slab-reveal:focus-within,
-  .slab-reveal[aria-expanded="true"],
-  .slab-lifted .slab-reveal {
+  .slab-reveal[aria-expanded="true"] {
     opacity: 1;
   }
 }
@@ -307,17 +326,75 @@
   opacity: 0.35;
 }
 
-@media (prefers-reduced-motion: reduce) {
+/* The sidebar slides in when it collapses to a rail or expands again. */
+.sidebar-in {
+  animation: sidebar-in 0.22s cubic-bezier(0.2, 0.9, 0.25, 1.1);
+}
+/* A settings section rises into place when picked. */
+.settings-pane-in {
+  animation: settings-pane-in 0.22s ease;
+}
+@keyframes settings-pane-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes sidebar-in {
+  from {
+    opacity: 0.4;
+    transform: translateX(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/*
+ * Settings › Appearance › Motion (`data-motion` on <html>): Reduced drops the lift, press and drop effects;
+ * System does so while the OS asks for less motion; Full keeps them regardless.
+ */
+:root[data-motion="reduced"] {
   .slab,
   .slab-tags,
   .slab-reveal {
     transition: none;
   }
-  .slab.slab-settled {
+  .slab.slab-settled,
+  .sidebar-in,
+  .settings-pane-in {
     animation: none;
   }
   .slab:not(.slab-lifted):hover,
   .slab:not(.slab-lifted):active {
     transform: none;
   }
+}
+@media (prefers-reduced-motion: reduce) {
+  :root:not([data-motion="full"], [data-motion="reduced"]) {
+    .slab,
+    .slab-tags,
+    .slab-reveal {
+      transition: none;
+    }
+    .slab.slab-settled,
+    .sidebar-in,
+    .settings-pane-in {
+      animation: none;
+    }
+    .slab:not(.slab-lifted):hover,
+    .slab:not(.slab-lifted):active {
+      transform: none;
+    }
+  }
+}
+
+/* Settings › Appearance › Tint by context off: My Day keeps the plain background in every context. */
+:root[data-tint="off"] [class*="ctx-"] {
+  --ctx-backdrop: var(--color-background);
 }

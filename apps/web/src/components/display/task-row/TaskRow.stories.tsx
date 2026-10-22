@@ -84,23 +84,43 @@ export const WithNote: Story = {
   args: { ...defaultArgs, task: { ...defaultArgs.task, hasNotes: true } },
 };
 
-/** With a grip from `useTaskReorder`: drag it, or focus it and press arrow up or down. */
+/**
+ * Draggable, from `useTaskReorder`: press the row and drag it with a mouse, or focus its title and press Alt with
+ * arrow up or down. Touch screens show a grip instead.
+ */
 export const Reorderable: Story = {
   args: {
     ...defaultArgs,
+    onOpen: fn(),
     reorder: {
       isLifted: false,
       offsetY: 0,
       dropIndicator: null,
       isSettled: false,
-      gripProps: { onPointerDownCapture: fn(), onPointerMove: fn(), onPointerUp: fn(), onPointerCancel: fn() },
+      rowProps: {
+        onPointerDownCapture: fn(),
+        onPointerMoveCapture: fn(),
+        onPointerUpCapture: fn(),
+        onPointerCancelCapture: fn(),
+      },
+      gripProps: { onPointerDownCapture: fn() },
       onGripKeyDown: fn(),
+      onRowKeyDown: fn(),
+      isDropping: () => false,
     },
   },
   play: async ({ args, canvas, userEvent }) => {
-    canvas.getByTestId("task-row__grip").focus();
-    await userEvent.keyboard("{ArrowUp}");
-    await expect(args.reorder!.onGripKeyDown).toHaveBeenCalled();
+    canvas.getByTestId("task-row__open").focus();
+    await userEvent.keyboard("{Alt>}{ArrowUp}{/Alt}");
+    await expect(args.reorder!.onRowKeyDown).toHaveBeenCalled();
+  },
+};
+
+/** The design's display options off: no dates, reminders or link buttons, just the title. */
+export const Minimal: Story = {
+  args: { ...defaultArgs, showMeta: false, showLinks: false },
+  play: async ({ canvas }) => {
+    await expect(canvas.queryByTestId("task-row__link")).toBeNull();
   },
 };
 

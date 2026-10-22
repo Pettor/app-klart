@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useBreakpoint } from "@package/react";
-import { useAtom } from "jotai";
+import { useAtom, useSetAtom } from "jotai";
 import { useIntl } from "react-intl";
 import type { ContextSwitcherOption } from "~/components/actions/context-switcher/ContextSwitcher";
 import type { SuggestionListGroup } from "~/components/display/suggestion-list/SuggestionList";
@@ -11,7 +11,12 @@ import { useHierarchyNavigation } from "~/core/routes/UseHierarchyNavigation";
 import type { SettingsSectionId } from "~/core/settings/SettingsSection";
 import { taskPath } from "~/core/sync/FolderSync";
 import { useFolderSync } from "~/core/sync/UseFolderSync";
-import { showAgentJsonAtom, showSuggestionsAtom, showTaskTagsAtom } from "~/core/tasks/KlartAtoms";
+import {
+  displayOptionsAtom,
+  searchFocusRequestAtom,
+  showSuggestionsAtom,
+  sidebarCollapsedAtom,
+} from "~/core/tasks/KlartAtoms";
 import type { TaskPatch } from "~/core/tasks/KlartData";
 import { parseQuickAdd } from "~/core/tasks/QuickAdd";
 import { selectDueSuggestions } from "~/core/tasks/Suggestions";
@@ -71,8 +76,9 @@ export function useMyDayRoute(editingId: string | null): MyDayViewProps {
   const isWide = useBreakpoint("xl");
   const [showSuggestions, setShowSuggestions] = useAtom(showSuggestionsAtom);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
-  const [showJson, setShowJson] = useAtom(showAgentJsonAtom);
-  const [showTaskTags, setShowTaskTags] = useAtom(showTaskTagsAtom);
+  const [displayOptions, setDisplayOptions] = useAtom(displayOptionsAtom);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useAtom(sidebarCollapsedAtom);
+  const requestSearchFocus = useSetAtom(searchFocusRequestAtom);
   const [draft, setDraft] = useState("");
   const editingTask = useTask(editingId);
 
@@ -277,12 +283,16 @@ export function useMyDayRoute(editingId: string | null): MyDayViewProps {
       onAddAllDue: () => actions.addToToday(dueSuggestions.map(({ task, reason }) => ({ taskId: task.id, reason }))),
     },
     editor,
-    agentJson: {
-      isOpen: showJson,
-      onToggle: () => setShowJson(!showJson),
-      json: JSON.stringify(myDay.todayView, null, 2),
+    agentJson: displayOptions.agentJson ? JSON.stringify(myDay.todayView, null, 2) : "",
+    display: { options: displayOptions, onChange: setDisplayOptions },
+    sidebar: {
+      isCollapsed: isSidebarCollapsed,
+      onToggle: () => setIsSidebarCollapsed(!isSidebarCollapsed),
+      onSearch: () => {
+        setIsSidebarCollapsed(false);
+        requestSearchFocus((current) => current + 1);
+      },
     },
-    taskTags: { isShown: showTaskTags, onChange: setShowTaskTags },
     onOpenSettings: () => openSettings(),
     onOpenNotifications: () => openSettings("notifications"),
   };

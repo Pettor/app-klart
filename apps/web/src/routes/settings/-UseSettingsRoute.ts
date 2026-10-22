@@ -1,5 +1,5 @@
 import { toast } from "@heroui/react";
-import { useAtomValue } from "jotai";
+import { useAtom, useAtomValue } from "jotai";
 import { useIntl } from "react-intl";
 import { useThemeSelector } from "~/components/actions/theme-selector/UseThemeSelector";
 import { useAppInfo } from "~/core/config/UseAppInfo";
@@ -12,8 +12,9 @@ import { GitHubError } from "~/core/sync/GitHubBackend";
 import { LLMS_TXT } from "~/core/sync/LlmsTxt";
 import type { GitConnectResult, GitHubConnectResult, GitHubCredentials } from "~/core/sync/UseFolderSync";
 import { useFolderSync } from "~/core/sync/UseFolderSync";
-import { klartDataAtom } from "~/core/tasks/KlartAtoms";
+import { klartDataAtom, startContextAtom, suggestionSettingsAtom } from "~/core/tasks/KlartAtoms";
 import { useKlartActions } from "~/core/tasks/UseKlartActions";
+import { densityAtom, motionAtom, tintByContextAtom } from "~/core/theme/ThemeAtoms";
 import { useWhatsNew } from "~/core/whats-new/UseWhatsNew";
 import { githubErrorText } from "~/views/settings/SettingsGitHubMessages";
 import type { SettingsViewProps } from "~/views/settings/SettingsView";
@@ -28,6 +29,11 @@ export function useSettingsRoute(section?: SettingsSectionId): SettingsViewProps
   const themeSelector = useThemeSelector();
   const { appName, appVersion } = useAppInfo();
   const whatsNew = useWhatsNew();
+  const [startContext, setStartContext] = useAtom(startContextAtom);
+  const [suggestionSettings, setSuggestionSettings] = useAtom(suggestionSettingsAtom);
+  const [density, setDensity] = useAtom(densityAtom);
+  const [tintByContext, setTintByContext] = useAtom(tintByContextAtom);
+  const [motion, setMotion] = useAtom(motionAtom);
 
   function reportError(error: unknown): void {
     toast.danger(
@@ -132,6 +138,11 @@ export function useSettingsRoute(section?: SettingsSectionId): SettingsViewProps
   return {
     initialSection: section,
     onBack: () => navigation.up({ to: "/" }),
+    general: {
+      startContext,
+      contexts: data.contexts.map(({ id, name, color }) => ({ id, name, color })),
+      onStartContextChange: setStartContext,
+    },
     contexts: {
       contexts: data.contexts.map((context) => ({ ...context, openTaskCount: openCounts.get(context.id) ?? 0 })),
       onCreate: (name, color) => void actions.createContext(name, color),
@@ -175,7 +186,16 @@ export function useSettingsRoute(section?: SettingsSectionId): SettingsViewProps
       onChange: notifications.update,
       onContextChange: notifications.updateContext,
     },
-    appearance: { themeSelector },
+    appearance: {
+      themeSelector,
+      density,
+      onDensityChange: setDensity,
+      tintByContext,
+      onTintByContextChange: setTintByContext,
+      motion,
+      onMotionChange: setMotion,
+    },
+    suggestions: { settings: suggestionSettings, onChange: setSuggestionSettings },
     about: { appName, ...appVersion, onShowWhatsNew: whatsNew.open },
   };
 }

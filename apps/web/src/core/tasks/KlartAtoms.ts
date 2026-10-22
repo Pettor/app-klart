@@ -1,9 +1,13 @@
 import { atom } from "jotai";
 import { atomWithStorage, createJSONStorage } from "jotai/utils";
+import type { DisplayOptions } from "./DisplayOptions";
+import { MINIMAL_DISPLAY_OPTIONS } from "./DisplayOptions";
 import type { KlartData } from "./KlartData";
 import { createEmptyData, normalizeData } from "./KlartData";
 import { toLocalDate } from "./LocalDate";
 import { createSampleData, SAMPLE_DATA_ENABLED } from "./SampleData";
+import type { SuggestionSettings } from "./SuggestionSettings";
+import { DEFAULT_SUGGESTION_SETTINGS } from "./SuggestionSettings";
 import type { ContextSelection } from "~/core/contexts/KlartContext";
 
 /** Smart views in the sidebar. */
@@ -42,8 +46,31 @@ export const klartDataAtom = atomWithStorage<KlartData>(
   { getOnInit: true }
 );
 
+const CONTEXT_KEY = "klart-context";
+const START_CONTEXT_KEY = "klart-start-context";
+
+/** The context Klart opens in: `"last"` (the last used), `"all"` or a context id. Set in Settings › General. */
+export type StartContext = "last" | ContextSelection;
+
+export const startContextAtom = atomWithStorage<StartContext>(START_CONTEXT_KEY, "last", undefined, {
+  getOnInit: true,
+});
+
+/** Applies the start context once per app load, before `currentContextAtom` reads the stored selection. */
+function applyStartContext(): void {
+  try {
+    const start = JSON.parse(localStorage.getItem(START_CONTEXT_KEY) ?? '"last"') as StartContext;
+    if (start !== "last") {
+      localStorage.setItem(CONTEXT_KEY, JSON.stringify(start));
+    }
+  } catch {
+    // Unreadable or blocked storage: open in the last used context.
+  }
+}
+applyStartContext();
+
 /** The selected context id, or `"all"`. Remembered per device. */
-export const currentContextAtom = atomWithStorage<ContextSelection>("klart-context", "all", undefined, {
+export const currentContextAtom = atomWithStorage<ContextSelection>(CONTEXT_KEY, "all", undefined, {
   getOnInit: true,
 });
 
@@ -63,9 +90,28 @@ export const showSuggestionsAtom = atomWithStorage<boolean>("klart-show-suggesti
   getOnInit: true,
 });
 
-/** Shows every task's tags under its title. Off, tags appear on hover or focus. Remembered per device. */
-export const showTaskTagsAtom = atomWithStorage<boolean>("klart-show-task-tags", false, undefined, {
+const storedDisplayOptionsAtom = atomWithStorage<Partial<DisplayOptions>>(
+  "klart-display-options",
+  MINIMAL_DISPLAY_OPTIONS,
+  undefined,
+  { getOnInit: true }
+);
+
+/** What My Day shows besides titles. Remembered per device; options added later start at their default. */
+export const displayOptionsAtom = atom(
+  (get): DisplayOptions => ({ ...MINIMAL_DISPLAY_OPTIONS, ...get(storedDisplayOptionsAtom) }),
+  (_get, set, options: DisplayOptions) => set(storedDisplayOptionsAtom, options)
+);
+
+/** The desktop sidebar folded down to a rail of icons. Remembered per device. */
+export const sidebarCollapsedAtom = atomWithStorage<boolean>("klart-sidebar-collapsed", false, undefined, {
   getOnInit: true,
 });
 
-export const showAgentJsonAtom = atom<boolean>(false);
+/** Which suggestion groups My Day offers. Remembered per device. */
+export const suggestionSettingsAtom = atomWithStorage<SuggestionSettings>(
+  "klart-suggestion-settings",
+  DEFAULT_SUGGESTION_SETTINGS,
+  undefined,
+  { getOnInit: true }
+);

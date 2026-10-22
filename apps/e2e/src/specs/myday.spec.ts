@@ -33,8 +33,32 @@ test.describe("myday.quickadd", () => {
     const row = page.getByTestId("task-row").filter({ hasText: "Water the plants" });
     await row.getByRole("button", { name: "Complete task" }).click();
 
+    // The completed list starts folded; its button expands it.
     await expect(page.getByText("Completed 1")).toBeVisible();
+    await expect(row).toHaveCount(0);
+    await page.getByTestId("my-day__toggle-completed").click();
     await expect(row.getByRole("button", { name: "Mark not completed" })).toBeVisible();
+  });
+
+  test("hides dates through the Display menu and collapses the sidebar", async ({ page }) => {
+    const input = page.getByTestId("quick-add__input");
+    await input.fill("pay rent @tomorrow");
+    await input.press("Enter");
+    const row = page.getByTestId("task-row").filter({ hasText: "Pay rent" });
+    await expect(row).toContainText("Tomorrow");
+
+    await page.getByTestId("my-day__display").click();
+    await page.getByTestId("my-day__display-details").click();
+    await page.keyboard.press("Escape");
+    await expect(row).not.toContainText("Tomorrow");
+
+    await page.getByTestId("my-day__collapse-sidebar").click();
+    await expect(page.getByTestId("my-day__sidebar-rail")).toBeVisible();
+    await page.reload();
+    await expect(page.getByTestId("my-day__sidebar-rail")).toBeVisible();
+    await expect(row).not.toContainText("Tomorrow");
+    await page.getByTestId("my-day__expand-sidebar").click();
+    await expect(page.getByTestId("my-day__sidebar-rail")).toHaveCount(0);
   });
 
   test("keeps tasks after a reload", async ({ page }) => {
@@ -63,7 +87,7 @@ test.describe("myday.quickadd", () => {
 
 test.describe("myday.settings", () => {
   test("creates a context in settings", async ({ page }) => {
-    await page.goto("/#/settings");
+    await page.goto("/#/settings?section=contexts");
     await page.getByTestId("settings__new-context-name").fill("Football club");
     await page.getByTestId("settings__new-context").click();
 
@@ -72,6 +96,19 @@ test.describe("myday.settings", () => {
     await page.getByTestId("settings__back").click();
     await page.getByTestId("context-switcher__trigger").first().click();
     await expect(page.getByRole("menuitemradio", { name: /Football club/ })).toBeVisible();
+  });
+  test("opens My Day in the context chosen under Start in", async ({ page }) => {
+    await page.goto("/#/settings");
+    await page.getByTestId("settings__start-context").click();
+    await page.getByRole("option", { name: "Work" }).click();
+
+    await page.goto("/#/settings?section=appearance");
+    await page.getByTestId("settings__density").getByRole("radio", { name: "Compact" }).click();
+    await expect(page.locator("html")).toHaveAttribute("data-density", "compact");
+
+    await page.goto("/");
+    await page.reload();
+    await expect(page.getByTestId("context-switcher__trigger").first()).toHaveAccessibleName("Context: Work");
   });
 });
 
@@ -123,26 +160,32 @@ test.describe("myday.reorder", () => {
     return page.getByTestId("my-day__tasks").getByTestId("task-row__title").allTextContents();
   }
 
-  test("drags a task by its grip and keeps the order after a reload", async ({ page }) => {
+  test("drags a task by pressing it and keeps the order after a reload", async ({ page }) => {
     const first = page.getByTestId("task-row").filter({ hasText: "First task" });
     const third = page.getByTestId("task-row").filter({ hasText: "Third task" });
-    await first.hover();
-    const grip = await first.getByTestId("task-row__grip").boundingBox();
+    const start = await first.getByTestId("task-row__title").boundingBox();
     const target = await third.boundingBox();
 
-    await page.mouse.move(grip!.x + grip!.width / 2, grip!.y + grip!.height / 2);
+    await page.mouse.move(start!.x + start!.width / 2, start!.y + start!.height / 2);
     await page.mouse.down();
-    await page.mouse.move(grip!.x + grip!.width / 2, target!.y + target!.height - 4, { steps: 8 });
+    await page.mouse.move(start!.x + start!.width / 2, target!.y + target!.height - 4, { steps: 8 });
     await page.mouse.up();
 
     await expect.poll(() => titles(page)).toEqual(["Second task", "Third task", "First task"]);
+    // The press that dragged doesn't also open the task.
+    await expect(page.getByTestId("task-editor")).toHaveCount(0);
     await page.reload();
     await expect.poll(() => titles(page)).toEqual(["Second task", "Third task", "First task"]);
   });
 
-  test("moves a task with the arrow keys", async ({ page }) => {
-    await page.getByTestId("task-row").filter({ hasText: "Third task" }).getByTestId("task-row__grip").focus();
-    await page.keyboard.press("ArrowUp");
+  test("a click without moving still opens the task", async ({ page }) => {
+    await page.getByTestId("task-row").filter({ hasText: "Second task" }).getByTestId("task-row__open").click();
+    await expect(page.getByTestId("task-editor__title")).toHaveValue("Second task");
+  });
+
+  test("moves a task with Alt and the arrow keys", async ({ page }) => {
+    await page.getByTestId("task-row").filter({ hasText: "Third task" }).getByTestId("task-row__open").focus();
+    await page.keyboard.press("Alt+ArrowUp");
 
     await expect.poll(() => titles(page)).toEqual(["First task", "Third task", "Second task"]);
   });

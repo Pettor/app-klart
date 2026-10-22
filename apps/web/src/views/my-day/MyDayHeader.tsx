@@ -1,10 +1,13 @@
 import type { ReactElement } from "react";
 import { XMarkIcon } from "@heroicons/react/20/solid";
-import { BellIcon, CodeBracketIcon, LightBulbIcon } from "@heroicons/react/24/outline";
+import { BellIcon, LightBulbIcon } from "@heroicons/react/24/outline";
 import { Button, Chip, ToggleButton } from "@heroui/react";
+import { useBreakpoint } from "@package/react";
 import clsx from "clsx";
 import { useIntl } from "react-intl";
+import { MyDayDisplayMenu } from "./MyDayDisplayMenu";
 import { getSmartViewLabel } from "./MyDayLabels";
+import type { MyDayDisplayProps } from "./MyDayTypes";
 import type { SmartView } from "~/core/tasks/KlartAtoms";
 import { parseLocalDate } from "~/core/tasks/LocalDate";
 
@@ -17,12 +20,9 @@ export interface MyDayHeaderProps {
   suggestionCount: number;
   isSuggestionsOpen: boolean;
   onToggleSuggestions: () => void;
-  isJsonOpen: boolean;
-  onToggleJson: () => void;
   onOpenNotifications: () => void;
-  /** Shows every task's tags instead of only on hover or focus. */
-  showTags: boolean;
-  onShowTagsChange: (showTags: boolean) => void;
+  display: MyDayDisplayProps;
+  contextColor: string;
 }
 
 /** The design's header buttons: flat, 36px tall, a faint fill whether or not they're pressed. */
@@ -39,16 +39,15 @@ export function MyDayHeader({
   suggestionCount,
   isSuggestionsOpen,
   onToggleSuggestions,
-  isJsonOpen,
-  onToggleJson,
   onOpenNotifications,
-  showTags,
-  onShowTagsChange,
+  display,
+  contextColor,
 }: MyDayHeaderProps): ReactElement {
   const intl = useIntl();
+  const isDesktop = useBreakpoint("lg");
 
   return (
-    <header className="flex flex-wrap items-start gap-4">
+    <header className="flex flex-wrap items-start gap-4 max-lg:flex-nowrap max-lg:items-end">
       <div className="flex min-w-[200px] flex-1 flex-col gap-1">
         <div className="flex flex-wrap items-center gap-2.5">
           <h1 className="text-[30px] leading-tight font-bold tracking-tight">{getSmartViewLabel(intl, smartView)}</h1>
@@ -98,46 +97,12 @@ export function MyDayHeader({
         >
           <BellIcon className="size-4" />
         </Button>
-        <ToggleButton
-          isSelected={showTags}
-          onChange={onShowTagsChange}
-          className={clsx(HEADER_BUTTON, "pl-2.5")}
-          data-testid="my-day__toggle-tags"
-        >
-          {/* A small switch drawn inside the button, as in the design; the button itself is the toggle. */}
-          <span
-            aria-hidden
-            className={clsx(
-              "relative h-4 w-7 shrink-0 rounded-full transition-colors",
-              showTags ? "bg-(--ctx)" : "bg-foreground/20"
-            )}
-          >
-            <span
-              className={clsx(
-                "absolute top-0.5 size-3 rounded-full bg-white shadow-[0_1px_3px_rgb(0_0_0/0.4)] transition-[left]",
-                showTags ? "left-3.5" : "left-0.5"
-              )}
-            />
-          </span>
-          {intl.formatMessage({
-            description: "MyDayHeader - toggle showing every task's tags",
-            defaultMessage: "Tags",
-            id: "QaRsVG",
-          })}
-        </ToggleButton>
-        <ToggleButton
-          isSelected={isJsonOpen}
-          onChange={onToggleJson}
-          className={clsx(HEADER_BUTTON, "max-sm:hidden")}
-          data-testid="my-day__toggle-json"
-        >
-          <CodeBracketIcon className="size-4" aria-hidden />
-          {intl.formatMessage({
-            description: "MyDayHeader - toggles the agent JSON panel",
-            defaultMessage: "JSON",
-            id: "dG/6c2",
-          })}
-        </ToggleButton>
+        <MyDayDisplayMenu
+          display={display}
+          variant={isDesktop ? "popover" : "sheet"}
+          contextColor={contextColor}
+          className={isDesktop ? HEADER_BUTTON : undefined}
+        />
         <ToggleButton
           isSelected={isSuggestionsOpen}
           onChange={onToggleSuggestions}

@@ -7,7 +7,8 @@ import { getSmartViewLabel } from "./MyDayLabels";
 import type { MyDaySidebarProps } from "./MyDayTypes";
 import type { SmartView } from "~/core/tasks/KlartAtoms";
 
-const SMART_VIEW_ICONS: Record<SmartView, ReactElement> = {
+/** Each smart view's icon, in its own color. Also used by the collapsed sidebar. */
+export const SMART_VIEW_ICONS: Record<SmartView, ReactElement> = {
   day: <SunIcon className="size-[18px] text-(--ctx)" />,
   important: <StarIcon className="size-[18px] text-(--star)" />,
   planned: <CalendarDaysIcon className="midnight:text-[#3ddcc0] size-[18px] text-[#0b7285] dark:text-[#7fd1c8]" />,

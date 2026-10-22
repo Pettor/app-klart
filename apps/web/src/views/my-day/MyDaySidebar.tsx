@@ -1,14 +1,19 @@
 import type { ReactElement } from "react";
-import { Button, Separator } from "@heroui/react";
+import { ChevronDoubleLeftIcon } from "@heroicons/react/24/outline";
+import { Button, Separator, Tooltip } from "@heroui/react";
 import clsx from "clsx";
 import { useIntl } from "react-intl";
+import { getSidebarShortcut } from "./MyDaySidebarRail";
 import { MyDaySmartViewNav } from "./MyDaySmartViewNav";
-import type { MyDaySidebarProps } from "./MyDayTypes";
+import type { MyDaySidebarCollapseProps, MyDaySidebarProps } from "./MyDayTypes";
 import { ContextSwitcher } from "~/components/actions/context-switcher/ContextSwitcher";
 import { SyncStatusCard } from "~/components/display/sync-status/SyncStatusCard";
 import { SearchField } from "~/components/input/input-field/SearchField";
 
 export interface MyDaySidebarComponentProps extends MyDaySidebarProps {
+  collapse: MyDaySidebarCollapseProps;
+  /** Shows the tag list, which filters My Day. */
+  showTags: boolean;
   className?: string;
 }
 
@@ -18,19 +23,26 @@ export function MyDaySidebar({
   smartViews,
   tags,
   sync,
+  collapse,
+  showTags,
   className,
 }: MyDaySidebarComponentProps): ReactElement {
   const intl = useIntl();
+  const collapseLabel = intl.formatMessage({
+    description: "MyDaySidebar - aria-label of the button collapsing the sidebar",
+    defaultMessage: "Collapse sidebar",
+    id: "X3977j",
+  });
 
   return (
     <aside
       className={clsx(
         `ctx-${context.selectedColor}`,
-        "border-separator flex w-60 shrink-0 flex-col gap-4 border-r px-3 pt-10 pb-4",
+        "sidebar-in border-separator flex w-60 shrink-0 flex-col gap-4 border-r px-3 pt-10 pb-4",
         className
       )}
     >
-      <div className="flex items-center px-2">
+      <div className="flex items-center gap-2.5 pl-2">
         <span className="text-[15px] font-bold">
           {intl.formatMessage({
             description: "MyDaySidebar - app name",
@@ -38,6 +50,19 @@ export function MyDaySidebar({
             id: "fk1n2t",
           })}
         </span>
+        <Tooltip delay={300}>
+          <Button
+            isIconOnly
+            variant="ghost"
+            onPress={collapse.onToggle}
+            aria-label={collapseLabel}
+            data-testid="my-day__collapse-sidebar"
+            className="text-muted ml-auto size-[34px] min-w-0 rounded-lg"
+          >
+            <ChevronDoubleLeftIcon className="size-[18px]" />
+          </Button>
+          <Tooltip.Content placement="right">{`${collapseLabel} (${getSidebarShortcut()})`}</Tooltip.Content>
+        </Tooltip>
       </div>
 
       <ContextSwitcher
@@ -67,9 +92,9 @@ export function MyDaySidebar({
 
       <MyDaySmartViewNav smartViews={smartViews} testIdPrefix="sidebar" />
 
-      <Separator className="mx-2 w-auto" />
+      {showTags && tags.items.length > 0 && <Separator className="mx-2 w-auto" />}
 
-      {tags.items.length > 0 && (
+      {showTags && tags.items.length > 0 && (
         <nav
           aria-label={intl.formatMessage({
             description: "MyDaySidebar - tags nav",
