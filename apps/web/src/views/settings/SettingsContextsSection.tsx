@@ -48,7 +48,7 @@ function ContextCard({ context, index, count, onUpdate, onRemove, onMove }: Cont
   return (
     <div
       data-testid="settings-context-card"
-      className={clsx(`ctx-${context.color}`, "bg-surface flex flex-col gap-3 rounded-xl border-t-[3px] p-4")}
+      className={clsx(`ctx-${context.color}`, "hero-card bg-surface flex flex-col gap-3 rounded-xl border-t-[3px] p-4")}
       style={{ borderTopColor: "var(--ctx)" }}
     >
       <div className="flex items-center gap-2">

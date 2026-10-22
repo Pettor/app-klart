@@ -47,7 +47,7 @@ export function MyDayTaskEditorPanel({ editor, pane }: MyDayTaskEditorPanelProps
     return (
       <aside
         aria-label={heading}
-        className="bg-surface border-separator sticky top-0 flex h-dvh max-w-[60vw] shrink-0 flex-col border-l"
+        className="bg-surface hero:bg-[#111114] border-separator sticky top-0 flex h-dvh max-w-[60vw] shrink-0 flex-col border-l"
         style={{ width: pane.width }}
       >
         {pane.handle}

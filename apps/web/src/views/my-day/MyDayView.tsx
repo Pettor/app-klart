@@ -100,7 +100,7 @@ export function MyDayView({
       <main
         className={clsx(
           `ctx-${context.selectedColor}`,
-          "flex min-w-0 flex-1 flex-col gap-5 bg-(--ctx-backdrop) px-4 pt-4 pb-4 sm:px-8 lg:pt-10"
+          "hero-glow flex min-w-0 flex-1 flex-col gap-5 bg-(--ctx-backdrop) bg-no-repeat px-4 pt-4 pb-4 sm:px-8 lg:pt-10"
         )}
       >
         <MyDayMobileBar

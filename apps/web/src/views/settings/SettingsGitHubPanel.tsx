@@ -45,7 +45,10 @@ export function SettingsGitHubPanel({
   const errorText = git?.error ? (githubErrorText(intl, git.errorKind) ?? git.error) : null;
 
   return (
-    <div className="bg-surface flex flex-col gap-3 rounded-xl p-[18px]" data-testid="settings__github-connected">
+    <div
+      className="hero-card bg-surface flex flex-col gap-3 rounded-xl p-[18px]"
+      data-testid="settings__github-connected"
+    >
       <span className="font-semibold">
         {intl.formatMessage({
           description: "SettingsGitHub - heading for the connected repository",
@@ -140,7 +143,7 @@ function SettingsGitHubForm({ onConnect, onCancel }: SettingsGitHubFormProps): R
   }
 
   return (
-    <div className="bg-surface flex flex-col gap-3 rounded-xl p-[18px]" data-testid="settings__github-setup">
+    <div className="hero-card bg-surface flex flex-col gap-3 rounded-xl p-[18px]" data-testid="settings__github-setup">
       <span className="font-semibold">
         {intl.formatMessage({
           description: "SettingsGitHub - heading of the sign-in form",

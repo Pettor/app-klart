@@ -349,6 +349,9 @@ catalogs:
     '@fontsource/jetbrains-mono':
       specifier: 5.3.0
       version: 5.3.0
+    '@fontsource/rubik':
+      specifier: 5.3.0
+      version: 5.3.0
     '@heroicons/react':
       specifier: 2.2.0
       version: 2.2.0
@@ -586,6 +589,9 @@ importers:
         specifier: catalog:ui
         version: 5.3.0
       '@fontsource/jetbrains-mono':
+        specifier: catalog:ui
+        version: 5.3.0
+      '@fontsource/rubik':
         specifier: catalog:ui
         version: 5.3.0
       '@heroicons/react':
@@ -1837,6 +1843,9 @@ packages:
 
   '@fontsource/jetbrains-mono@5.3.0':
     resolution: {integrity: sha512-fqDfB5I9f1p1TV486aUgB9t8zP84P0O1FtQR5Ol9vjwPy+S+EIGlVYm1cvj2W5shcZMTg2nZFdVMoH5wFu8a1A==}
+
+  '@fontsource/rubik@5.3.0':
+    resolution: {integrity: sha512-Nks2mn7vlE1jZVHuVgoKU2Ejqjvd+GJzLRdraCjo1xc79oo7O6vJ8pcvSfmKPGX3/Ln7nt09XWFzPeu2jWf0xQ==}
 
   '@formatjs/cli-native-darwin-arm64@1.1.28':
     resolution: {integrity: sha512-kFkM6peuJgZrzcuWZiCbnh3o9SHYWBYq3OW8vwL7Cd3IRnzaH1InnzverZpqhLfRKDs+JGa64ll/IuieW/u+4A==}
@@ -8072,6 +8081,8 @@ snapshots:
   '@fontsource/inter@5.3.0': {}
 
   '@fontsource/jetbrains-mono@5.3.0': {}
+
+  '@fontsource/rubik@5.3.0': {}
 
   '@formatjs/cli-native-darwin-arm64@1.1.28':
     optional: true

@@ -12,6 +12,7 @@ import { StarIcon as StarOutlineIcon } from "@heroicons/react/24/outline";
 import { Button, Dropdown, Label, Link, ToggleButton } from "@heroui/react";
 import clsx from "clsx";
 import { useIntl } from "react-intl";
+import type { DueTone } from "./TaskDateFormat";
 import { DUE_TONE_CLASS, formatDue, formatReminder, getDueTone } from "./TaskDateFormat";
 import type { TaskRowReorder } from "./UseTaskReorder";
 import { REORDER_HANDLE_ATTRIBUTE, REORDER_ID_ATTRIBUTE } from "./UseTaskReorder";
@@ -61,6 +62,15 @@ export interface TaskRowProps {
    */
   reorder?: TaskRowReorder;
 }
+
+/** Under the Dark (HeroUI) theme, the context, due date and reminder under a title are pills. */
+const META_CHIP = "inline-flex items-center hero:h-[22px] hero:rounded-full hero:px-2";
+
+const DUE_CHIP_CLASS: Record<DueTone, string> = {
+  overdue: "hero:bg-[#f31260]/16",
+  today: "hero:bg-accent/16",
+  upcoming: "hero:bg-surface-tertiary hero:text-foreground/85",
+};
 
 /** Six dots. Heroicons has no grip icon. */
 function GripIcon(): ReactElement {
@@ -171,15 +181,11 @@ export function TaskRow({
           className="slab-check size-10 shrink-0 rounded-full"
         >
           {task.done ? (
-            <span className="grid size-5 place-items-center rounded-full bg-(--ctx)">
+            <span className="slab-check-done grid size-5 place-items-center rounded-full bg-(--ctx)">
               <CheckIcon className="text-background size-3.5" />
             </span>
           ) : (
-            <span
-              className="slab-check-ring relative block size-[22px] rounded-full border-2 shadow-(--slab-check-inset)"
-              // Inline: a global `* { border-color }` rule outside any layer beats Tailwind's border utilities.
-              style={{ borderColor: "var(--ctx)" }}
-            >
+            <span className="slab-check-ring relative block size-[22px] rounded-full border-2 shadow-(--slab-check-inset)">
               <span className="slab-check-fill absolute inset-[3px] rounded-full bg-(--ctx) opacity-0 transition-opacity" />
             </span>
           )}
@@ -227,20 +233,27 @@ export function TaskRow({
             {task.title}
           </span>
           {!task.done && hasMeta && (
-            <span className="text-muted flex flex-wrap items-center gap-x-2.5 gap-y-0.5 text-xs">
+            <span className="text-muted hero:gap-x-1.5 hero:gap-y-1 flex flex-wrap items-center gap-x-2.5 gap-y-0.5 text-xs">
               {showContext && (
-                <span className="inline-flex items-center gap-1.5">
+                <span className={clsx(META_CHIP, "hero:bg-(--ctx)/16 hero:text-(--ctx) gap-1.5")}>
                   <span className="size-1.5 rounded-full bg-(--ctx)" aria-hidden />
                   {task.contextName}
                 </span>
               )}
               {task.due && (
-                <span className={clsx("font-semibold", DUE_TONE_CLASS[getDueTone(task.due, today)])}>
+                <span
+                  className={clsx(
+                    META_CHIP,
+                    "hero:font-medium font-semibold",
+                    DUE_TONE_CLASS[getDueTone(task.due, today)],
+                    DUE_CHIP_CLASS[getDueTone(task.due, today)]
+                  )}
+                >
                   {formatDue(intl, task.due, today)}
                 </span>
               )}
               {task.remindAt && (
-                <span className="inline-flex items-center gap-1">
+                <span className={clsx(META_CHIP, "hero:bg-surface-tertiary hero:text-foreground/85 gap-1")}>
                   <BellIcon className="size-3" aria-hidden />
                   {formatReminder(intl, task.remindAt, today)}
                 </span>

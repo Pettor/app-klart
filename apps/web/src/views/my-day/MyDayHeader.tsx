@@ -50,7 +50,9 @@ export function MyDayHeader({
     <header className="flex flex-wrap items-start gap-4 max-lg:flex-nowrap max-lg:items-end">
       <div className="flex min-w-[200px] flex-1 flex-col gap-1">
         <div className="flex flex-wrap items-center gap-2.5">
-          <h1 className="text-[30px] leading-tight font-bold tracking-tight">{getSmartViewLabel(intl, smartView)}</h1>
+          <h1 className="hero-title hero:text-[32px] text-[30px] leading-tight font-bold tracking-tight">
+            {getSmartViewLabel(intl, smartView)}
+          </h1>
           <Chip
             size="sm"
             variant="soft"

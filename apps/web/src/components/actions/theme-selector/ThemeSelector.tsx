@@ -19,9 +19,9 @@ interface ThemeSwatch {
 }
 
 const SWATCHES: Record<ThemeMode, ThemeSwatch> = {
-  auto: { side: "#eceef1", main: "#111d3b", card: "#1d2640", edge: "#0a0e19", accent: "#5b8cff" },
+  auto: { side: "#eceef1", main: "#111114", card: "#18181c", edge: "#27272c", accent: "#2d7ff9" },
   light: { side: "#f5f6f8", main: "#e8f0fb", card: "#ffffff", edge: "#d3d8e1", accent: "#2f74d9" },
-  dark: { side: "#1b1c20", main: "#1d2a3b", card: "#2b2d33", edge: "#17181c", accent: "#5ea2ff" },
+  dark: { side: "#0c0c0f", main: "#111114", card: "#18181c", edge: "#27272c", accent: "#2d7ff9" },
   midnight: { side: "#0e1220", main: "#111d3b", card: "#1d2640", edge: "#0a0e19", accent: "#5b8cff" },
 };
 
@@ -122,8 +122,8 @@ export function ThemeSelector({ mode, onSelect }: ThemeSelectorProps): ReactElem
         })}
         hint={intl.formatMessage({
           description: "ThemeSelector: hint - dark option",
-          defaultMessage: "Graphite, easy on the eyes",
-          id: "M51hxh",
+          defaultMessage: "Near-black, HeroUI style",
+          id: "VZvcE7",
         })}
       />
       <ThemeOption
