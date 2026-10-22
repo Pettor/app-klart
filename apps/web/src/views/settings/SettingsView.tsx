@@ -137,7 +137,7 @@ export function SettingsView({
             id: "hNutHe",
           })}
         </Button>
-        <span className="px-2.5 pb-2 text-[22px] font-bold">
+        <span className="hero-title hero:text-2xl self-start px-2.5 pb-2 text-[22px] font-bold">
           {intl.formatMessage({
             description: "SettingsView - page heading",
             defaultMessage: "Settings",
@@ -163,7 +163,7 @@ export function SettingsView({
                 data-testid={`settings__nav-${id}`}
                 className={clsx(
                   "h-10 shrink-0 justify-start gap-3 rounded-[9px] px-2.5 lg:w-full",
-                  isCurrent ? "bg-surface font-semibold" : "font-normal"
+                  isCurrent ? "bg-surface hero:bg-surface-secondary font-semibold" : "font-normal"
                 )}
               >
                 <span aria-hidden className={clsx("flex", isCurrent ? "text-accent" : "text-muted")}>
@@ -176,7 +176,7 @@ export function SettingsView({
         </nav>
       </aside>
 
-      <main className="bg-surface-secondary/40 min-w-0 flex-1 px-4 pt-6 pb-12 sm:px-8 lg:pt-10">
+      <main className="bg-surface-secondary/40 hero:bg-[#111114] hero-glow min-w-0 flex-1 bg-no-repeat px-4 pt-6 pb-12 sm:px-8 lg:pt-10">
         <div key={section} className="settings-pane-in flex max-w-[760px] flex-col gap-6">
           {panes[section]()}
         </div>

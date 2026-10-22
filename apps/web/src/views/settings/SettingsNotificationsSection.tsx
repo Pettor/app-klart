@@ -200,7 +200,7 @@ export function SettingsNotificationsSection({
         id: "1KKzkV",
       })}
     >
-      <div className="bg-surface flex flex-wrap items-center gap-3 rounded-xl p-[18px]">
+      <div className="hero-card bg-surface flex flex-wrap items-center gap-3 rounded-xl p-[18px]">
         {permission === "default" && (
           <Button onPress={onRequestPermission} data-testid="settings__allow-notifications">
             {intl.formatMessage({
@@ -350,7 +350,7 @@ export function SettingsNotificationsSection({
         ))}
       </SettingsPanel>
 
-      <div className="bg-surface flex flex-col gap-2 rounded-xl p-[18px]">
+      <div className="hero-card bg-surface flex flex-col gap-2 rounded-xl p-[18px]">
         <span className="font-semibold">
           {intl.formatMessage({
             description: "SettingsNotifications - device policy heading",

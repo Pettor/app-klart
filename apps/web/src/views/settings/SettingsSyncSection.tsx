@@ -212,7 +212,7 @@ export function SettingsSyncSection({
             isDisabled={option.isDisabled}
             data-testid={`settings__sync-${option.value}`}
             className={clsx(
-              "bg-surface items-start gap-3 rounded-xl border-2 border-transparent p-4",
+              "hero-card bg-surface items-start gap-3 rounded-xl border-2 border-transparent p-4",
               "data-[selected=true]:border-accent data-[selected=true]:bg-accent/10"
             )}
           >
@@ -230,7 +230,7 @@ export function SettingsSyncSection({
       </RadioGroup>
 
       {method === "folder" && status.method === "folder" && (
-        <div className="bg-surface flex flex-col gap-3 rounded-xl p-[18px]">
+        <div className="hero-card bg-surface flex flex-col gap-3 rounded-xl p-[18px]">
           <span className="font-semibold">
             {intl.formatMessage({
               description: "SettingsSync - connected folder heading",
@@ -329,7 +329,7 @@ export function SettingsSyncSection({
         />
       )}
 
-      <div className="bg-surface flex flex-col gap-1 rounded-xl p-[18px]">
+      <div className="hero-card bg-surface flex flex-col gap-1 rounded-xl p-[18px]">
         <TextField className="flex max-w-sm flex-col gap-1">
           <Label className="font-semibold">
             {intl.formatMessage({

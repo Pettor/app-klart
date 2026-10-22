@@ -53,7 +53,7 @@ export function MyDaySuggestionsPanel({
         })}
         className={clsx(
           `ctx-${contextColor}`,
-          "bg-surface border-separator relative flex max-w-[60vw] shrink-0 flex-col border-l px-4 pt-10 pb-4"
+          "bg-surface hero:bg-[#111114] border-separator relative flex max-w-[60vw] shrink-0 flex-col border-l px-4 pt-10 pb-4"
         )}
         style={{ width: pane.width }}
       >

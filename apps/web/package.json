@@ -26,6 +26,7 @@
     "@config/tailwind": "workspace:*",
     "@fontsource/inter": "catalog:ui",
     "@fontsource/jetbrains-mono": "catalog:ui",
+    "@fontsource/rubik": "catalog:ui",
     "@heroicons/react": "catalog:ui",
     "@heroui/react": "catalog:ui",
     "@package/react": "workspace:*",

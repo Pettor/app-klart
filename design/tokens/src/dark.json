@@ -4,156 +4,156 @@
       "dark": {
         "background": {
           "$type": "color",
-          "$value": "#1b1b1d",
+          "$value": "#0c0c0f",
           "$description": "Background color for dark theme"
         },
         "foreground": {
           "$type": "color",
-          "$value": "#f2f2f3",
+          "$value": "#f4f4f5",
           "$description": "Foreground color for dark theme"
         },
         "surface": {
           "DEFAULT": {
             "$type": "color",
-            "$value": "#232428",
+            "$value": "#18181c",
             "$description": "Surface background for dark theme"
           },
           "foreground": {
             "$type": "color",
-            "$value": "#f2f2f3",
+            "$value": "#f4f4f5",
             "$description": "Surface foreground for dark theme"
           }
         },
         "surface-secondary": {
           "DEFAULT": {
             "$type": "color",
-            "$value": "#2c2d31",
+            "$value": "#202024",
             "$description": "Secondary surface background for dark theme"
           },
           "foreground": {
             "$type": "color",
-            "$value": "#f2f2f3",
+            "$value": "#f4f4f5",
             "$description": "Secondary surface foreground for dark theme"
           }
         },
         "surface-tertiary": {
           "DEFAULT": {
             "$type": "color",
-            "$value": "#34353b",
+            "$value": "#27272c",
             "$description": "Tertiary surface background for dark theme"
           },
           "foreground": {
             "$type": "color",
-            "$value": "#f2f2f3",
+            "$value": "#f4f4f5",
             "$description": "Tertiary surface foreground for dark theme"
           }
         },
         "overlay": {
           "DEFAULT": {
             "$type": "color",
-            "$value": "#2a2b2f",
+            "$value": "#1f1f24",
             "$description": "Overlay background for dark theme"
           },
           "foreground": {
             "$type": "color",
-            "$value": "#f2f2f3",
+            "$value": "#f4f4f5",
             "$description": "Overlay foreground for dark theme"
           }
         },
         "muted": {
           "$type": "color",
-          "$value": "#a7abb3",
+          "$value": "#a1a1aa",
           "$description": "Muted text color for dark theme"
         },
         "default": {
           "DEFAULT": {
             "$type": "color",
-            "$value": "#2c2d31",
+            "$value": "#27272c",
             "$description": "Default color for dark theme"
           },
           "foreground": {
             "$type": "color",
-            "$value": "#f2f2f3",
+            "$value": "#f4f4f5",
             "$description": "Default foreground color for dark theme"
           }
         },
         "accent": {
           "DEFAULT": {
             "$type": "color",
-            "$value": "#12b886",
+            "$value": "#2d7ff9",
             "$description": "Accent color for dark theme"
           },
           "foreground": {
             "$type": "color",
-            "$value": "#141518",
+            "$value": "#ffffff",
             "$description": "Accent foreground color for dark theme"
           }
         },
         "success": {
           "DEFAULT": {
             "$type": "color",
-            "$value": "#7fd19b",
+            "$value": "#17c964",
             "$description": "Success color for dark theme"
           },
           "foreground": {
             "$type": "color",
-            "$value": "#141518",
+            "$value": "#0c0c0f",
             "$description": "Success foreground color for dark theme"
           }
         },
         "warning": {
           "DEFAULT": {
             "$type": "color",
-            "$value": "#f0a347",
+            "$value": "#f5a524",
             "$description": "Warning color for dark theme"
           },
           "foreground": {
             "$type": "color",
-            "$value": "#141518",
+            "$value": "#0c0c0f",
             "$description": "Warning foreground color for dark theme"
           }
         },
         "danger": {
           "DEFAULT": {
             "$type": "color",
-            "$value": "#ff8a80",
+            "$value": "#f97a8a",
             "$description": "Danger color for dark theme"
           },
           "foreground": {
             "$type": "color",
-            "$value": "#141518",
+            "$value": "#0c0c0f",
             "$description": "Danger foreground color for dark theme"
           }
         },
         "focus": {
           "$type": "color",
-          "$value": "#9cc4ff",
+          "$value": "#7fb2ff",
           "$description": "Focus ring color for dark theme"
         },
         "border": {
           "$type": "color",
-          "$value": "#34353a",
+          "$value": "#3f3f46",
           "$description": "Border color for dark theme"
         },
         "separator": {
           "$type": "color",
-          "$value": "#2a2b2f",
+          "$value": "#1f1f24",
           "$description": "Separator color for dark theme"
         },
         "field": {
           "background": {
             "$type": "color",
-            "$value": "#26272b",
+            "$value": "#0c0c0f",
             "$description": "Form field background for dark theme"
           },
           "foreground": {
             "$type": "color",
-            "$value": "#f2f2f3",
+            "$value": "#f4f4f5",
             "$description": "Form field foreground for dark theme"
           },
           "placeholder": {
             "$type": "color",
-            "$value": "#9a9ea6",
+            "$value": "#71717a",
             "$description": "Form field placeholder for dark theme"
           }
         }

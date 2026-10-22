@@ -1,4 +1,5 @@
 import type { ReactElement, ReactNode } from "react";
+import clsx from "clsx";
 
 export interface SettingsSectionShellProps {
   id: string;
@@ -31,7 +32,13 @@ export interface SettingsPanelProps {
 /** A rounded group of rows inside a section. */
 export function SettingsPanel({ children, className }: SettingsPanelProps): ReactElement {
   return (
-    <div className={`bg-surface divide-separator flex flex-col divide-y overflow-hidden rounded-xl ${className ?? ""}`}>
+    <div
+      className={clsx(
+        "bg-surface divide-separator flex flex-col divide-y overflow-hidden rounded-xl",
+        "hero-card hero:divide-surface-tertiary",
+        className
+      )}
+    >
       {children}
     </div>
   );

@@ -6,6 +6,10 @@
 @import "@fontsource/inter/800.css";
 @import "@fontsource/jetbrains-mono/400.css";
 @import "@fontsource/jetbrains-mono/500.css";
+@import "@fontsource/rubik/400.css";
+@import "@fontsource/rubik/500.css";
+@import "@fontsource/rubik/600.css";
+@import "@fontsource/rubik/700.css";
 
 /* Tailwind configuration */
 @import "../node_modules/@config/tailwind/tailwind.css";
@@ -18,6 +22,8 @@
 /* Fonts */
 /* `midnight:` styles apply under the Midnight theme, which also has `.dark`. */
 @custom-variant midnight (&:is(.midnight *));
+/* `hero:` styles apply under the Dark theme, styled after HeroUI. Midnight also has `.dark` but not these. */
+@custom-variant hero (&:is(.dark:not(.midnight) *));
 /* `compact:` styles apply with Settings › Appearance › Density set to Compact. */
 @custom-variant compact (&:where([data-density="compact"] *));
 
@@ -63,45 +69,46 @@
   --ctx-backdrop: #fbeaea;
 }
 
+/* Dark (HeroUI): HeroUI's palette on near-black backdrops with a hint of the context's color. */
 .dark .ctx-all,
 .dark.ctx-all {
-  --ctx: #b8bcc4;
-  --ctx-backdrop: #24262b;
+  --ctx: #a1a1aa;
+  --ctx-backdrop: #0c0c0f;
 }
 .dark .ctx-blue,
 .dark.ctx-blue {
-  --ctx: #5ea2ff;
-  --ctx-backdrop: #1d2a3b;
+  --ctx: #5b9bff;
+  --ctx-backdrop: #0d0f16;
 }
 .dark .ctx-orange,
 .dark.ctx-orange {
-  --ctx: #f0a347;
-  --ctx-backdrop: #2e261d;
+  --ctx: #f5a524;
+  --ctx-backdrop: #110e0b;
 }
 .dark .ctx-green,
 .dark.ctx-green {
-  --ctx: #7fd19b;
-  --ctx-backdrop: #1d2b24;
+  --ctx: #17c964;
+  --ctx-backdrop: #0b100e;
 }
 .dark .ctx-teal,
 .dark.ctx-teal {
-  --ctx: #63d2c6;
-  --ctx-backdrop: #1b2a2a;
+  --ctx: #2dd4bf;
+  --ctx-backdrop: #0b1012;
 }
 .dark .ctx-violet,
 .dark.ctx-violet {
-  --ctx: #b39dfa;
-  --ctx-backdrop: #251f35;
+  --ctx: #a78bfa;
+  --ctx-backdrop: #100e17;
 }
 .dark .ctx-pink,
 .dark.ctx-pink {
-  --ctx: #f783ac;
-  --ctx-backdrop: #33202a;
+  --ctx: #f472b6;
+  --ctx-backdrop: #140c11;
 }
 .dark .ctx-red,
 .dark.ctx-red {
-  --ctx: #ff8a80;
-  --ctx-backdrop: #352020;
+  --ctx: #f97a8a;
+  --ctx-backdrop: #140c0d;
 }
 
 /* Tag and due-date text colors from the design */
@@ -111,9 +118,9 @@
   --star: #d98c0a;
 }
 .dark {
-  --tag: #9cc4ff;
-  --due-today: #9cc4ff;
-  --star: #f6c58a;
+  --tag: #a9c9ff;
+  --due-today: #7fb2ff;
+  --star: #f5a524;
 }
 
 /*
@@ -134,19 +141,18 @@
     inset 0 1px 0 #ffffff, 0 1px 0 #d3d8e1, 0 2px 3px rgb(15 23 42 / 0.1), 0 6px 10px -6px rgb(15 23 42 / 0.18);
   --slab-check-inset: inset 0 1px 2px rgb(15 23 42 / 0.15);
 }
+/* Dark (HeroUI): flat cards with a hairline border instead of a raised edge. */
 .dark {
-  --slab: #2b2d33;
-  --slab-hover: #30323a;
-  --slab-done: rgb(23 24 28 / 0.55);
-  --slab-shadow:
-    inset 0 1px 0 rgb(255 255 255 / 0.07), 0 3px 0 #17181c, 0 4px 6px rgb(0 0 0 / 0.25),
-    0 14px 24px -10px rgb(0 0 0 / 0.55);
-  --slab-shadow-hover:
-    inset 0 1px 0 rgb(255 255 255 / 0.09), 0 5px 0 #17181c, 0 8px 12px rgb(0 0 0 / 0.3),
-    0 24px 36px -14px rgb(0 0 0 / 0.65);
-  --slab-shadow-press:
-    inset 0 1px 0 rgb(255 255 255 / 0.05), 0 1px 0 #17181c, 0 2px 3px rgb(0 0 0 / 0.3), 0 6px 10px -6px rgb(0 0 0 / 0.5);
-  --slab-check-inset: inset 0 1px 2px rgb(0 0 0 / 0.5);
+  --slab: #18181c;
+  --slab-hover: #18181c;
+  --slab-done: rgb(24 24 28 / 0.6);
+  --slab-done-shadow: inset 0 0 0 1px #1f1f24;
+  --slab-radius: 14px;
+  --slab-press-y: 0px;
+  --slab-shadow: inset 0 0 0 1px #27272c, 0 1px 2px rgb(0 0 0 / 0.4), 0 8px 20px -10px rgb(0 0 0 / 0.65);
+  --slab-shadow-hover: inset 0 0 0 1px #3a3a42, 0 2px 4px rgb(0 0 0 / 0.4), 0 18px 32px -14px rgb(0 0 0 / 0.8);
+  --slab-shadow-press: inset 0 0 0 1px #3a3a42, 0 1px 2px rgb(0 0 0 / 0.4), 0 6px 14px -8px rgb(0 0 0 / 0.7);
+  --slab-check-inset: none;
 }
 
 /*
@@ -194,6 +200,10 @@
   --ctx-backdrop: #2a1219;
 }
 .midnight {
+  --slab-done-shadow: none;
+  --slab-radius: 12px;
+  --slab-press-y: 2px;
+  --slab-check-inset: inset 0 1px 2px rgb(0 0 0 / 0.5);
   --tag: #9db8ff;
   --due-today: #9db8ff;
   --star: #ffc56b;
@@ -223,7 +233,7 @@
 
 .slab {
   position: relative;
-  border-radius: 12px;
+  border-radius: var(--slab-radius, 12px);
   background: var(--slab);
   box-shadow: var(--slab-shadow);
   -webkit-tap-highlight-color: transparent;
@@ -242,7 +252,7 @@
 }
 .slab:active {
   box-shadow: var(--slab-shadow-press);
-  transform: translateY(2px);
+  transform: translateY(var(--slab-press-y, 2px));
   transition-duration: 0.08s;
 }
 /* Follows the pointer while dragged by its grip; `--slab-dy` is the distance moved. */
@@ -268,8 +278,9 @@
   }
 }
 .slab-done {
-  border-radius: 12px;
+  border-radius: var(--slab-radius, 12px);
   background: var(--slab-done);
+  box-shadow: var(--slab-done-shadow, none);
 }
 
 .slab-tags {
@@ -321,6 +332,10 @@
   .slab-reveal[aria-expanded="true"] {
     opacity: 1;
   }
+}
+/* A class, not a utility: a global `* { border-color }` rule outside any layer beats Tailwind's border colors. */
+.slab-check-ring {
+  border-color: var(--ctx);
 }
 .slab-check:hover .slab-check-fill {
   opacity: 0.35;
@@ -397,4 +412,57 @@
 /* Settings › Appearance › Tint by context off: My Day keeps the plain background in every context. */
 :root[data-tint="off"] [class*="ctx-"] {
   --ctx-backdrop: var(--color-background);
+}
+
+/*
+ * Dark (HeroUI). Midnight also has `.dark`, so everything here skips it.
+ * Rubik type, a violet glow over the top of My Day and Settings, a blue-to-coral gradient on page titles,
+ * and rounded-square checkboxes that fill blue.
+ */
+:root.dark:not(.midnight) {
+  --font-sans: "Rubik", system-ui, -apple-system, sans-serif;
+  --typography-font-family-primary: var(--font-sans);
+
+  .hero-glow {
+    background-image: radial-gradient(ellipse 80% 45% at 50% -12%, rgb(120 119 198 / 0.28), rgb(12 12 15 / 0));
+  }
+  /* Settings cards and panels: a hairline edge and a soft drop shadow, like the task cards. */
+  .hero-card {
+    border-radius: 14px;
+    box-shadow:
+      inset 0 0 0 1px #27272c,
+      0 1px 2px rgb(0 0 0 / 0.4),
+      0 8px 20px -10px rgb(0 0 0 / 0.65);
+  }
+  .hero-title {
+    background: linear-gradient(90deg, #2d7ff9, #f0523f);
+    background-clip: text;
+    color: transparent;
+  }
+  .slab-check-ring {
+    border-radius: 7px;
+    border-color: #52525b;
+    transition:
+      border-color 0.2s ease,
+      transform 0.15s ease;
+  }
+  .slab-check:hover .slab-check-ring {
+    border-color: #7a7a85;
+  }
+  .slab-check:active .slab-check-ring {
+    transform: scale(0.9);
+  }
+  .slab-check-fill {
+    display: none;
+  }
+  .slab-check-done {
+    width: 22px;
+    height: 22px;
+    border-radius: 7px;
+    background: #2d7ff9;
+
+    svg {
+      color: #ffffff;
+    }
+  }
 }

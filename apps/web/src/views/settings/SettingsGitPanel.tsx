@@ -32,7 +32,7 @@ export function SettingsGitPanel({
 
   if (status.method !== "git") {
     return (
-      <div className="bg-surface flex flex-col gap-3 rounded-xl p-[18px]" data-testid="settings__git-setup">
+      <div className="hero-card bg-surface flex flex-col gap-3 rounded-xl p-[18px]" data-testid="settings__git-setup">
         <span className="font-semibold">
           {intl.formatMessage({
             description: "SettingsGit - heading when no repository is connected",
@@ -90,7 +90,7 @@ export function SettingsGitPanel({
   const minutes = git?.lastSyncedAt ? Math.round((Date.parse(git.lastSyncedAt) - now) / 60_000) : null;
 
   return (
-    <div className="bg-surface flex flex-col gap-3 rounded-xl p-[18px]" data-testid="settings__git-connected">
+    <div className="hero-card bg-surface flex flex-col gap-3 rounded-xl p-[18px]" data-testid="settings__git-connected">
       <span className="font-semibold">
         {intl.formatMessage({
           description: "SettingsGit - heading for the connected repository",
