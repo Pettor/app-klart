@@ -105,7 +105,7 @@ export function MyDayView({
       <main
         className={clsx(
           `ctx-${context.selectedColor}`,
-          "hero-glow flex min-w-0 flex-1 flex-col gap-5 bg-(--ctx-backdrop) bg-no-repeat px-4 pt-4 pb-4 sm:px-8 lg:pt-10"
+          "hero-glow flex min-w-0 flex-1 flex-col gap-5 bg-(--ctx-backdrop) bg-no-repeat px-4 pt-4 pb-[calc(env(safe-area-inset-bottom)+12px)] sm:px-8 sm:pb-0 lg:pt-10"
         )}
       >
         <MyDayMobileBar
@@ -153,7 +153,14 @@ export function MyDayView({
           arrivingIds={arrivingIds}
         />
 
-        <div className="sticky bottom-0 mt-auto flex flex-col gap-2 bg-(--ctx-backdrop) pt-2 pb-[env(safe-area-inset-bottom)]">
+        {/* On phones it floats above the list, clear of the screen's bottom edge. */}
+        <div
+          className={clsx(
+            "sticky mt-auto flex flex-col gap-2",
+            "max-sm:bg-surface/85 max-sm:bottom-[calc(env(safe-area-inset-bottom)+12px)] max-sm:rounded-3xl max-sm:p-2 max-sm:shadow-lg max-sm:backdrop-blur-md",
+            "sm:bottom-0 sm:bg-(--ctx-backdrop) sm:pt-2 sm:pb-[calc(env(safe-area-inset-bottom)+16px)]"
+          )}
+        >
           <Button
             variant="secondary"
             onPress={suggestions.onToggle}

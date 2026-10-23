@@ -84,7 +84,10 @@ export const WithManyLinks: Story = {
   },
 };
 
-/** Tags are hidden until the row is hovered or focused, unless an ancestor has `slab-tags-on`. */
+/**
+ * Tags are hidden until the row is hovered, keyboard-focused or held on a touch screen, unless an ancestor has
+ * `slab-tags-on`.
+ */
 export const TagsShown: Story = {
   args: defaultArgs,
   decorators: [
