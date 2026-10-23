@@ -3,7 +3,6 @@ import {
   ArrowTopRightOnSquareIcon,
   Bars3BottomLeftIcon,
   BellIcon,
-  CheckIcon,
   EllipsisHorizontalIcon,
   StarIcon,
   SunIcon,
@@ -16,6 +15,8 @@ import { useIntl } from "react-intl";
 import type { DueTone } from "./TaskDateFormat";
 import { DUE_TONE_CLASS, formatDue, formatReminder, getDueTone } from "./TaskDateFormat";
 import { TaskLinksButton } from "./TaskLinksButton";
+import { TaskCheck, TaskRowLeanMeta } from "./TaskRowParts";
+import { useTaskCompletion } from "./UseTaskCompletion";
 import type { TaskRowReorder } from "./UseTaskReorder";
 import { REORDER_HANDLE_ATTRIBUTE, REORDER_ID_ATTRIBUTE } from "./UseTaskReorder";
 import type { ContextColor } from "~/core/contexts/KlartContext";
@@ -105,10 +106,18 @@ export function TaskRow({
   reorder: reorderProp,
 }: TaskRowProps): ReactElement {
   const intl = useIntl();
-  const isPhone = !useBreakpoint("sm");
   const hasMenu = !!onArchive || (isInMyDay && !!onRemoveFromMyDay);
   const reorder = task.done ? undefined : reorderProp;
-  const hasMeta = showMeta && (showContext || !!task.due || !!task.remindAt || !!task.hasNotes);
+  const completion = useTaskCompletion(task.id, task.done, onToggleDone);
+  // Phones get the lean row: the title takes the width, and links, star and actions move to the details sheet.
+  const isLean = !useBreakpoint("sm");
+  const hasMeta = isLean
+    ? showContext ||
+      task.important ||
+      (showLinks && task.links.length > 0) ||
+      !!task.hasNotes ||
+      (showMeta && (!!task.due || !!task.remindAt))
+    : showMeta && (showContext || !!task.due || !!task.remindAt || !!task.hasNotes);
 
   return (
     <div
@@ -124,6 +133,7 @@ export function TaskRow({
         reorder && "slab-draggable select-none",
         reorder?.isLifted && "slab-lifted",
         reorder?.isSettled && "slab-settled",
+        completion.isChecking && "slab-checking",
         isSelected && "outline-2 outline-offset-2 outline-(color:--ctx)"
       )}
       style={reorder?.isLifted ? ({ "--slab-dy": `${reorder.offsetY}px` } as CSSProperties) : undefined}
@@ -163,36 +173,13 @@ export function TaskRow({
           </span>
         )}
 
-        <Button
-          isIconOnly
-          variant="ghost"
-          aria-label={
-            task.done
-              ? intl.formatMessage({
-                  description: "TaskRow - aria-label for marking a completed task as not completed",
-                  defaultMessage: "Mark not completed",
-                  id: "lq+lgm",
-                })
-              : intl.formatMessage({
-                  description: "TaskRow - aria-label for completing a task",
-                  defaultMessage: "Complete task",
-                  id: "GcMmcK",
-                })
-          }
-          data-testid="task-row__toggle"
-          onPress={() => onToggleDone(task.id, !task.done)}
-          className="slab-check size-10 shrink-0 rounded-full"
-        >
-          {task.done ? (
-            <span className="slab-check-done grid size-5 place-items-center rounded-full bg-(--ctx)">
-              <CheckIcon className="text-background size-3.5" />
-            </span>
-          ) : (
-            <span className="slab-check-ring relative block size-[22px] rounded-full border-2 shadow-(--slab-check-inset)">
-              <span className="slab-check-fill absolute inset-[3px] rounded-full bg-(--ctx) opacity-0 transition-opacity" />
-            </span>
-          )}
-        </Button>
+        <TaskCheck
+          done={task.done}
+          isChecking={completion.isChecking}
+          onPress={completion.toggle}
+          testId="task-row__toggle"
+          className={clsx(isLean && "w-9")}
+        />
 
         <div className="relative flex min-w-0 flex-1 flex-col gap-1 py-1">
           {onOpen && (
@@ -228,19 +215,28 @@ export function TaskRow({
             />
           )}
           <span
-            // Phones keep each title to one line; the full title is in the tooltip and the editor.
+            // Phones keep each title to one line; the full title is in the tooltip and the details sheet.
             title={task.title}
             className={clsx(
-              "max-sm:truncate",
-              task.done
-                ? "text-muted text-sm line-through"
-                : "text-[15px] font-semibold tracking-[-0.005em] max-sm:text-sm max-sm:tracking-[-0.01em]"
+              task.done && "text-muted text-sm line-through",
+              !task.done && (isLean ? "font-medium" : "font-semibold tracking-[-0.005em]"),
+              !task.done && "text-[15px]",
+              isLean && "truncate"
             )}
             data-testid="task-row__title"
           >
             {task.title}
           </span>
-          {!task.done && hasMeta && (
+          {!task.done && hasMeta && isLean && (
+            <TaskRowLeanMeta
+              task={task}
+              today={today}
+              showContext={showContext}
+              showDates={showMeta}
+              showLinks={showLinks}
+            />
+          )}
+          {!task.done && hasMeta && !isLean && (
             <span className="text-muted hero:gap-x-1.5 hero:gap-y-1 flex flex-wrap items-center gap-x-2.5 gap-y-0.5 text-xs">
               {showContext && (
                 <span className={clsx(META_CHIP, "hero:bg-(--ctx)/16 hero:text-(--ctx) gap-1.5")}>
@@ -280,12 +276,13 @@ export function TaskRow({
           )}
         </div>
 
-        {!task.done && showLinks && task.links.length > 1 && (
+        {!task.done && !isLean && showLinks && task.links.length > 1 && (
           // Several links share one button, leaving the title room.
-          <TaskLinksButton links={task.links} title={task.title} variant={isPhone ? "sheet" : "popover"} />
+          <TaskLinksButton links={task.links} title={task.title} variant="popover" />
         )}
 
         {!task.done &&
+          !isLean &&
           showLinks &&
           task.links.length === 1 &&
           task.links.map((link) => (
@@ -309,7 +306,7 @@ export function TaskRow({
             </Link>
           ))}
 
-        {!task.done && onAddToMyDay && !isInMyDay && (
+        {!task.done && !isLean && onAddToMyDay && !isInMyDay && (
           <Button
             isIconOnly
             variant="ghost"
@@ -325,7 +322,7 @@ export function TaskRow({
           </Button>
         )}
 
-        {!task.done && (
+        {!task.done && !isLean && (
           <ToggleButton
             isIconOnly
             variant="ghost"
@@ -347,7 +344,7 @@ export function TaskRow({
           </ToggleButton>
         )}
 
-        {hasMenu && (
+        {hasMenu && !isLean && (
           <Dropdown>
             <Button
               isIconOnly

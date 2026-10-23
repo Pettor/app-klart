@@ -42,6 +42,7 @@ function toMyDayTask(task: Task, contexts: KlartContext[], inTodayIds: Set<strin
     tags: task.tags.filter((tag) => tag !== context?.tag),
     links: task.links,
     hasNotes: !!task.notes.trim(),
+    notes: task.notes,
     contextName: context?.name ?? task.context,
     contextColor: context?.color ?? "blue",
     isInMyDay: inTodayIds.has(task.id),

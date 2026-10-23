@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, fn, screen, within } from "storybook/test";
+import { expect, fn, screen, waitFor, within } from "storybook/test";
 import type { MyDayTask } from "./MyDayTypes";
 import { MyDayView as Component } from "./MyDayView";
 import type { MyDayViewProps as Props } from "./MyDayView";
@@ -26,6 +26,8 @@ function toRow(task: Task): MyDayTask {
     remindAt: task.remindAt,
     tags: task.tags.filter((tag) => tag !== context.tag),
     links: task.links,
+    hasNotes: !!task.notes.trim(),
+    notes: task.notes,
     contextName: context.name,
     contextColor: context.color,
     isInMyDay: inToday.has(task.id),
@@ -281,7 +283,8 @@ export const CompleteFromMyDay: Story = {
   play: async ({ args, canvas, userEvent }) => {
     const [firstToggle] = canvas.getAllByTestId("task-row__toggle");
     await userEvent.click(firstToggle!);
-    await expect(args.taskActions.onToggleDone).toHaveBeenCalledWith("p8", true);
+    // The check animates before the task is marked done.
+    await waitFor(() => expect(args.taskActions.onToggleDone).toHaveBeenCalledWith("p8", true));
   },
 };
 
@@ -318,11 +321,17 @@ export const Editing: Story = {
   parameters: { viewport: { value: "full" } },
 };
 
+/** On phones a tap shows the task's details in a sheet; Edit there opens the editor. */
 export const OpenTaskFromList: Story = {
   args: { ...buildArgs("personal"), suggestions: { ...buildArgs("personal").suggestions, isOpen: false } },
+  globals: { viewport: { value: "iphonex" } },
   play: async ({ args, canvas, userEvent }) => {
     const [firstOpen] = canvas.getAllByTestId("task-row__open");
     await userEvent.click(firstOpen!);
+    await expect(await screen.findByTestId("task-details__title")).toHaveTextContent(args.tasks[0]!.title);
+    await expect(args.taskActions.onOpen).not.toHaveBeenCalled();
+
+    await userEvent.click(screen.getByTestId("task-details__edit"));
     await expect(args.taskActions.onOpen).toHaveBeenCalledWith("p8");
   },
 };

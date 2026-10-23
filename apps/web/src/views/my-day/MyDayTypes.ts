@@ -16,6 +16,8 @@ import type { SmartView } from "~/core/tasks/KlartAtoms";
 
 export interface MyDayTask extends TaskRowTask {
   isInMyDay: boolean;
+  /** Shown in the details sheet that a tap on a task opens on phones. */
+  notes: string;
 }
 
 export interface MyDayContextProps {
