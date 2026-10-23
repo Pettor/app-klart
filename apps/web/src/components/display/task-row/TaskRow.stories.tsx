@@ -174,7 +174,10 @@ export const CompleteAndStar: Story = {
     // The box fills and the check draws first; the task is marked done once that has played.
     await expect(args.onToggleDone).not.toHaveBeenCalled();
     await expect(canvas.getByTestId("task-row")).toHaveClass("slab-checking");
-    await waitFor(() => expect(args.onToggleDone).toHaveBeenCalledWith("w1", true));
+    // Then the card sinks away and the list closes the gap.
+    await waitFor(() => expect(canvas.getByTestId("task-row").closest(".slab-leave")).toHaveClass("slab-leaving"));
+    await expect(args.onToggleDone).not.toHaveBeenCalled();
+    await waitFor(() => expect(args.onToggleDone).toHaveBeenCalledWith("w1", true), { timeout: 2000 });
 
     await userEvent.click(canvas.getByRole("button", { name: "Mark important" }));
     await expect(args.onToggleImportant).toHaveBeenCalledWith("w1");

@@ -284,7 +284,7 @@ export const CompleteFromMyDay: Story = {
     const [firstToggle] = canvas.getAllByTestId("task-row__toggle");
     await userEvent.click(firstToggle!);
     // The check animates before the task is marked done.
-    await waitFor(() => expect(args.taskActions.onToggleDone).toHaveBeenCalledWith("p8", true));
+    await waitFor(() => expect(args.taskActions.onToggleDone).toHaveBeenCalledWith("p8", true), { timeout: 2000 });
   },
 };
 
