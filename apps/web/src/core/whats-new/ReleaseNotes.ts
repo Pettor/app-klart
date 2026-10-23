@@ -15,6 +15,42 @@ export interface ReleaseNote {
   fixes: ReleaseNoteItem[];
 }
 
+const v042 = defineMessages({
+  starsTitle: {
+    description: "ReleaseNotes 0.4.2 - highlight title: starred tasks lead My Day",
+    defaultMessage: "Stars rise to the top",
+    id: "xeuFCH",
+  },
+  starsDescription: {
+    description: "ReleaseNotes 0.4.2 - highlight text: starred tasks lead My Day",
+    defaultMessage:
+      "Starred tasks now lead My Day. Star one and it glides up into place, while your own order still holds among the starred tasks and the rest.",
+    id: "bB4p84",
+  },
+  suggestionsTitle: {
+    description: "ReleaseNotes 0.4.2 - highlight title: animated adding from Suggestions",
+    defaultMessage: "Watch suggestions land",
+    id: "wbzX7t",
+  },
+  suggestionsDescription: {
+    description: "ReleaseNotes 0.4.2 - highlight text: animated adding from Suggestions",
+    defaultMessage:
+      "Adding a suggestion ticks it off the panel and drops it into My Day with a quick glow, so you can see where it went.",
+    id: "YdJZPr",
+  },
+  completeTitle: {
+    description: "ReleaseNotes 0.4.2 - highlight title: completed tasks drop into Completed",
+    defaultMessage: "Crossed off and counted",
+    id: "X1NXBh",
+  },
+  completeDescription: {
+    description: "ReleaseNotes 0.4.2 - highlight text: completed tasks drop into Completed",
+    defaultMessage:
+      "Completing a task now strikes through its title, then sinks it into Completed, whose count gives a little bump.",
+    id: "eEiffN",
+  },
+});
+
 const v041 = defineMessages({
   leanTitle: {
     description: "ReleaseNotes 0.4.1 - highlight title: leaner task rows on phones",
@@ -254,6 +290,15 @@ const v010 = defineMessages({
  * entry here; people who update see every entry newer than the last one they saw.
  */
 export const RELEASE_NOTES: ReleaseNote[] = [
+  {
+    version: "0.4.2",
+    highlights: [
+      { emoji: "⭐", title: v042.starsTitle, description: v042.starsDescription },
+      { emoji: "💡", title: v042.suggestionsTitle, description: v042.suggestionsDescription },
+      { emoji: "✅", title: v042.completeTitle, description: v042.completeDescription },
+    ],
+    fixes: [],
+  },
   {
     version: "0.4.1",
     highlights: [
