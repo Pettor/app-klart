@@ -1,6 +1,6 @@
 {
   "name": "@app/desktop",
-  "version": "0.4.2",
+  "version": "0.5.0",
   "description": "Klart desktop app: the web build packaged with Tauri",
   "license": "MIT",
   "private": true,
