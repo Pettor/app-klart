@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, fn } from "storybook/test";
+import { expect, fn, waitFor } from "storybook/test";
 import { SuggestionList as Component } from "./SuggestionList";
 import type { SuggestionListProps as Props } from "./SuggestionList";
 
@@ -57,10 +57,14 @@ export const Empty: Story = {
 export const AddSuggestion: Story = {
   args: defaultArgs,
   play: async ({ args, canvas, userEvent }) => {
-    await userEvent.click(canvas.getByRole("button", { name: "Add Adele Guldpeng to My Day" }));
-    await expect(args.onAdd).toHaveBeenCalledWith("p3", "overdue");
+    const add = canvas.getByRole("button", { name: "Add Adele Guldpeng to My Day" });
+    await userEvent.click(add);
+    // The card slides out of the panel before the task is added.
+    await expect(args.onAdd).not.toHaveBeenCalled();
+    await expect(add.closest(".slab-leave")).toHaveClass("slab-leaving");
+    await waitFor(() => expect(args.onAdd).toHaveBeenCalledWith("p3", "overdue"));
 
     await userEvent.click(canvas.getByTestId("suggestion-list__add-all-due"));
-    await expect(args.onAddAllDue).toHaveBeenCalled();
+    await waitFor(() => expect(args.onAddAllDue).toHaveBeenCalled());
   },
 };

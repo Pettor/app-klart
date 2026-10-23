@@ -22,6 +22,7 @@ import type {
   MyDayTaskActions,
   MyDayTaskEditorProps,
 } from "./MyDayTypes";
+import { useMyDayArrivals } from "./UseMyDayArrivals";
 import { useMyDayPaneWidth } from "./UseMyDayPaneWidth";
 import { QuickAddInput } from "~/components/input/quick-add/QuickAddInput";
 
@@ -55,7 +56,7 @@ export function MyDayView({
   showContextOnTasks,
   taskActions,
   quickAdd,
-  suggestions,
+  suggestions: suggestionsProp,
   editor,
   agentJson,
   display,
@@ -67,6 +68,10 @@ export function MyDayView({
   const isPhone = !useBreakpoint("sm");
   const isWide = useBreakpoint("xl");
   const pane = useMyDayPaneWidth();
+  const { arrivingIds, suggestions } = useMyDayArrivals(
+    tasks.map((task) => task.id),
+    suggestionsProp
+  );
   const { options } = display;
   // A tag picked elsewhere (search, a task) keeps the list visible so it can be cleared.
   const showTagFilter = options.tagFilter || !!tags.active;
@@ -145,6 +150,7 @@ export function MyDayView({
           showLinks={options.links}
           isCompletedExpanded={options.completed}
           onToggleCompleted={() => display.onChange({ ...options, completed: !options.completed })}
+          arrivingIds={arrivingIds}
         />
 
         <div className="sticky bottom-0 mt-auto flex flex-col gap-2 bg-(--ctx-backdrop) pt-2 pb-[env(safe-area-inset-bottom)]">

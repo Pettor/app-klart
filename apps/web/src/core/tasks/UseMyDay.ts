@@ -99,9 +99,11 @@ export function useMyDay(): MyDayState {
       return task ? [task] : [];
     });
     const open = visible.filter(isOpen);
+    const dayOpen = dayTasks.filter(isOpen);
 
     const lists: Record<SmartView, Task[]> = {
-      day: dayTasks.filter(isOpen),
+      // Starred tasks lead My Day; each group keeps the order set by dragging.
+      day: [...dayOpen.filter((task) => task.important), ...dayOpen.filter((task) => !task.important)],
       important: open.filter((task) => task.important).sort(compareByDue),
       planned: open.filter((task) => !!task.due).sort(compareByDue),
       tasks: [...open].sort(compareByDue),
