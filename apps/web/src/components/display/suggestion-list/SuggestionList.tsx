@@ -1,9 +1,10 @@
 import type { ReactElement } from "react";
-import { PlusIcon } from "@heroicons/react/20/solid";
+import { CheckIcon, PlusIcon } from "@heroicons/react/20/solid";
 import { Button } from "@heroui/react";
 import clsx from "clsx";
 import type { IntlShape } from "react-intl";
 import { useIntl } from "react-intl";
+import { useSuggestionLeave } from "./UseSuggestionLeave";
 import {
   DUE_TONE_CLASS,
   formatRelativeDate,
@@ -140,6 +141,7 @@ export function SuggestionList({
   onOpen,
 }: SuggestionListProps): ReactElement {
   const intl = useIntl();
+  const leave = useSuggestionLeave(groups, onAdd, onAddAllDue);
 
   return (
     <div className="flex flex-col gap-[18px]" data-testid="suggestion-list">
@@ -160,7 +162,7 @@ export function SuggestionList({
             hideHeading && "ml-auto"
           )}
           isDisabled={dueCount === 0}
-          onPress={onAddAllDue}
+          onPress={leave.addAllDue}
           data-testid="suggestion-list__add-all-due"
         >
           {intl.formatMessage({
@@ -182,65 +184,85 @@ export function SuggestionList({
       )}
 
       {groups.map((group) => (
-        <section key={group.reason} className="flex flex-col gap-2.5" aria-label={getGroupLabel(intl, group.reason)}>
+        <section
+          key={group.reason}
+          className="flex flex-col gap-2.5 [--slab-gap:--spacing(2.5)]"
+          aria-label={getGroupLabel(intl, group.reason)}
+        >
           <h3 className="text-foreground/85 flex items-center gap-2 text-[13px] font-semibold">
             {getGroupLabel(intl, group.reason)}
             <span className="text-muted font-medium">{group.total}</span>
           </h3>
-          {group.items.map((item) => (
-            <div
-              key={item.id}
-              className={clsx(`ctx-${item.contextColor}`, "slab flex min-h-14 items-center gap-2.5 py-1.5 pr-1.5 pl-3")}
-            >
-              <span className="w-1 self-stretch rounded-sm bg-(--ctx)" aria-hidden />
-              <div className="relative flex min-w-0 flex-1 flex-col gap-0.5">
-                {onOpen && (
-                  // An invisible button over the whole column, so the reason line opens the task too.
-                  // It must be the pressed element itself: React Aria drops a press released outside the button's box.
-                  <Button
-                    variant="ghost"
-                    aria-label={intl.formatMessage(
-                      {
-                        description: "SuggestionList - aria-label of a suggestion's title, which opens the task editor",
-                        defaultMessage: "Edit task: {title}",
-                        id: "JF1JER",
-                      },
-                      { title: item.title }
+          {group.items.map((item) => {
+            const isLeaving = leave.leavingIds.has(item.id);
+            return (
+              // Slides out toward My Day and collapses once added.
+              <div key={item.id} className={clsx("slab-leave slab-leave-side", isLeaving && "slab-leaving")}>
+                <div className="slab-leave-in">
+                  <div
+                    className={clsx(
+                      `ctx-${item.contextColor}`,
+                      "slab flex min-h-14 items-center gap-2.5 py-1.5 pr-1.5 pl-3"
                     )}
-                    onPress={() => onOpen(item.id)}
-                    className="absolute inset-0 h-auto min-h-0 w-auto transform-none rounded-md p-0 data-[hovered=true]:bg-transparent data-[pressed=true]:bg-transparent"
-                    data-testid="suggestion-list__open"
-                  />
-                )}
-                <span className="text-sm">{item.title}</span>
-                <span className="text-muted flex flex-wrap gap-1.5 text-xs">
-                  <span className={item.due ? DUE_TONE_CLASS[getDueTone(item.due, today)] : undefined}>
-                    {getReasonText(intl, group.reason, item, today)}
-                  </span>
-                  {item.tags.map((tag) => (
-                    <span key={tag} className="text-(--tag)">
-                      #{tag}
-                    </span>
-                  ))}
-                </span>
+                  >
+                    <span className="w-1 self-stretch rounded-sm bg-(--ctx)" aria-hidden />
+                    <div className="relative flex min-w-0 flex-1 flex-col gap-0.5">
+                      {onOpen && (
+                        // An invisible button over the whole column, so the reason line opens the task too.
+                        // It must be the pressed element itself: React Aria drops a press released outside the button's box.
+                        <Button
+                          variant="ghost"
+                          aria-label={intl.formatMessage(
+                            {
+                              description:
+                                "SuggestionList - aria-label of a suggestion's title, which opens the task editor",
+                              defaultMessage: "Edit task: {title}",
+                              id: "JF1JER",
+                            },
+                            { title: item.title }
+                          )}
+                          onPress={() => onOpen(item.id)}
+                          className="absolute inset-0 h-auto min-h-0 w-auto transform-none rounded-md p-0 data-[hovered=true]:bg-transparent data-[pressed=true]:bg-transparent"
+                          data-testid="suggestion-list__open"
+                        />
+                      )}
+                      <span className="text-sm">{item.title}</span>
+                      <span className="text-muted flex flex-wrap gap-1.5 text-xs">
+                        <span className={item.due ? DUE_TONE_CLASS[getDueTone(item.due, today)] : undefined}>
+                          {getReasonText(intl, group.reason, item, today)}
+                        </span>
+                        {item.tags.map((tag) => (
+                          <span key={tag} className="text-(--tag)">
+                            #{tag}
+                          </span>
+                        ))}
+                      </span>
+                    </div>
+                    <Button
+                      isIconOnly
+                      variant="ghost"
+                      aria-label={intl.formatMessage(
+                        {
+                          description: "SuggestionList - aria-label of the button adding a suggestion to My Day",
+                          defaultMessage: "Add {title} to My Day",
+                          id: "qSIYMN",
+                        },
+                        { title: item.title }
+                      )}
+                      onPress={() => leave.add(item.id, group.reason)}
+                      className={clsx(isLeaving && "text-(--ctx)")}
+                    >
+                      {isLeaving ? (
+                        <CheckIcon className="slab-pop size-[18px]" />
+                      ) : (
+                        <PlusIcon className="size-[18px]" />
+                      )}
+                    </Button>
+                  </div>
+                </div>
               </div>
-              <Button
-                isIconOnly
-                variant="ghost"
-                aria-label={intl.formatMessage(
-                  {
-                    description: "SuggestionList - aria-label of the button adding a suggestion to My Day",
-                    defaultMessage: "Add {title} to My Day",
-                    id: "qSIYMN",
-                  },
-                  { title: item.title }
-                )}
-                onPress={() => onAdd(item.id, group.reason)}
-              >
-                <PlusIcon className="size-[18px]" />
-              </Button>
-            </div>
-          ))}
+            );
+          })}
         </section>
       ))}
 

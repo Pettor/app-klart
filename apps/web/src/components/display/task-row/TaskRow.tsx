@@ -16,6 +16,7 @@ import type { DueTone } from "./TaskDateFormat";
 import { DUE_TONE_CLASS, formatDue, formatReminder, getDueTone } from "./TaskDateFormat";
 import { TaskLinksButton } from "./TaskLinksButton";
 import { TaskCheck, TaskRowLeanMeta } from "./TaskRowParts";
+import { useStarPop } from "./UseStarPop";
 import { useTaskCompletion } from "./UseTaskCompletion";
 import type { TaskRowReorder } from "./UseTaskReorder";
 import { REORDER_HANDLE_ATTRIBUTE, REORDER_ID_ATTRIBUTE } from "./UseTaskReorder";
@@ -55,6 +56,8 @@ export interface TaskRowProps {
   onOpen?: (taskId: string) => void;
   /** Highlights the row, e.g. while it's open in the editor. */
   isSelected?: boolean;
+  /** Plays the arrival animation as the row mounts, e.g. just added from Suggestions. */
+  isArriving?: boolean;
   /** Shows the due date, reminder and note marker under the title. */
   showMeta?: boolean;
   /** Shows a button per link that opens it in a new tab. */
@@ -101,6 +104,7 @@ export function TaskRow({
   onArchive,
   onOpen,
   isSelected = false,
+  isArriving = false,
   showMeta = true,
   showLinks = true,
   reorder: reorderProp,
@@ -109,6 +113,7 @@ export function TaskRow({
   const hasMenu = !!onArchive || (isInMyDay && !!onRemoveFromMyDay);
   const reorder = task.done ? undefined : reorderProp;
   const completion = useTaskCompletion(task.id, task.done, onToggleDone);
+  const star = useStarPop(task.id, task.important, onToggleImportant);
   // Phones get the lean row: the title takes the width, and links, star and actions move to the details sheet.
   const isLean = !useBreakpoint("sm");
   const hasMeta = isLean
@@ -121,7 +126,13 @@ export function TaskRow({
 
   return (
     // Collapses to nothing while a completed card sinks away, so the list closes the gap.
-    <div className={clsx("slab-leave", completion.phase === "leaving" && "slab-leaving")}>
+    <div
+      className={clsx(
+        "slab-leave",
+        completion.phase === "leaving" && "slab-leaving",
+        isArriving && !task.done && "slab-arriving"
+      )}
+    >
       <div className="slab-leave-in">
         <div
           data-testid="task-row"
@@ -332,7 +343,7 @@ export function TaskRow({
                 variant="ghost"
                 size="sm"
                 isSelected={task.important}
-                onChange={() => onToggleImportant(task.id)}
+                onChange={star.toggle}
                 aria-label={intl.formatMessage({
                   description: "TaskRow - aria-label for the important toggle",
                   defaultMessage: "Mark important",
@@ -344,7 +355,11 @@ export function TaskRow({
                   task.important ? "text-(--star)" : "text-muted"
                 )}
               >
-                {task.important ? <StarIcon className="size-[18px]" /> : <StarOutlineIcon className="size-[18px]" />}
+                {task.important ? (
+                  <StarIcon key={star.pops} className={clsx("size-[18px]", star.pops > 0 && "slab-pop")} />
+                ) : (
+                  <StarOutlineIcon className="size-[18px]" />
+                )}
               </ToggleButton>
             )}
 

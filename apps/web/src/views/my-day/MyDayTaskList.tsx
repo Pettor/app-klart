@@ -1,11 +1,14 @@
+import { useRef } from "react";
 import type { ReactElement } from "react";
 import { ChevronRightIcon } from "@heroicons/react/20/solid";
 import { Button } from "@heroui/react";
 import { useBreakpoint } from "@package/react";
 import clsx from "clsx";
 import { useIntl } from "react-intl";
+import { keepStarredFirst } from "./MyDayTaskOrder";
 import type { MyDayTask, MyDayTaskActions } from "./MyDayTypes";
 import { useCompletedBump } from "./UseCompletedBump";
+import { useMyDayStarMove } from "./UseMyDayStarMove";
 import { useMyDayTaskDetails } from "./UseMyDayTaskDetails";
 import { TaskDetailsSheet } from "~/components/display/task-details-sheet/TaskDetailsSheet";
 import { TaskRow } from "~/components/display/task-row/TaskRow";
@@ -30,6 +33,8 @@ export interface MyDayTaskListProps {
   /** Lists the completed tasks; otherwise only their count shows, as a button that expands them. */
   isCompletedExpanded?: boolean;
   onToggleCompleted?: () => void;
+  /** Tasks just added from Suggestions, which animate into the list. */
+  arrivingIds?: ReadonlySet<string>;
 }
 
 export function MyDayTaskList({
@@ -45,17 +50,25 @@ export function MyDayTaskList({
   showLinks = true,
   isCompletedExpanded = true,
   onToggleCompleted,
+  arrivingIds,
 }: MyDayTaskListProps): ReactElement {
   const intl = useIntl();
   // On phones a tap shows the task's details first; the editor is one more tap away.
   const isPhone = !useBreakpoint("sm");
   const details = useMyDayTaskDetails([...tasks, ...doneTasks]);
   const completedBump = useCompletedBump(doneTasks.length);
+  const listRef = useRef<HTMLElement>(null);
+  const toggleImportant = useMyDayStarMove(listRef, actions.onToggleImportant);
   // Only My Day has an order of its own; the other views sort by due date.
   const canReorder = smartView === "day";
   const getReorder = useTaskReorder(
     tasks.map((task) => task.id),
-    actions.onMoveInMyDay
+    (taskId, targetId, position) => {
+      const move = keepStarredFirst(tasks, taskId, targetId, position);
+      if (move) {
+        actions.onMoveInMyDay(taskId, move.targetId, move.position);
+      }
+    }
   );
 
   function renderRow(task: MyDayTask): ReactElement {
@@ -67,12 +80,13 @@ export function MyDayTaskList({
         showContext={showContext}
         isInMyDay={task.isInMyDay}
         onToggleDone={actions.onToggleDone}
-        onToggleImportant={actions.onToggleImportant}
+        onToggleImportant={toggleImportant}
         onAddToMyDay={actions.onAddToMyDay}
         onRemoveFromMyDay={actions.onRemoveFromMyDay}
         onArchive={actions.onArchive}
         onOpen={isPhone ? details.open : actions.onOpen}
         isSelected={task.id === selectedTaskId}
+        isArriving={arrivingIds?.has(task.id)}
         showMeta={showMeta}
         showLinks={showLinks}
         reorder={canReorder && !task.done ? getReorder(task.id) : undefined}
@@ -83,6 +97,7 @@ export function MyDayTaskList({
   return (
     <>
       <section
+        ref={listRef}
         aria-label={intl.formatMessage({
           description: "MyDayTaskList - aria-label of the open tasks",
           defaultMessage: "Tasks",
@@ -159,7 +174,7 @@ export function MyDayTaskList({
           today={today}
           onClose={details.close}
           onToggleDone={actions.onToggleDone}
-          onToggleImportant={actions.onToggleImportant}
+          onToggleImportant={toggleImportant}
           onAddToMyDay={actions.onAddToMyDay}
           onRemoveFromMyDay={actions.onRemoveFromMyDay}
           onEdit={(taskId) => {

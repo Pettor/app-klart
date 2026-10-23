@@ -8,6 +8,7 @@ import { DUE_TONE_CLASS, formatDue, formatReminder, getDueTone } from "~/compone
 import type { DueTone } from "~/components/display/task-row/TaskDateFormat";
 import type { TaskRowTask } from "~/components/display/task-row/TaskRow";
 import { TaskCheck, TaskLinkItem } from "~/components/display/task-row/TaskRowParts";
+import { useStarPop } from "~/components/display/task-row/UseStarPop";
 import { useTaskCompletion } from "~/components/display/task-row/UseTaskCompletion";
 
 export interface TaskDetailsTask extends TaskRowTask {
@@ -106,6 +107,7 @@ function TaskDetailsBody({
 }: TaskDetailsBodyProps): ReactElement {
   const intl = useIntl();
   const completion = useTaskCompletion(task.id, task.done, onToggleDone, { onCompleted: onClose, leave: false });
+  const star = useStarPop(task.id, task.important, onToggleImportant);
   const notes = task.notes.trim();
 
   return (
@@ -128,7 +130,7 @@ function TaskDetailsBody({
           isIconOnly
           variant="ghost"
           isSelected={task.important}
-          onChange={() => onToggleImportant(task.id)}
+          onChange={star.toggle}
           aria-label={intl.formatMessage({
             description: "TaskDetailsSheet - aria-label for the important toggle",
             defaultMessage: "Important",
@@ -140,7 +142,11 @@ function TaskDetailsBody({
             task.important ? "text-(--star)" : "text-muted"
           )}
         >
-          {task.important ? <StarIcon className="size-[19px]" /> : <StarOutlineIcon className="size-[19px]" />}
+          {task.important ? (
+            <StarIcon key={star.pops} className={clsx("size-[19px]", star.pops > 0 && "slab-pop")} />
+          ) : (
+            <StarOutlineIcon className="size-[19px]" />
+          )}
         </ToggleButton>
       </div>
 
