@@ -15,6 +15,72 @@ export interface ReleaseNote {
   fixes: ReleaseNoteItem[];
 }
 
+const v040 = defineMessages({
+  themesTitle: {
+    description: "ReleaseNotes 0.4.0 - highlight title: new Dark and Midnight themes",
+    defaultMessage: "A fresh coat of paint",
+    id: "HEMYBB",
+  },
+  themesDescription: {
+    description: "ReleaseNotes 0.4.0 - highlight text: new Dark and Midnight themes",
+    defaultMessage:
+      "Dark is now a crisp near-black look with glowing titles, and Midnight brings navy blues. Pick one in Settings › Appearance, along with density, motion and context tints.",
+    id: "mBtm1y",
+  },
+  reorderTitle: {
+    description: "ReleaseNotes 0.4.0 - highlight title: drag to reorder My Day",
+    defaultMessage: "Put your day in order",
+    id: "5ER/aD",
+  },
+  reorderDescription: {
+    description: "ReleaseNotes 0.4.0 - highlight text: drag to reorder My Day",
+    defaultMessage: "Drag a task by its grip to move it up or down My Day, or focus the grip and use the arrow keys.",
+    id: "Gmt5g5",
+  },
+  displayTitle: {
+    description: "ReleaseNotes 0.4.0 - highlight title: display options for My Day",
+    defaultMessage: "Show only what you need",
+    id: "WHgYX2",
+  },
+  displayDescription: {
+    description: "ReleaseNotes 0.4.0 - highlight text: display options for My Day",
+    defaultMessage:
+      "The Display menu turns dates, link buttons, tags and the tag filter on or off. Minimal clears it all.",
+    id: "bxFPXG",
+  },
+  sidebarTitle: {
+    description: "ReleaseNotes 0.4.0 - highlight title: collapsible sidebar",
+    defaultMessage: "Fold the sidebar away",
+    id: "kA5Vmb",
+  },
+  sidebarDescription: {
+    description: "ReleaseNotes 0.4.0 - highlight text: collapsible sidebar",
+    defaultMessage: "Collapse it to a slim rail of icons for more room, and press ⌘\\ or Ctrl+\\ to flip it back.",
+    id: "zUSkD3",
+  },
+  linksTitle: {
+    description: "ReleaseNotes 0.4.0 - highlight title: several links share one button",
+    defaultMessage: "Links pack together",
+    id: "qR0GM3",
+  },
+  linksDescription: {
+    description: "ReleaseNotes 0.4.0 - highlight text: several links share one button",
+    defaultMessage:
+      "A task with several links shows one button with a count, so the title gets the room. Tap it to pick a link.",
+    id: "OGjBMi",
+  },
+  titlesFixTitle: {
+    description: "ReleaseNotes 0.4.0 - fix title: long task titles on phones",
+    defaultMessage: "Long titles behave on phones",
+    id: "cVLmt4",
+  },
+  titlesFixDescription: {
+    description: "ReleaseNotes 0.4.0 - fix text: long task titles on phones",
+    defaultMessage: "Task titles keep to one tidy line on small screens. Open the task to read all of it.",
+    id: "qaQYAJ",
+  },
+});
+
 const v030 = defineMessages({
   drawerTitle: {
     description: "ReleaseNotes 0.3.0 - highlight title: mobile navigation drawer",
@@ -153,6 +219,17 @@ const v010 = defineMessages({
  * entry here; people who update see every entry newer than the last one they saw.
  */
 export const RELEASE_NOTES: ReleaseNote[] = [
+  {
+    version: "0.4.0",
+    highlights: [
+      { emoji: "🎨", title: v040.themesTitle, description: v040.themesDescription },
+      { emoji: "✋", title: v040.reorderTitle, description: v040.reorderDescription },
+      { emoji: "🎛️", title: v040.displayTitle, description: v040.displayDescription },
+      { emoji: "📐", title: v040.sidebarTitle, description: v040.sidebarDescription },
+      { emoji: "🔗", title: v040.linksTitle, description: v040.linksDescription },
+    ],
+    fixes: [{ emoji: "📱", title: v040.titlesFixTitle, description: v040.titlesFixDescription }],
+  },
   {
     version: "0.3.0",
     highlights: [
