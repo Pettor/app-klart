@@ -182,9 +182,9 @@ export const WithTagFilter: Story = {
   args: withDisplay("personal", { tagFilter: true }),
 };
 
-/** Display › Dates & reminders and Link buttons off: just titles. */
+/** Display › Dates & reminders, Note marker and Link buttons off: just titles. */
 export const TitlesOnly: Story = {
-  args: withDisplay("work", { details: false, links: false }),
+  args: withDisplay("work", { details: false, notes: false, links: false }),
 };
 
 /** The Display menu flips an option and resets to the minimal view. */

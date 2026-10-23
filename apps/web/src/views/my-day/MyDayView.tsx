@@ -148,6 +148,7 @@ export function MyDayView({
           showTags={options.taskTags}
           showMeta={options.details}
           showLinks={options.links}
+          showNotes={options.notes}
           isCompletedExpanded={options.completed}
           onToggleCompleted={() => display.onChange({ ...options, completed: !options.completed })}
           arrivingIds={arrivingIds}

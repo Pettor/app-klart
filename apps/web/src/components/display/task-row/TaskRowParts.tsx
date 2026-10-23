@@ -5,7 +5,6 @@ import {
   BellIcon,
   CheckIcon,
   LinkIcon,
-  StarIcon,
 } from "@heroicons/react/20/solid";
 import { Button, Link } from "@heroui/react";
 import clsx from "clsx";
@@ -117,11 +116,13 @@ export interface TaskRowLeanMetaProps {
   showDates: boolean;
   /** The link count, from the "Link buttons" display option. */
   showLinks: boolean;
+  /** The note marker, from the "Note marker" display option. */
+  showNotes: boolean;
 }
 
 /**
  * The phone row's single grey line under the title: context, due date (red when overdue), reminder,
- * a link count, a note marker and a star when important. It never wraps.
+ * a link count and a note marker. It never wraps.
  */
 export function TaskRowLeanMeta({
   task,
@@ -129,6 +130,7 @@ export function TaskRowLeanMeta({
   showContext,
   showDates,
   showLinks,
+  showNotes,
 }: TaskRowLeanMetaProps): ReactElement {
   const intl = useIntl();
 
@@ -171,7 +173,7 @@ export function TaskRowLeanMeta({
           <span aria-hidden>{task.links.length}</span>
         </span>
       )}
-      {task.hasNotes && (
+      {showNotes && task.hasNotes && (
         <span
           role="img"
           aria-label={intl.formatMessage({
@@ -182,19 +184,6 @@ export function TaskRowLeanMeta({
           className="flex shrink-0"
         >
           <Bars3BottomLeftIcon className="size-[13px]" aria-hidden />
-        </span>
-      )}
-      {task.important && (
-        <span
-          role="img"
-          aria-label={intl.formatMessage({
-            description: "TaskRow - accessible name of the important marker in a phone task row",
-            defaultMessage: "Important",
-            id: "3/a3Ys",
-          })}
-          className="flex shrink-0"
-        >
-          <StarIcon className="size-[13px] text-(--star)" aria-hidden />
         </span>
       )}
     </span>

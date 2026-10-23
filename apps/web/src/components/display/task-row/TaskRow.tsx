@@ -59,8 +59,10 @@ export interface TaskRowProps {
   isSelected?: boolean;
   /** Plays the arrival animation as the row mounts, e.g. just added from Suggestions. */
   isArriving?: boolean;
-  /** Shows the due date, reminder and note marker under the title. */
+  /** Shows the due date and reminder under the title. */
   showMeta?: boolean;
+  /** Shows a marker when the task has a note. */
+  showNotes?: boolean;
   /** Shows a button per link that opens it in a new tab. */
   showLinks?: boolean;
   /**
@@ -107,6 +109,7 @@ export function TaskRow({
   isSelected = false,
   isArriving = false,
   showMeta = true,
+  showNotes = true,
   showLinks = true,
   reorder: reorderProp,
 }: TaskRowProps): ReactElement {
@@ -118,13 +121,13 @@ export function TaskRow({
   // Phones get the lean row: the title takes the width, and links, star and actions move to the details sheet.
   const isLean = !useBreakpoint("sm");
   const tags = useTagsLongPress(isLean && !task.done && task.tags.length > 0);
+  const hasNoteMarker = showNotes && !!task.hasNotes;
   const hasMeta = isLean
     ? showContext ||
-      task.important ||
       (showLinks && task.links.length > 0) ||
-      !!task.hasNotes ||
+      hasNoteMarker ||
       (showMeta && (!!task.due || !!task.remindAt))
-    : showMeta && (showContext || !!task.due || !!task.remindAt || !!task.hasNotes);
+    : hasNoteMarker || (showMeta && (showContext || !!task.due || !!task.remindAt));
 
   return (
     // Collapses to nothing while a completed card sinks away, so the list closes the gap.
@@ -258,17 +261,18 @@ export function TaskRow({
                   showContext={showContext}
                   showDates={showMeta}
                   showLinks={showLinks}
+                  showNotes={showNotes}
                 />
               )}
               {!task.done && hasMeta && !isLean && (
                 <span className="text-muted hero:gap-x-1.5 hero:gap-y-1 flex flex-wrap items-center gap-x-2.5 gap-y-0.5 text-xs">
-                  {showContext && (
+                  {showMeta && showContext && (
                     <span className={clsx(META_CHIP, "hero:bg-(--ctx)/16 hero:text-(--ctx) gap-1.5")}>
                       <span className="size-1.5 rounded-full bg-(--ctx)" aria-hidden />
                       {task.contextName}
                     </span>
                   )}
-                  {task.due && (
+                  {showMeta && task.due && (
                     <span
                       className={clsx(
                         META_CHIP,
@@ -280,13 +284,13 @@ export function TaskRow({
                       {formatDue(intl, task.due, today)}
                     </span>
                   )}
-                  {task.remindAt && (
+                  {showMeta && task.remindAt && (
                     <span className={clsx(META_CHIP, "hero:bg-surface-tertiary hero:text-foreground/85 gap-1")}>
                       <BellIcon className="size-3" aria-hidden />
                       {formatReminder(intl, task.remindAt, today)}
                     </span>
                   )}
-                  {task.hasNotes && (
+                  {hasNoteMarker && (
                     <span className="inline-flex items-center gap-1">
                       <Bars3BottomLeftIcon className="size-3" aria-hidden />
                       {intl.formatMessage({
@@ -299,6 +303,22 @@ export function TaskRow({
                 </span>
               )}
             </div>
+
+            {!task.done && isLean && task.important && (
+              // Phones can't star from the row, but a starred task shows it at the end.
+              <span
+                role="img"
+                aria-label={intl.formatMessage({
+                  description: "TaskRow - accessible name of the important marker in a phone task row",
+                  defaultMessage: "Important",
+                  id: "3/a3Ys",
+                })}
+                className="flex shrink-0 pl-1"
+                data-testid="task-row__important-marker"
+              >
+                <StarIcon className="size-4 text-(--star)" aria-hidden />
+              </span>
+            )}
 
             {!task.done && !isLean && showLinks && task.links.length > 1 && (
               // Several links share one button, leaving the title room.

@@ -26,10 +26,12 @@ export interface MyDayTaskListProps {
   selectedTaskId?: string | null;
   /** Shows every task's tags; otherwise they appear on hover or focus. */
   showTags?: boolean;
-  /** Shows due dates, reminders and note markers under titles. */
+  /** Shows due dates and reminders under titles. */
   showMeta?: boolean;
   /** Shows a button per task link. */
   showLinks?: boolean;
+  /** Shows a marker on tasks that have a note. */
+  showNotes?: boolean;
   /** Lists the completed tasks; otherwise only their count shows, as a button that expands them. */
   isCompletedExpanded?: boolean;
   onToggleCompleted?: () => void;
@@ -48,6 +50,7 @@ export function MyDayTaskList({
   showTags = false,
   showMeta = true,
   showLinks = true,
+  showNotes = true,
   isCompletedExpanded = true,
   onToggleCompleted,
   arrivingIds,
@@ -89,6 +92,7 @@ export function MyDayTaskList({
         isArriving={arrivingIds?.has(task.id)}
         showMeta={showMeta}
         showLinks={showLinks}
+        showNotes={showNotes}
         reorder={canReorder && !task.done ? getReorder(task.id) : undefined}
       />
     );
