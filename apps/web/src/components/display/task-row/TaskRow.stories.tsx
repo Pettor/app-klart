@@ -1,6 +1,6 @@
 import { ContainerDecorator } from "@package/storybook";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, fn } from "storybook/test";
+import { expect, fn, waitFor, within } from "storybook/test";
 import { TaskRow as Component } from "./TaskRow";
 import type { TaskRowProps as Props } from "./TaskRow";
 
@@ -171,7 +171,10 @@ export const CompleteAndStar: Story = {
   args: defaultArgs,
   play: async ({ args, canvas, userEvent }) => {
     await userEvent.click(canvas.getByRole("button", { name: "Complete task" }));
-    await expect(args.onToggleDone).toHaveBeenCalledWith("w1", true);
+    // The box fills and the check draws first; the task is marked done once that has played.
+    await expect(args.onToggleDone).not.toHaveBeenCalled();
+    await expect(canvas.getByTestId("task-row")).toHaveClass("slab-checking");
+    await waitFor(() => expect(args.onToggleDone).toHaveBeenCalledWith("w1", true));
 
     await userEvent.click(canvas.getByRole("button", { name: "Mark important" }));
     await expect(args.onToggleImportant).toHaveBeenCalledWith("w1");
@@ -187,5 +190,50 @@ export const OpenEditor: Story = {
   play: async ({ args, canvas, userEvent }) => {
     await userEvent.click(canvas.getByRole("button", { name: `Edit task: ${defaultArgs.task.title}` }));
     await expect(args.onOpen).toHaveBeenCalledWith("w1");
+  },
+};
+
+/**
+ * Phones: the title takes the width. Links, star and actions move to the details sheet, and one grey line under
+ * the title shows the due date, reminder, link count, note and importance.
+ */
+export const Phone: Story = {
+  args: {
+    ...defaultArgs,
+    onOpen: fn(),
+    task: {
+      ...defaultArgs.task,
+      title: "Review sync PR for gateway client and update the release notes before the Friday deploy",
+      important: true,
+      hasNotes: true,
+      links: ["https://github.com/acme/gateway-client/pull/412", "https://wiki.acme.dev/release-notes"],
+    },
+  },
+  globals: { viewport: { value: "iphonex" } },
+  play: async ({ args, canvas, userEvent }) => {
+    await expect(canvas.queryByTestId("task-row__link")).toBeNull();
+    await expect(canvas.queryByTestId("task-row__links")).toBeNull();
+    await expect(canvas.queryByTestId("task-row__important")).toBeNull();
+    await expect(canvas.queryByRole("button", { name: "Task actions" })).toBeNull();
+
+    const meta = canvas.getByTestId("task-row__meta");
+    await expect(within(meta).getByRole("img", { name: "2 links" })).toBeInTheDocument();
+    await expect(within(meta).getByRole("img", { name: "Has note" })).toBeInTheDocument();
+    await expect(within(meta).getByRole("img", { name: "Important" })).toBeInTheDocument();
+
+    await userEvent.click(canvas.getByTestId("task-row__open"));
+    await expect(args.onOpen).toHaveBeenCalledWith("w1");
+  },
+};
+
+/** With nothing under the title, a phone row is a single line. */
+export const PhoneMinimal: Story = {
+  args: {
+    ...defaultArgs,
+    task: { ...defaultArgs.task, due: null, remindAt: null, tags: [] },
+  },
+  globals: { viewport: { value: "iphonex" } },
+  play: async ({ canvas }) => {
+    await expect(canvas.queryByTestId("task-row__meta")).toBeNull();
   },
 };

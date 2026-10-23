@@ -1,9 +1,12 @@
 import type { ReactElement } from "react";
 import { ChevronRightIcon } from "@heroicons/react/20/solid";
 import { Button } from "@heroui/react";
+import { useBreakpoint } from "@package/react";
 import clsx from "clsx";
 import { useIntl } from "react-intl";
 import type { MyDayTask, MyDayTaskActions } from "./MyDayTypes";
+import { useMyDayTaskDetails } from "./UseMyDayTaskDetails";
+import { TaskDetailsSheet } from "~/components/display/task-details-sheet/TaskDetailsSheet";
 import { TaskRow } from "~/components/display/task-row/TaskRow";
 import { useTaskReorder } from "~/components/display/task-row/UseTaskReorder";
 import type { SmartView } from "~/core/tasks/KlartAtoms";
@@ -43,6 +46,9 @@ export function MyDayTaskList({
   onToggleCompleted,
 }: MyDayTaskListProps): ReactElement {
   const intl = useIntl();
+  // On phones a tap shows the task's details first; the editor is one more tap away.
+  const isPhone = !useBreakpoint("sm");
+  const details = useMyDayTaskDetails([...tasks, ...doneTasks]);
   // Only My Day has an order of its own; the other views sort by due date.
   const canReorder = smartView === "day";
   const getReorder = useTaskReorder(
@@ -63,7 +69,7 @@ export function MyDayTaskList({
         onAddToMyDay={actions.onAddToMyDay}
         onRemoveFromMyDay={actions.onRemoveFromMyDay}
         onArchive={actions.onArchive}
-        onOpen={actions.onOpen}
+        onOpen={isPhone ? details.open : actions.onOpen}
         isSelected={task.id === selectedTaskId}
         showMeta={showMeta}
         showLinks={showLinks}
@@ -133,6 +139,22 @@ export function MyDayTaskList({
           </Button>
           {isCompletedExpanded && doneTasks.map(renderRow)}
         </section>
+      )}
+
+      {isPhone && (
+        <TaskDetailsSheet
+          task={details.task}
+          today={today}
+          onClose={details.close}
+          onToggleDone={actions.onToggleDone}
+          onToggleImportant={actions.onToggleImportant}
+          onAddToMyDay={actions.onAddToMyDay}
+          onRemoveFromMyDay={actions.onRemoveFromMyDay}
+          onEdit={(taskId) => {
+            details.close();
+            actions.onOpen(taskId);
+          }}
+        />
       )}
     </>
   );

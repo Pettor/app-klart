@@ -346,6 +346,25 @@
 .slab-check:hover .slab-check-fill {
   opacity: 0.35;
 }
+/* Completing a task: the box fills and the check draws itself, the card fades, then it moves to Completed. */
+.slab-check-ring.slab-check-on {
+  background: var(--ctx);
+}
+.slab-check-mark {
+  animation: slab-check-draw 0.25s ease 0.05s both;
+}
+@keyframes slab-check-draw {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    clip-path: inset(0);
+  }
+}
+.slab.slab-checking {
+  opacity: 0.6;
+  transition: opacity 0.3s ease;
+}
 
 /* The sidebar slides in when it collapses to a rail or expands again. */
 .sidebar-in {
@@ -387,6 +406,7 @@
     transition: none;
   }
   .slab.slab-settled,
+  .slab-check-mark,
   .sidebar-in,
   .settings-pane-in {
     animation: none;
@@ -404,6 +424,7 @@
       transition: none;
     }
     .slab.slab-settled,
+    .slab-check-mark,
     .sidebar-in,
     .settings-pane-in {
       animation: none;
@@ -460,6 +481,13 @@
   }
   .slab-check-fill {
     display: none;
+  }
+  .slab-check-ring.slab-check-on {
+    background: #2d7ff9;
+    border-color: #2d7ff9;
+  }
+  .slab-check-mark {
+    color: #ffffff;
   }
   .slab-check-done {
     width: 22px;

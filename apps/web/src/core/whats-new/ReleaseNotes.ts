@@ -15,6 +15,41 @@ export interface ReleaseNote {
   fixes: ReleaseNoteItem[];
 }
 
+const v041 = defineMessages({
+  leanTitle: {
+    description: "ReleaseNotes 0.4.1 - highlight title: leaner task rows on phones",
+    defaultMessage: "Room to read on your phone",
+    id: "qoCf5Z",
+  },
+  leanDescription: {
+    description: "ReleaseNotes 0.4.1 - highlight text: leaner task rows on phones",
+    defaultMessage:
+      "Task rows on phones drop their buttons, so titles get nearly the full width. One quiet line underneath shows the due date, reminder, links, note and star.",
+    id: "9etEMb",
+  },
+  detailsTitle: {
+    description: "ReleaseNotes 0.4.1 - highlight title: task details sheet on phones",
+    defaultMessage: "Tap a task for the details",
+    id: "Jn/hc/",
+  },
+  detailsDescription: {
+    description: "ReleaseNotes 0.4.1 - highlight text: task details sheet on phones",
+    defaultMessage:
+      "A sheet slides up with the whole title, its links and note, a star, and buttons to edit it or take it off My Day.",
+    id: "UTa89c",
+  },
+  checkTitle: {
+    description: "ReleaseNotes 0.4.1 - highlight title: animated completion",
+    defaultMessage: "A satisfying tick",
+    id: "i89f+4",
+  },
+  checkDescription: {
+    description: "ReleaseNotes 0.4.1 - highlight text: animated completion",
+    defaultMessage: "Completing a task fills the box and draws the check before it slides down to Completed.",
+    id: "4iGVxl",
+  },
+});
+
 const v040 = defineMessages({
   themesTitle: {
     description: "ReleaseNotes 0.4.0 - highlight title: new Dark and Midnight themes",
@@ -219,6 +254,15 @@ const v010 = defineMessages({
  * entry here; people who update see every entry newer than the last one they saw.
  */
 export const RELEASE_NOTES: ReleaseNote[] = [
+  {
+    version: "0.4.1",
+    highlights: [
+      { emoji: "📱", title: v041.leanTitle, description: v041.leanDescription },
+      { emoji: "👆", title: v041.detailsTitle, description: v041.detailsDescription },
+      { emoji: "✅", title: v041.checkTitle, description: v041.checkDescription },
+    ],
+    fixes: [],
+  },
   {
     version: "0.4.0",
     highlights: [
