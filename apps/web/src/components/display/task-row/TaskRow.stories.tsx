@@ -50,21 +50,37 @@ export const Important: Story = {
   args: { ...defaultArgs, task: { ...defaultArgs.task, important: true } },
 };
 
-export const WithLinks: Story = {
+export const WithLink: Story = {
+  args: {
+    ...defaultArgs,
+    task: { ...defaultArgs.task, links: ["https://github.com/acme/gateway-client/pull/412"] },
+  },
+  play: async ({ canvas }) => {
+    const link = canvas.getByTestId("task-row__link");
+    await expect(link).toHaveAccessibleName("Open link to github.com");
+    await expect(link).toHaveAttribute("href", "https://github.com/acme/gateway-client/pull/412");
+    await expect(link).toHaveAttribute("target", "_blank");
+    await expect(canvas.queryByTestId("task-row__links")).toBeNull();
+  },
+};
+
+/** Two or more links collapse into one button with their count, leaving the title room. */
+export const WithManyLinks: Story = {
   args: {
     ...defaultArgs,
     task: {
       ...defaultArgs.task,
-      links: ["https://github.com/acme/gateway-client/pull/412", "https://www.notion.so/acme/Gateway-sync-spec-9f2c"],
+      title: "Review sync PR for gateway client and update the release notes before the Friday deploy",
+      links: [
+        "https://github.com/acme/gateway-client/pull/412",
+        "https://www.notion.so/acme/Gateway-sync-spec-9f2c",
+        "https://wiki.acme.dev/release-notes",
+      ],
     },
   },
   play: async ({ canvas }) => {
-    const links = canvas.getAllByTestId("task-row__link");
-    await expect(links).toHaveLength(2);
-    await expect(links[0]).toHaveAccessibleName("Open link to github.com");
-    await expect(links[0]).toHaveAttribute("href", "https://github.com/acme/gateway-client/pull/412");
-    await expect(links[0]).toHaveAttribute("target", "_blank");
-    await expect(links[1]).toHaveAccessibleName("Open link to notion.so");
+    await expect(canvas.queryByTestId("task-row__link")).toBeNull();
+    await expect(canvas.getByTestId("task-row__links")).toHaveAccessibleName("3 links");
   },
 };
 

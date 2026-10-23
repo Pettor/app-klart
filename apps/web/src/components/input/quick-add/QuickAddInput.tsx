@@ -124,7 +124,7 @@ export function QuickAddInput({
         })}
         className="w-full"
       >
-        <InputGroup className="h-13 rounded-[10px]">
+        <InputGroup className="hero:bg-[rgb(32_33_36/0.92)] h-13 rounded-[10px]">
           <InputGroupPrefix>
             <PlusIcon className="size-5 text-(--ctx)" aria-hidden />
           </InputGroupPrefix>

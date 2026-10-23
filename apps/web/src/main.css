@@ -304,15 +304,21 @@
 .slab-draggable.slab-lifted {
   cursor: grabbing;
 }
-/* With a mouse the whole card is the handle; the grip is for touch, where a swipe on the card scrolls. */
+/*
+ * The grip sits left of the checkbox. With a mouse the whole card drags too, so the grip stays faint until the card
+ * is hovered; on touch screens it's the only handle, since a swipe on the card scrolls.
+ */
+.slab-draggable .slab-tags {
+  padding-left: 74px;
+}
 @media (hover: hover) {
   .slab-grip {
-    display: none;
+    opacity: 0.5;
+    transition: opacity 0.15s;
   }
-}
-@media (hover: none) {
-  .slab-draggable .slab-tags {
-    padding-left: 74px;
+  .slab:hover .slab-grip,
+  .slab-grip:focus-within {
+    opacity: 1;
   }
 }
 @media (hover: hover) {
