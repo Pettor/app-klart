@@ -15,6 +15,51 @@ export interface ReleaseNote {
   fixes: ReleaseNoteItem[];
 }
 
+const v050 = defineMessages({
+  holdTitle: {
+    description: "ReleaseNotes 0.5.0 - highlight title: hold a task to see its tags",
+    defaultMessage: "Hold for tags",
+    id: "AgaBmF",
+  },
+  holdDescription: {
+    description: "ReleaseNotes 0.5.0 - highlight text: hold a task to see its tags",
+    defaultMessage:
+      "On your phone, press and hold a task to show its tags. Hold it again to tuck them away. A quick tap still opens the task.",
+    id: "njnPaz",
+  },
+  quickAddTitle: {
+    description: "ReleaseNotes 0.5.0 - highlight title: floating quick add on phones",
+    defaultMessage: "Quick add floats",
+    id: "vdeBro",
+  },
+  quickAddDescription: {
+    description: "ReleaseNotes 0.5.0 - highlight text: floating quick add on phones",
+    defaultMessage:
+      "Suggestions and quick add now sit in a floating panel above your list, comfortably clear of the bottom edge.",
+    id: "YAp2+f",
+  },
+  gripTitle: {
+    description: "ReleaseNotes 0.5.0 - highlight title: slimmer drag grip on phones",
+    defaultMessage: "A slimmer grip",
+    id: "bQYjRg",
+  },
+  gripDescription: {
+    description: "ReleaseNotes 0.5.0 - highlight text: slimmer drag grip on phones",
+    defaultMessage: "The drag grip on phones hugs the edge of the card, leaving more room for the title.",
+    id: "8Sx83A",
+  },
+  tapFixTitle: {
+    description: "ReleaseNotes 0.5.0 - fix title: tapping a task no longer flashes its tags",
+    defaultMessage: "Calmer taps",
+    id: "9x0ZL+",
+  },
+  tapFixDescription: {
+    description: "ReleaseNotes 0.5.0 - fix text: tapping a task no longer flashes its tags",
+    defaultMessage: "Tapping a task on your phone opens it without its tags briefly sliding open first.",
+    id: "z4PEeD",
+  },
+});
+
 const v042 = defineMessages({
   starsTitle: {
     description: "ReleaseNotes 0.4.2 - highlight title: starred tasks lead My Day",
@@ -290,6 +335,15 @@ const v010 = defineMessages({
  * entry here; people who update see every entry newer than the last one they saw.
  */
 export const RELEASE_NOTES: ReleaseNote[] = [
+  {
+    version: "0.5.0",
+    highlights: [
+      { emoji: "🏷️", title: v050.holdTitle, description: v050.holdDescription },
+      { emoji: "🛟", title: v050.quickAddTitle, description: v050.quickAddDescription },
+      { emoji: "↕️", title: v050.gripTitle, description: v050.gripDescription },
+    ],
+    fixes: [{ emoji: "👆", title: v050.tapFixTitle, description: v050.tapFixDescription }],
+  },
   {
     version: "0.4.2",
     highlights: [
