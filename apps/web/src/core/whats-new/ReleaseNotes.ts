@@ -15,6 +15,30 @@ export interface ReleaseNote {
   fixes: ReleaseNoteItem[];
 }
 
+const v051 = defineMessages({
+  starTitle: {
+    description: "ReleaseNotes 0.5.1 - highlight title: star at the end of phone task rows",
+    defaultMessage: "Stars stand out",
+    id: "tIv30F",
+  },
+  starDescription: {
+    description: "ReleaseNotes 0.5.1 - highlight text: star at the end of phone task rows",
+    defaultMessage:
+      "On your phone, a starred task shows its star at the end of the row instead of tucked under the title.",
+    id: "z7uhGb",
+  },
+  notesTitle: {
+    description: "ReleaseNotes 0.5.1 - highlight title: option to hide the note marker",
+    defaultMessage: "Hide the note marker",
+    id: "bqsBN8",
+  },
+  notesDescription: {
+    description: "ReleaseNotes 0.5.1 - highlight text: option to hide the note marker",
+    defaultMessage: "A new Note marker switch in the Display menu hides the little icon on tasks that have a note.",
+    id: "g1p+pU",
+  },
+});
+
 const v050 = defineMessages({
   holdTitle: {
     description: "ReleaseNotes 0.5.0 - highlight title: hold a task to see its tags",
@@ -335,6 +359,14 @@ const v010 = defineMessages({
  * entry here; people who update see every entry newer than the last one they saw.
  */
 export const RELEASE_NOTES: ReleaseNote[] = [
+  {
+    version: "0.5.1",
+    highlights: [
+      { emoji: "⭐", title: v051.starTitle, description: v051.starDescription },
+      { emoji: "📝", title: v051.notesTitle, description: v051.notesDescription },
+    ],
+    fixes: [],
+  },
   {
     version: "0.5.0",
     highlights: [
