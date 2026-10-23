@@ -200,8 +200,9 @@ export const OpenEditor: Story = {
 };
 
 /**
- * Phones: the title takes the width. Links, star and actions move to the details sheet, and one grey line under
- * the title shows the due date, reminder, link count, note and importance.
+ * Phones: the title takes the width. Links, the star toggle and actions move to the details sheet; a starred task
+ * shows its star at the end of the row. One grey line under the title shows the due date, reminder, link count and
+ * note.
  */
 export const Phone: Story = {
   args: {
@@ -225,7 +226,8 @@ export const Phone: Story = {
     const meta = canvas.getByTestId("task-row__meta");
     await expect(within(meta).getByRole("img", { name: "2 links" })).toBeInTheDocument();
     await expect(within(meta).getByRole("img", { name: "Has note" })).toBeInTheDocument();
-    await expect(within(meta).getByRole("img", { name: "Important" })).toBeInTheDocument();
+    await expect(within(meta).queryByRole("img", { name: "Important" })).toBeNull();
+    await expect(canvas.getByTestId("task-row__important-marker")).toBeInTheDocument();
 
     await userEvent.click(canvas.getByTestId("task-row__open"));
     await expect(args.onOpen).toHaveBeenCalledWith("w1");
@@ -241,5 +243,21 @@ export const PhoneMinimal: Story = {
   globals: { viewport: { value: "iphonex" } },
   play: async ({ canvas }) => {
     await expect(canvas.queryByTestId("task-row__meta")).toBeNull();
+  },
+};
+
+/** Every display option off: a starred task with a note keeps its star at the end, and nothing under the title. */
+export const PhoneNothingShown: Story = {
+  args: {
+    ...defaultArgs,
+    showMeta: false,
+    showLinks: false,
+    showNotes: false,
+    task: { ...defaultArgs.task, important: true, hasNotes: true },
+  },
+  globals: { viewport: { value: "iphonex" } },
+  play: async ({ canvas }) => {
+    await expect(canvas.queryByTestId("task-row__meta")).toBeNull();
+    await expect(canvas.getByTestId("task-row__important-marker")).toBeInTheDocument();
   },
 };

@@ -1,7 +1,9 @@
 /** What My Day shows besides each task's title. Chosen in the Display menu, remembered per device. */
 export interface DisplayOptions {
-  /** Due date, reminder and note marker under each title. */
+  /** Due date and reminder under each title. */
   details: boolean;
+  /** A marker on tasks that have a note. */
+  notes: boolean;
   /** A button per task link that opens it in one click. */
   links: boolean;
   /** Every task's tags; off, they still appear on hover or focus. */
@@ -19,6 +21,7 @@ export type DisplayOption = keyof DisplayOptions;
 /** The default, and what "Minimal" in the Display menu goes back to. */
 export const MINIMAL_DISPLAY_OPTIONS: DisplayOptions = {
   details: true,
+  notes: true,
   links: true,
   taskTags: false,
   tagFilter: false,

@@ -42,6 +42,18 @@ export function MyDayDisplayMenu({ display, variant, contextColor, className }: 
         id: "2q3pNL",
       }),
     },
+    notes: {
+      label: intl.formatMessage({
+        description: "MyDayDisplayMenu - option showing the note marker",
+        defaultMessage: "Note marker",
+        id: "0Qytn/",
+      }),
+      hint: intl.formatMessage({
+        description: "MyDayDisplayMenu - hint for the note marker option",
+        defaultMessage: "An icon on tasks that have a note",
+        id: "ZSAaJn",
+      }),
+    },
     links: {
       label: intl.formatMessage({
         description: "MyDayDisplayMenu - option showing link buttons",
@@ -128,7 +140,7 @@ export function MyDayDisplayMenu({ display, variant, contextColor, className }: 
       }),
     },
   };
-  const keys: DisplayOption[] = ["details", "links", "taskTags", "tagFilter", "completed"];
+  const keys: DisplayOption[] = ["details", "notes", "links", "taskTags", "tagFilter", "completed"];
   if (!isSheet) {
     keys.push("agentJson");
   }
