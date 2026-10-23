@@ -105,7 +105,7 @@ function TaskDetailsBody({
   onEdit,
 }: TaskDetailsBodyProps): ReactElement {
   const intl = useIntl();
-  const completion = useTaskCompletion(task.id, task.done, onToggleDone, onClose);
+  const completion = useTaskCompletion(task.id, task.done, onToggleDone, { onCompleted: onClose, leave: false });
   const notes = task.notes.trim();
 
   return (

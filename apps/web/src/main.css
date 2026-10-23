@@ -346,12 +346,27 @@
 .slab-check:hover .slab-check-fill {
   opacity: 0.35;
 }
-/* Completing a task: the box fills and the check draws itself, the card fades, then it moves to Completed. */
+/*
+ * Completing a task: the box fills with a pop, the check draws itself and the title is struck through. Then the
+ * card sinks and shrinks toward Completed while the list closes the gap, and the Completed count bumps.
+ */
 .slab-check-ring.slab-check-on {
   background: var(--ctx);
+  animation: slab-check-pop 0.32s cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+@keyframes slab-check-pop {
+  0% {
+    transform: scale(0.82);
+  }
+  55% {
+    transform: scale(1.14);
+  }
+  100% {
+    transform: scale(1);
+  }
 }
 .slab-check-mark {
-  animation: slab-check-draw 0.25s ease 0.05s both;
+  animation: slab-check-draw 0.26s cubic-bezier(0.4, 0, 0.2, 1) 0.06s both;
 }
 @keyframes slab-check-draw {
   from {
@@ -361,9 +376,57 @@
     clip-path: inset(0);
   }
 }
-.slab.slab-checking {
-  opacity: 0.6;
-  transition: opacity 0.3s ease;
+.slab-title {
+  background: linear-gradient(currentColor, currentColor) 0 55% / 0 1.5px no-repeat;
+  box-decoration-break: clone;
+  transition:
+    color 0.3s ease,
+    background-size 0.3s cubic-bezier(0.4, 0, 0.2, 1) 0.1s;
+}
+.slab-checking .slab-title {
+  color: var(--color-muted);
+  background-size: 100% 1.5px;
+}
+.slab-leave {
+  display: grid;
+  /* `minmax(0, …)` so a long one-line title truncates instead of widening the card. */
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: 1fr;
+  transition:
+    grid-template-rows 0.32s cubic-bezier(0.4, 0, 0.2, 1) 0.14s,
+    margin-bottom 0.32s cubic-bezier(0.4, 0, 0.2, 1) 0.14s;
+}
+.slab-leave-in {
+  min-height: 0;
+}
+/* `--slab-gap` is the list's gap, taken back so the rows below close up all the way. */
+.slab-leave.slab-leaving {
+  grid-template-rows: 0fr;
+  margin-bottom: calc(-1 * var(--slab-gap, 12px));
+}
+.slab-leaving .slab-leave-in {
+  overflow: hidden;
+}
+.slab-leaving .slab {
+  opacity: 0;
+  transform: translateY(14px) scale(0.94);
+  transition:
+    transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.3s ease;
+}
+.slab-bump {
+  animation: slab-bump 0.4s cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+@keyframes slab-bump {
+  0% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.12);
+  }
+  100% {
+    transform: scale(1);
+  }
 }
 
 /* The sidebar slides in when it collapses to a rail or expands again. */
@@ -402,17 +465,22 @@
 :root[data-motion="reduced"] {
   .slab,
   .slab-tags,
-  .slab-reveal {
+  .slab-reveal,
+  .slab-title,
+  .slab-leave {
     transition: none;
   }
   .slab.slab-settled,
   .slab-check-mark,
+  .slab-check-ring.slab-check-on,
+  .slab-bump,
   .sidebar-in,
   .settings-pane-in {
     animation: none;
   }
   .slab:not(.slab-lifted):hover,
-  .slab:not(.slab-lifted):active {
+  .slab:not(.slab-lifted):active,
+  .slab-leaving .slab {
     transform: none;
   }
 }
@@ -420,17 +488,22 @@
   :root:not([data-motion="full"], [data-motion="reduced"]) {
     .slab,
     .slab-tags,
-    .slab-reveal {
+    .slab-reveal,
+    .slab-title,
+    .slab-leave {
       transition: none;
     }
     .slab.slab-settled,
     .slab-check-mark,
+    .slab-check-ring.slab-check-on,
+    .slab-bump,
     .sidebar-in,
     .settings-pane-in {
       animation: none;
     }
     .slab:not(.slab-lifted):hover,
-    .slab:not(.slab-lifted):active {
+    .slab:not(.slab-lifted):active,
+    .slab-leaving .slab {
       transform: none;
     }
   }

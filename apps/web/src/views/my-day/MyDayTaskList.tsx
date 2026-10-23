@@ -5,6 +5,7 @@ import { useBreakpoint } from "@package/react";
 import clsx from "clsx";
 import { useIntl } from "react-intl";
 import type { MyDayTask, MyDayTaskActions } from "./MyDayTypes";
+import { useCompletedBump } from "./UseCompletedBump";
 import { useMyDayTaskDetails } from "./UseMyDayTaskDetails";
 import { TaskDetailsSheet } from "~/components/display/task-details-sheet/TaskDetailsSheet";
 import { TaskRow } from "~/components/display/task-row/TaskRow";
@@ -49,6 +50,7 @@ export function MyDayTaskList({
   // On phones a tap shows the task's details first; the editor is one more tap away.
   const isPhone = !useBreakpoint("sm");
   const details = useMyDayTaskDetails([...tasks, ...doneTasks]);
+  const completedBump = useCompletedBump(doneTasks.length);
   // Only My Day has an order of its own; the other views sort by due date.
   const canReorder = smartView === "day";
   const getReorder = useTaskReorder(
@@ -86,7 +88,10 @@ export function MyDayTaskList({
           defaultMessage: "Tasks",
           id: "EvrxWO",
         })}
-        className={clsx("compact:gap-2 flex flex-col gap-3", showTags && "slab-tags-on")}
+        className={clsx(
+          "compact:gap-2 compact:[--slab-gap:--spacing(2)] flex flex-col gap-3 [--slab-gap:--spacing(3)]",
+          showTags && "slab-tags-on"
+        )}
         data-testid="my-day__tasks"
       >
         {tasks.length === 0 && (
@@ -117,26 +122,33 @@ export function MyDayTaskList({
           })}
           className="flex flex-col gap-2"
         >
-          <Button
-            variant="ghost"
-            onPress={onToggleCompleted}
-            aria-expanded={isCompletedExpanded}
-            data-testid="my-day__toggle-completed"
-            className="text-foreground h-[30px] min-w-0 gap-1.5 self-start rounded-lg bg-white/75 pr-2.5 pl-1.5 text-[13px] font-semibold hover:bg-white dark:bg-black/30 dark:hover:bg-black/40"
+          <span
+            // Remounts on each completion, replaying the bump.
+            key={completedBump}
+            className={clsx("flex self-start", completedBump > 0 && "slab-bump")}
+            data-testid="my-day__completed-count"
           >
-            <ChevronRightIcon
-              aria-hidden
-              className={clsx("size-3.5 transition-transform", isCompletedExpanded && "rotate-90")}
-            />
-            {intl.formatMessage(
-              {
-                description: "MyDayTaskList - completed section heading with count",
-                defaultMessage: "Completed {count}",
-                id: "6737j1",
-              },
-              { count: doneTasks.length }
-            )}
-          </Button>
+            <Button
+              variant="ghost"
+              onPress={onToggleCompleted}
+              aria-expanded={isCompletedExpanded}
+              data-testid="my-day__toggle-completed"
+              className="text-foreground h-[30px] min-w-0 gap-1.5 self-start rounded-lg bg-white/75 pr-2.5 pl-1.5 text-[13px] font-semibold hover:bg-white dark:bg-black/30 dark:hover:bg-black/40"
+            >
+              <ChevronRightIcon
+                aria-hidden
+                className={clsx("size-3.5 transition-transform", isCompletedExpanded && "rotate-90")}
+              />
+              {intl.formatMessage(
+                {
+                  description: "MyDayTaskList - completed section heading with count",
+                  defaultMessage: "Completed {count}",
+                  id: "6737j1",
+                },
+                { count: doneTasks.length }
+              )}
+            </Button>
+          </span>
           {isCompletedExpanded && doneTasks.map(renderRow)}
         </section>
       )}
