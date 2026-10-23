@@ -1,8 +1,8 @@
 import type { ReactElement } from "react";
-import { ChevronDoubleLeftIcon } from "@heroicons/react/24/outline";
 import { Button, Separator, Tooltip } from "@heroui/react";
 import clsx from "clsx";
 import { useIntl } from "react-intl";
+import { MyDaySidebarIcon } from "./MyDaySidebarIcon";
 import { getSidebarShortcut } from "./MyDaySidebarRail";
 import { MyDaySmartViewNav } from "./MyDaySmartViewNav";
 import type { MyDaySidebarCollapseProps, MyDaySidebarProps } from "./MyDayTypes";
@@ -59,7 +59,7 @@ export function MyDaySidebar({
             data-testid="my-day__collapse-sidebar"
             className="text-muted ml-auto size-[34px] min-w-0 rounded-lg"
           >
-            <ChevronDoubleLeftIcon className="size-[18px]" />
+            <MyDaySidebarIcon direction="collapse" className="size-[18px]" />
           </Button>
           <Tooltip.Content placement="right">{`${collapseLabel} (${getSidebarShortcut()})`}</Tooltip.Content>
         </Tooltip>

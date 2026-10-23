@@ -1,9 +1,10 @@
 import type { ReactElement, ReactNode } from "react";
-import { ChevronDoubleRightIcon, MagnifyingGlassIcon } from "@heroicons/react/24/outline";
+import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 import { Button, Separator, Tooltip } from "@heroui/react";
 import clsx from "clsx";
 import { useIntl } from "react-intl";
 import { getSmartViewLabel } from "./MyDayLabels";
+import { MyDaySidebarIcon } from "./MyDaySidebarIcon";
 import { SMART_VIEW_ICONS } from "./MyDaySmartViewNav";
 import type { MyDaySidebarCollapseProps, MyDaySidebarProps } from "./MyDayTypes";
 import { isMac } from "~/components/actions/command-palette/CommandShortcut";
@@ -89,7 +90,7 @@ export function MyDaySidebarRail({
         testId="my-day__expand-sidebar"
         className="text-muted"
       >
-        <ChevronDoubleRightIcon className="size-[18px]" />
+        <MyDaySidebarIcon direction="expand" className="size-[18px]" />
       </RailButton>
 
       <ContextSwitcher

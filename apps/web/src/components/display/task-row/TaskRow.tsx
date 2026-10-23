@@ -10,10 +10,12 @@ import {
 } from "@heroicons/react/20/solid";
 import { StarIcon as StarOutlineIcon } from "@heroicons/react/24/outline";
 import { Button, Dropdown, Label, Link, ToggleButton } from "@heroui/react";
+import { useBreakpoint } from "@package/react";
 import clsx from "clsx";
 import { useIntl } from "react-intl";
 import type { DueTone } from "./TaskDateFormat";
 import { DUE_TONE_CLASS, formatDue, formatReminder, getDueTone } from "./TaskDateFormat";
+import { TaskLinksButton } from "./TaskLinksButton";
 import type { TaskRowReorder } from "./UseTaskReorder";
 import { REORDER_HANDLE_ATTRIBUTE, REORDER_ID_ATTRIBUTE } from "./UseTaskReorder";
 import type { ContextColor } from "~/core/contexts/KlartContext";
@@ -103,6 +105,7 @@ export function TaskRow({
   reorder: reorderProp,
 }: TaskRowProps): ReactElement {
   const intl = useIntl();
+  const isPhone = !useBreakpoint("sm");
   const hasMenu = !!onArchive || (isInMyDay && !!onRemoveFromMyDay);
   const reorder = task.done ? undefined : reorderProp;
   const hasMeta = showMeta && (showContext || !!task.due || !!task.remindAt || !!task.hasNotes);
@@ -225,8 +228,13 @@ export function TaskRow({
             />
           )}
           <span
+            // Phones keep each title to one line; the full title is in the tooltip and the editor.
+            title={task.title}
             className={clsx(
-              task.done ? "text-muted text-sm line-through" : "text-[15px] font-semibold tracking-[-0.005em]"
+              "max-sm:truncate",
+              task.done
+                ? "text-muted text-sm line-through"
+                : "text-[15px] font-semibold tracking-[-0.005em] max-sm:text-sm max-sm:tracking-[-0.01em]"
             )}
             data-testid="task-row__title"
           >
@@ -272,8 +280,14 @@ export function TaskRow({
           )}
         </div>
 
+        {!task.done && showLinks && task.links.length > 1 && (
+          // Several links share one button, leaving the title room.
+          <TaskLinksButton links={task.links} title={task.title} variant={isPhone ? "sheet" : "popover"} />
+        )}
+
         {!task.done &&
           showLinks &&
+          task.links.length === 1 &&
           task.links.map((link) => (
             <Link
               key={link}
