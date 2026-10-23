@@ -17,6 +17,7 @@ import { DUE_TONE_CLASS, formatDue, formatReminder, getDueTone } from "./TaskDat
 import { TaskLinksButton } from "./TaskLinksButton";
 import { TaskCheck, TaskRowLeanMeta } from "./TaskRowParts";
 import { useStarPop } from "./UseStarPop";
+import { useTagsLongPress } from "./UseTagsLongPress";
 import { useTaskCompletion } from "./UseTaskCompletion";
 import type { TaskRowReorder } from "./UseTaskReorder";
 import { REORDER_HANDLE_ATTRIBUTE, REORDER_ID_ATTRIBUTE } from "./UseTaskReorder";
@@ -116,6 +117,7 @@ export function TaskRow({
   const star = useStarPop(task.id, task.important, onToggleImportant);
   // Phones get the lean row: the title takes the width, and links, star and actions move to the details sheet.
   const isLean = !useBreakpoint("sm");
+  const tags = useTagsLongPress(isLean && !task.done && task.tags.length > 0);
   const hasMeta = isLean
     ? showContext ||
       task.important ||
@@ -143,8 +145,12 @@ export function TaskRow({
             "group flex flex-col pr-2.5",
             task.done
               ? "slab-done compact:min-h-10 compact:py-0.5 min-h-12 justify-center py-1.5 pl-[26px]"
-              : "slab compact:py-1 py-2.5 pl-2",
+              : "slab compact:py-1 py-2.5",
+            // On phones the grip hugs the card's edge.
+            !task.done && (isLean && reorder ? "pl-1" : "pl-2"),
+            isLean && "slab-lean select-none [-webkit-touch-callout:none]",
             reorder && "slab-draggable select-none",
+            tags.isOpen && "slab-tags-open",
             reorder?.isLifted && "slab-lifted",
             reorder?.isSettled && "slab-settled",
             completion.isChecking && "slab-checking",
@@ -165,7 +171,10 @@ export function TaskRow({
           {/* The checkbox, title, link and star sit on one line that never moves; tags open up below it. */}
           <div className="flex items-center gap-1.5">
             {reorder && (
-              <span className="slab-grip -mr-1.5 shrink-0 touch-none" {...reorder.gripProps}>
+              <span
+                className={clsx("slab-grip shrink-0 touch-none", isLean ? "-mr-2" : "-mr-1.5")}
+                {...reorder.gripProps}
+              >
                 <Button
                   isIconOnly
                   variant="ghost"
@@ -179,7 +188,7 @@ export function TaskRow({
                     { title: task.title }
                   )}
                   onKeyDown={reorder.onGripKeyDown}
-                  className="text-muted h-11 w-7 min-w-0 rounded-md"
+                  className={clsx("text-muted h-11 min-w-0 rounded-md", isLean ? "w-5" : "w-7")}
                   data-testid="task-row__grip"
                 >
                   <GripIcon />
@@ -195,7 +204,7 @@ export function TaskRow({
               className={clsx(isLean && "w-9")}
             />
 
-            <div className="relative flex min-w-0 flex-1 flex-col gap-1 py-1">
+            <div className="relative flex min-w-0 flex-1 flex-col gap-1 py-1" {...tags.pressProps}>
               {onOpen && (
                 // An invisible button over the whole column, so the meta line opens the task too.
                 // It must be the pressed element itself: React Aria drops a press released outside the button's box.
@@ -221,7 +230,7 @@ export function TaskRow({
                           { title: task.title }
                         )
                   }
-                  onPress={() => !reorder?.isDropping() && onOpen(task.id)}
+                  onPress={() => !reorder?.isDropping() && !tags.wasLongPress() && onOpen(task.id)}
                   onKeyDown={reorder?.onRowKeyDown}
                   {...{ [REORDER_HANDLE_ATTRIBUTE]: "" }}
                   className="absolute inset-0 h-auto min-h-0 w-auto transform-none rounded-md p-0 data-[hovered=true]:bg-transparent data-[pressed=true]:bg-transparent"
