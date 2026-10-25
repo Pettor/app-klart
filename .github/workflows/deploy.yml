@@ -1,22 +1,21 @@
 name: "deploy"
 
 on:
-  push:
-    branches: ["main"]
+  # Called by main.yml once ci and verify pass on main
+  workflow_call:
   workflow_dispatch:
 
 permissions:
   contents: write
 
-# Queue deploys so back-to-back pushes don't race on the deploy/main branch
-concurrency:
-  group: deploy-gh-pages
-  cancel-in-progress: false
-
 jobs:
   deploy-gh-pages:
     name: Deploy
     runs-on: ubuntu-latest
+    # Queue deploys so back-to-back pushes don't race on the deploy/main branch
+    concurrency:
+      group: deploy-gh-pages
+      cancel-in-progress: false
     steps:
       - name: Checkout code
         uses: actions/checkout@v7

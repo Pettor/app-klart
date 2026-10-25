@@ -3,6 +3,8 @@ name: "ci"
 on:
   pull_request:
     branches: ["main"]
+  # Called by main.yml on pushes to main, gating the deploy
+  workflow_call:
 
 permissions:
   contents: read

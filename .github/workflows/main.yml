@@ -9,6 +9,14 @@ permissions:
   contents: read
 
 jobs:
+  ci:
+    name: CI
+    uses: ./.github/workflows/ci.yml
+    permissions:
+      contents: read
+      checks: write
+      id-token: write
+
   verify:
     name: Verify
     runs-on: ubuntu-latest
@@ -79,3 +87,10 @@ jobs:
       # The desktop app (apps/desktop) needs Rust and the platform webview SDK; it's built locally with `pnpm build`.
       - name: Build application
         run: pnpm build:web
+
+  deploy:
+    name: Deploy
+    needs: [ci, verify]
+    uses: ./.github/workflows/deploy.yml
+    permissions:
+      contents: write
