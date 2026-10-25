@@ -6,10 +6,11 @@ async function globalSetup() {
   });
   const page = await browser.newPage();
 
-  // Wait for the server to respond
+  // Warm up the dev server. DOMContentLoaded waits for the module graph, which on a cold CI runner means
+  // Vite pre-bundling dependencies (and Istanbul instrumenting every module in coverage runs).
   await page.goto("https://localhost:4167", {
     waitUntil: "domcontentloaded",
-    timeout: 10000,
+    timeout: 120000,
   });
 
   await browser.close();
