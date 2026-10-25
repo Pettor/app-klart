@@ -15,8 +15,12 @@ export default defineConfig({
         [180, "apple-touch-icon.png"],
       ],
     },
+    // Android crops this one to its own shape, so it fills the whole square; the mark already sits inside the
+    // safe zone (the middle 80%).
     maskable: {
-      sizes: [],
+      sizes: [512],
+      padding: 0,
+      resizeOptions: { background: "#ffffff" },
     },
     apple: {
       sizes: [],

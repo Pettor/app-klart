@@ -9,6 +9,9 @@ export interface NotificationContent {
 
 const ICON = "pwa-192x192.png";
 
+/** The mark in white on transparent: Android draws only its shape, in the status bar. */
+const BADGE = "badge-96x96.png";
+
 /**
  * Shows a system notification: natively in the desktop app; in the browser
  * through the service worker when one is registered (works with the window in
@@ -21,7 +24,7 @@ export async function showSystemNotification({ title, body, tag }: NotificationC
   }
   const registration = await navigator.serviceWorker?.getRegistration();
   if (registration) {
-    await registration.showNotification(title, { body, tag, icon: ICON, badge: ICON });
+    await registration.showNotification(title, { body, tag, icon: ICON, badge: BADGE });
     return;
   }
   const notification = new Notification(title, { body, tag, icon: ICON });

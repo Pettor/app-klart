@@ -9,7 +9,7 @@
 //   source-dir  folder holding the source SVG named in pwa-assets.config.ts,
 //               relative to the app; defaults to this package's Branding/assets
 import { execSync } from "node:child_process";
-import { renameSync } from "node:fs";
+import { existsSync, renameSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -27,6 +27,10 @@ for (const file of [
   "favicon-16x16.png",
   "favicon-32x32.png",
   "apple-touch-icon.png",
+  // Only when the app's config asks for a maskable icon.
+  "maskable-icon-512x512.png",
 ]) {
-  renameSync(resolve(assetsDir, file), resolve(publicDir, file));
+  if (existsSync(resolve(assetsDir, file))) {
+    renameSync(resolve(assetsDir, file), resolve(publicDir, file));
+  }
 }
