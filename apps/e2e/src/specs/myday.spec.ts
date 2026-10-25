@@ -204,3 +204,56 @@ test.describe("myday.reorder", () => {
     await expect.poll(() => titles(page)).toEqual(["First task", "Third task", "Second task"]);
   });
 });
+
+test.describe("myday.editor", () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto("/");
+    const input = page.getByTestId("quick-add__input");
+    await input.fill("#work first task");
+    await input.press("Enter");
+    await input.fill("#work second task");
+    await input.press("Enter");
+  });
+
+  test("starring a task moves it to the top", async ({ page }) => {
+    const second = page.getByTestId("task-row").filter({ hasText: "Second task" });
+    await second.getByTestId("task-row__important").click();
+    await expect(page.getByTestId("task-row").first()).toContainText("Second task");
+  });
+
+  test("edits a task's title, tags, context and star, then deletes it", async ({ page }) => {
+    await page.getByTestId("task-row").filter({ hasText: "First task" }).getByTestId("task-row__open").click();
+    const editor = page.getByTestId("task-editor");
+    await expect(editor).toBeVisible();
+
+    const title = editor.getByTestId("task-editor__title");
+    await title.fill("Renamed task");
+    await title.press("Enter");
+    await expect(page.getByTestId("task-row").filter({ hasText: "Renamed task" })).toBeVisible();
+
+    const tags = editor.getByTestId("task-editor__tags");
+    await tags.fill("#errands");
+    await tags.press("Enter");
+    await expect(page.getByTestId("task-row").filter({ hasText: "Renamed task" })).toContainText("#errands");
+
+    await editor.getByTestId("task-editor__context").getByRole("button").click();
+    await page.getByRole("option", { name: "Personal" }).click();
+    await expect(editor.getByTestId("task-editor__context")).toContainText("Personal");
+
+    await editor.getByTestId("task-editor__important").click();
+    await expect(page.getByTestId("task-row").first()).toContainText("Renamed task");
+
+    await editor.getByTestId("task-editor__my-day").click();
+    await expect(editor.getByTestId("task-editor__my-day")).toHaveText(/Add to My Day/);
+    await editor.getByTestId("task-editor__my-day").click();
+    await expect(editor.getByTestId("task-editor__my-day")).toHaveText(/In My Day/);
+
+    await editor.getByTestId("task-editor__toggle").click();
+    await expect(editor.getByTestId("task-editor__toggle")).toHaveAccessibleName("Mark not completed");
+    await editor.getByTestId("task-editor__toggle").click();
+
+    await editor.getByTestId("task-editor__archive").click();
+    await expect(editor).toHaveCount(0);
+    await expect(page.getByTestId("task-row").filter({ hasText: "Renamed task" })).toHaveCount(0);
+  });
+});
