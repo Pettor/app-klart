@@ -15,6 +15,40 @@ export interface ReleaseNote {
   fixes: ReleaseNoteItem[];
 }
 
+const v052 = defineMessages({
+  iconTitle: {
+    description: "ReleaseNotes 0.5.2 - highlight title: sharper app icon on phones",
+    defaultMessage: "A sharper icon",
+    id: "idFUvF",
+  },
+  iconDescription: {
+    description: "ReleaseNotes 0.5.2 - highlight text: sharper app icon on phones",
+    defaultMessage:
+      "On Android, Klart's icon now fills your home screen shape, and reminders show the Klart mark in the status bar.",
+    id: "sbfSFR",
+  },
+  reorderFixTitle: {
+    description: "ReleaseNotes 0.5.2 - fix title: dragging a task between others",
+    defaultMessage: "Drag tasks anywhere",
+    id: "fOGeHy",
+  },
+  reorderFixDescription: {
+    description: "ReleaseNotes 0.5.2 - fix text: dragging a task between others",
+    defaultMessage: "Dragging a task in My Day lands it where you drop it, not always at the bottom.",
+    id: "9qgPr4",
+  },
+  titleFixTitle: {
+    description: "ReleaseNotes 0.5.2 - fix title: task title no longer vanishes while pressed",
+    defaultMessage: "Titles stay put",
+    id: "9SVGlT",
+  },
+  titleFixDescription: {
+    description: "ReleaseNotes 0.5.2 - fix text: task title no longer vanishes while pressed",
+    defaultMessage: "Pressing a task no longer hides its title until you let go.",
+    id: "WMUg+a",
+  },
+});
+
 const v051 = defineMessages({
   starTitle: {
     description: "ReleaseNotes 0.5.1 - highlight title: star at the end of phone task rows",
@@ -359,6 +393,14 @@ const v010 = defineMessages({
  * entry here; people who update see every entry newer than the last one they saw.
  */
 export const RELEASE_NOTES: ReleaseNote[] = [
+  {
+    version: "0.5.2",
+    highlights: [{ emoji: "📱", title: v052.iconTitle, description: v052.iconDescription }],
+    fixes: [
+      { emoji: "↕️", title: v052.reorderFixTitle, description: v052.reorderFixDescription },
+      { emoji: "👆", title: v052.titleFixTitle, description: v052.titleFixDescription },
+    ],
+  },
   {
     version: "0.5.1",
     highlights: [
