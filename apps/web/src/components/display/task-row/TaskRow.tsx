@@ -236,7 +236,8 @@ export function TaskRow({
                   onPress={() => !reorder?.isDropping() && !tags.wasLongPress() && onOpen(task.id)}
                   onKeyDown={reorder?.onRowKeyDown}
                   {...{ [REORDER_HANDLE_ATTRIBUTE]: "" }}
-                  className="absolute inset-0 h-auto min-h-0 w-auto transform-none rounded-md p-0 data-[hovered=true]:bg-transparent data-[pressed=true]:bg-transparent"
+                  // Clears the ghost button's hover and press fills, which would cover the title it sits over.
+                  className="absolute inset-0 h-auto min-h-0 w-auto transform-none rounded-md p-0 [--button-bg-hover:transparent] [--button-bg-pressed:transparent]"
                   data-testid="task-row__open"
                 />
               )}
