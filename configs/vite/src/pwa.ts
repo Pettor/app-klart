@@ -32,6 +32,9 @@ export function createPWAConfig(options: PWAViteConfigOptions = {}): UserConfig 
       "apple-touch-icon.png",
       "pwa-192x192.png",
       "pwa-512x512.png",
+      "maskable-icon-512x512.png",
+      "badge-96x96.png",
+      "sw-notifications.js",
       "screenshot-desktop.png",
       "screenshot-phone.png",
     ],
@@ -51,6 +54,13 @@ export function createPWAConfig(options: PWAViteConfigOptions = {}): UserConfig 
           src: "pwa-512x512.png",
           sizes: "512x512",
           type: "image/png",
+        },
+        // Android crops it to its own shape instead of shrinking the icon into a white circle.
+        {
+          src: "maskable-icon-512x512.png",
+          sizes: "512x512",
+          type: "image/png",
+          purpose: "maskable",
         },
       ],
       screenshots: [
@@ -76,6 +86,8 @@ export function createPWAConfig(options: PWAViteConfigOptions = {}): UserConfig 
     workbox: {
       globPatterns: ["**/*.{js,css,html,ico,png,svg}"],
       navigateFallbackDenylist: [/storybook/],
+      // Opens the app when a notification is tapped.
+      importScripts: ["sw-notifications.js"],
     },
     ...pwaOptions,
   };
