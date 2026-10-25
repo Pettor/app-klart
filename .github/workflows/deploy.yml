@@ -1,18 +1,21 @@
 name: "deploy"
 
 on:
-  pull_request:
-    types:
-      - closed
+  push:
+    branches: ["main"]
   workflow_dispatch:
 
 permissions:
   contents: write
 
+# Queue deploys so back-to-back pushes don't race on the deploy/main branch
+concurrency:
+  group: deploy-gh-pages
+  cancel-in-progress: false
+
 jobs:
   deploy-gh-pages:
     name: Deploy
-    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
