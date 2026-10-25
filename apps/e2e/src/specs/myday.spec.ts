@@ -178,6 +178,20 @@ test.describe("myday.reorder", () => {
     await expect.poll(() => titles(page)).toEqual(["Second task", "Third task", "First task"]);
   });
 
+  test("drops a dragged task between two others", async ({ page }) => {
+    const first = page.getByTestId("task-row").filter({ hasText: "First task" });
+    const second = page.getByTestId("task-row").filter({ hasText: "Second task" });
+    const start = await first.getByTestId("task-row__title").boundingBox();
+    const target = await second.boundingBox();
+
+    await page.mouse.move(start!.x + start!.width / 2, start!.y + start!.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(start!.x + start!.width / 2, target!.y + target!.height - 4, { steps: 8 });
+    await page.mouse.up();
+
+    await expect.poll(() => titles(page)).toEqual(["Second task", "First task", "Third task"]);
+  });
+
   test("a click without moving still opens the task", async ({ page }) => {
     await page.getByTestId("task-row").filter({ hasText: "Second task" }).getByTestId("task-row__open").click();
     await expect(page.getByTestId("task-editor__title")).toHaveValue("Second task");

@@ -102,8 +102,13 @@ export function useTaskReorder(
 
   /** Measures every row, then makes `element` (the row or its grip) follow the pointer. */
   function lift(taskId: string, from: number, element: HTMLElement, startY: number, event: PointerEvent): void {
-    const row = element.closest<HTMLElement>(`[${REORDER_ID_ATTRIBUTE}]`);
-    const rows = row?.parentElement?.querySelectorAll<HTMLElement>(`:scope > [${REORDER_ID_ATTRIBUTE}]`);
+    // Rows sit inside wrappers of their own, so climb to the first ancestor that holds the whole list.
+    let list = element.closest<HTMLElement>(`[${REORDER_ID_ATTRIBUTE}]`)?.parentElement;
+    let rows = list?.querySelectorAll<HTMLElement>(`[${REORDER_ID_ATTRIBUTE}]`);
+    while (list?.parentElement && (rows?.length ?? 0) < ids.length) {
+      list = list.parentElement;
+      rows = list.querySelectorAll<HTMLElement>(`[${REORDER_ID_ATTRIBUTE}]`);
+    }
     const rectById = new Map(
       [...(rows ?? [])].map((other) => [other.getAttribute(REORDER_ID_ATTRIBUTE), other.getBoundingClientRect()])
     );
