@@ -49,7 +49,7 @@ Klart/
 
 After an update (a new PWA bundle or desktop build with a higher `version` in `apps/web/package.json`), Klart shows a "What's new" dialog once with the release notes in `core/whats-new/ReleaseNotes.ts`. The last version seen is kept per device in `localStorage` (`klart-last-seen-version`). A fresh install shows nothing; a device that already had data but no last-seen version gets the latest notes once. Settings → About → "See what's new" reopens it.
 
-To ship notes: bump the version and add an entry at the top of `RELEASE_NOTES` — a few emoji highlights, plus only the fixes people would notice. Versions without an entry are skipped quietly.
+To ship notes: bump the version and add an entry at the top of `RELEASE_NOTES` — a few emoji highlights, plus only the fixes people would notice. Versions without an entry are skipped quietly. `/bump-version` (or `/bump-patch`, `/bump-minor`, `/bump-major`) does both: `scripts/bump-version.mjs` keeps the root and `apps/*` `package.json` files, `Cargo.toml` and `Cargo.lock` in sync, and `/add-release-notes` writes the entry.
 
 ## Desktop app
 
