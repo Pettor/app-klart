@@ -15,6 +15,62 @@ export interface ReleaseNote {
   fixes: ReleaseNoteItem[];
 }
 
+const v060 = defineMessages({
+  shoppingTitle: {
+    description: "ReleaseNotes 0.6.0 - highlight title: shopping lists",
+    defaultMessage: "Shopping lists",
+    id: "5kMMQz",
+  },
+  shoppingDescription: {
+    description: "ReleaseNotes 0.6.0 - highlight text: shopping lists",
+    defaultMessage:
+      "Pick Shopping under your smart views to plan groceries, gifts and home buys. Type 2x milk 25 kr and Klart works out the quantity, the price and where the milk is in the store.",
+    id: "+DePr/",
+  },
+  myDayTitle: {
+    description: "ReleaseNotes 0.6.0 - highlight title: shopping items in My Day",
+    defaultMessage: "Shopping meets My Day",
+    id: "/pUGWR",
+  },
+  myDayDescription: {
+    description: "ReleaseNotes 0.6.0 - highlight text: shopping items in My Day",
+    defaultMessage: "Press the sun on an item to make it a task in My Day. Tick off either one and the other follows.",
+    id: "PoipDt",
+  },
+  completeTitle: {
+    description: "ReleaseNotes 0.6.0 - highlight title: completing, renaming and deleting lists",
+    defaultMessage: "Done with a list?",
+    id: "IVJeAQ",
+  },
+  completeDescription: {
+    description: "ReleaseNotes 0.6.0 - highlight text: completing, renaming and deleting lists",
+    defaultMessage:
+      "Complete it and move whatever you didn't buy to the next list. Rename or delete a list from its … menu.",
+    id: "aoMwEL",
+  },
+  agentsTitle: {
+    description: "ReleaseNotes 0.6.0 - highlight title: agents can shop too",
+    defaultMessage: "Your agents can shop too",
+    id: "qvxylc",
+  },
+  agentsDescription: {
+    description: "ReleaseNotes 0.6.0 - highlight text: agents can shop too",
+    defaultMessage:
+      "Lists live in your synced folder, and LLMS.txt explains them, so an agent can add to them for you.",
+    id: "BDtozb",
+  },
+  notificationFixTitle: {
+    description: "ReleaseNotes 0.6.0 - fix title: readable reminder notifications",
+    defaultMessage: "Reminders you can read",
+    id: "FUs0gA",
+  },
+  notificationFixDescription: {
+    description: "ReleaseNotes 0.6.0 - fix text: readable reminder notifications",
+    defaultMessage: "On phones, a reminder's task title is no longer cut short. It's shown in full under the heading.",
+    id: "L7YUOk",
+  },
+});
+
 const v053 = defineMessages({
   tagsTitle: {
     description: "ReleaseNotes 0.5.3 - highlight title: tags shown only via the display option",
@@ -417,6 +473,16 @@ const v010 = defineMessages({
  * entry here; people who update see every entry newer than the last one they saw.
  */
 export const RELEASE_NOTES: ReleaseNote[] = [
+  {
+    version: "0.6.0",
+    highlights: [
+      { emoji: "🛒", title: v060.shoppingTitle, description: v060.shoppingDescription },
+      { emoji: "☀️", title: v060.myDayTitle, description: v060.myDayDescription },
+      { emoji: "✅", title: v060.completeTitle, description: v060.completeDescription },
+      { emoji: "🤖", title: v060.agentsTitle, description: v060.agentsDescription },
+    ],
+    fixes: [{ emoji: "🔔", title: v060.notificationFixTitle, description: v060.notificationFixDescription }],
+  },
   {
     version: "0.5.3",
     highlights: [{ emoji: "🏷️", title: v053.tagsTitle, description: v053.tagsDescription }],
