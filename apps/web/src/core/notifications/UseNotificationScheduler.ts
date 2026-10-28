@@ -19,16 +19,21 @@ export function describeNotification(intl: IntlShape, notification: PlannedNotif
   const tag = notification.key;
   switch (notification.kind) {
     case "reminder":
+      // Android truncates the title to share its row with the site and time, so the task title goes in the body.
       return {
         tag,
-        title: notification.task.title,
+        title: intl.formatMessage({
+          description: "Notification - task reminder title",
+          defaultMessage: "Reminder",
+          id: "rRaPrP",
+        }),
         body: intl.formatMessage(
           {
-            description: "Notification - task reminder body",
-            defaultMessage: "Reminder{tags, select, none {} other { · {tags}}}",
-            id: "f9EzFB",
+            description: "Notification - task reminder body: the task title, then its tags on a new line",
+            defaultMessage: "{title}{tags, select, none {} other {\n{tags}}}",
+            id: "v5qaLP",
           },
-          { tags: notification.task.tags.map((name) => `#${name}`).join(" ") || "none" }
+          { title: notification.task.title, tags: notification.task.tags.map((name) => `#${name}`).join(" ") || "none" }
         ),
       };
     case "plan-day":
@@ -73,19 +78,21 @@ export function describeNotification(intl: IntlShape, notification: PlannedNotif
         title: intl.formatMessage(
           {
             description: "Notification - overdue title",
-            defaultMessage:
-              "{title}{more, plural, =0 { is overdue} one { and # more are overdue} other { and # more are overdue}}",
-            id: "TaWtAL",
+            defaultMessage: "{count, plural, one {Overdue} other {# tasks overdue}}",
+            id: "cEqUlf",
           },
-          { title: notification.tasks[0]!.title, more: notification.tasks.length - 1 }
+          { count: notification.tasks.length }
         ),
         body: intl.formatMessage(
           {
-            description: "Notification - overdue body",
-            defaultMessage: "Oldest due {date}. Add them to My Day or move them.",
-            id: "yLZ6to",
+            description: "Notification - overdue body: the oldest task title first",
+            defaultMessage:
+              "{title}{more, plural, =0 {} other { and # more}}\nOldest due {date}. Add them to My Day or move them.",
+            id: "INm7TT",
           },
           {
+            title: notification.tasks[0]!.title,
+            more: notification.tasks.length - 1,
             date: intl.formatDate(`${notification.tasks[0]!.due}T12:00:00`, {
               weekday: "short",
               day: "numeric",
