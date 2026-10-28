@@ -53,9 +53,15 @@ export function ShoppingListPanel({ list, draft, moveTargets, actions }: Shoppin
     { bought: list.bought, total: list.total }
   );
 
+  const completeLabel = intl.formatMessage({
+    description: "ShoppingListPanel - button completing the list",
+    defaultMessage: "Complete list",
+    id: "zOV/bo",
+  });
+
   return (
-    <div className={clsx(`ctx-${list.color}`, "flex w-full max-w-[760px] flex-col gap-5")}>
-      <header className="flex flex-wrap items-start gap-4">
+    <div className={clsx(`ctx-${list.color}`, "@container flex w-full max-w-[760px] flex-col gap-5")}>
+      <header className="flex items-start gap-4">
         <span className="grid size-13 shrink-0 place-items-center rounded-[14px] bg-(--ctx)/15 text-(--ctx)">
           <ShoppingKindIcon kind={list.kind} className="size-[26px]" />
         </span>
@@ -79,14 +85,14 @@ export function ShoppingListPanel({ list, draft, moveTargets, actions }: Shoppin
               />
             </TextField>
           ) : (
-            <h2 className="text-[28px] leading-tight font-bold tracking-[-0.01em]" data-testid="shopping__list-name">
+            <h2
+              className="text-[28px] leading-tight font-bold tracking-[-0.01em] wrap-break-word"
+              data-testid="shopping__list-name"
+            >
               {list.name}
             </h2>
           )}
           <div className="text-muted flex flex-wrap items-center gap-2 text-[13px]">
-            <span className="inline-flex h-6 items-center rounded-full bg-(--ctx)/15 px-2.5 font-medium text-(--ctx)">
-              {getShoppingKindLabel(intl, list.kind)}
-            </span>
             {list.date && (
               <Chip size="sm" variant="soft">
                 {formatShortDate(intl, list.date)}
@@ -118,19 +124,17 @@ export function ShoppingListPanel({ list, draft, moveTargets, actions }: Shoppin
             )}
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex shrink-0 items-center gap-2">
           {!list.isCompleted ? (
+            // In a narrow panel only the check shows, so the list name keeps the room.
             <Button
               onPress={panel.askComplete}
+              aria-label={completeLabel}
               data-testid="shopping__complete-list"
-              className="h-[38px] gap-1.5 rounded-[10px] bg-[#17c964] text-[13px] font-semibold text-[#0c0c0f]"
+              className="h-[38px] min-w-[38px] gap-1.5 rounded-[10px] bg-[#17c964] px-2.5 text-[13px] font-semibold text-[#0c0c0f] @lg:px-3.5"
             >
               <CheckIcon className="size-4" aria-hidden />
-              {intl.formatMessage({
-                description: "ShoppingListPanel - button completing the list",
-                defaultMessage: "Complete list",
-                id: "zOV/bo",
-              })}
+              <span className="hidden @lg:inline">{completeLabel}</span>
             </Button>
           ) : (
             <Button
@@ -218,15 +222,27 @@ export function ShoppingListPanel({ list, draft, moveTargets, actions }: Shoppin
       {!list.isCompleted && <ShoppingItemInput {...draft} />}
 
       {!list.isCompleted && isEmpty && (
-        <div className="text-muted border-separator rounded-2xl border border-dashed p-9 text-center leading-relaxed">
-          {intl.formatMessage(
-            {
-              description: "ShoppingListPanel - empty state when nothing is left to buy",
-              defaultMessage: "Nothing left to buy.{br}Add items above, or complete the list.",
-              id: "TJebpJ",
-            },
-            { br: <br key="br" /> }
-          )}
+        <div
+          className="text-muted border-separator rounded-2xl border border-dashed p-9 text-center leading-relaxed"
+          data-testid="shopping__empty"
+        >
+          {list.total === 0
+            ? intl.formatMessage(
+                {
+                  description: "ShoppingListPanel - empty state when no item has been added to the list yet",
+                  defaultMessage: "No items yet.{br}Add the first one above.",
+                  id: "jZjOlo",
+                },
+                { br: <br key="br" /> }
+              )
+            : intl.formatMessage(
+                {
+                  description: "ShoppingListPanel - empty state when nothing is left to buy",
+                  defaultMessage: "Nothing left to buy.{br}Add items above, or complete the list.",
+                  id: "TJebpJ",
+                },
+                { br: <br key="br" /> }
+              )}
         </div>
       )}
 

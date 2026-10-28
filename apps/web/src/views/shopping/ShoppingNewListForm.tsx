@@ -67,7 +67,7 @@ export function ShoppingNewListForm({ onCreate, onDone }: ShoppingNewListFormPro
           defaultMessage: "List type",
           id: "cFCVuL",
         })}
-        className="grid grid-cols-4 gap-1"
+        className="grid grid-cols-2 gap-1.5"
       >
         {SHOPPING_LIST_KINDS.map((option) => (
           <ToggleButton
@@ -78,7 +78,7 @@ export function ShoppingNewListForm({ onCreate, onDone }: ShoppingNewListFormPro
             data-testid={`shopping__new-list-kind-${option}`}
             className={clsx(
               `ctx-${SHOPPING_KIND_COLORS[option]}`,
-              "border-separator text-muted h-auto w-full min-w-0 flex-col gap-1 rounded-[10px] border px-0 py-2 text-xs font-normal",
+              "border-separator text-muted h-auto w-full min-w-0 justify-start gap-2 rounded-[10px] border px-3 py-2.5 text-[13px] font-normal",
               "data-[selected=true]:border-(--ctx) data-[selected=true]:bg-(--ctx)/15 data-[selected=true]:text-(--ctx)"
             )}
           >
