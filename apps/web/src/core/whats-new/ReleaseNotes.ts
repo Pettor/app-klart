@@ -15,6 +15,30 @@ export interface ReleaseNote {
   fixes: ReleaseNoteItem[];
 }
 
+const v061 = defineMessages({
+  headerFixTitle: {
+    description: "ReleaseNotes 0.6.1 - fix title: shopping list header on small screens",
+    defaultMessage: "Room for long list names",
+    id: "ByyGAB",
+  },
+  headerFixDescription: {
+    description: "ReleaseNotes 0.6.1 - fix text: shopping list header on small screens",
+    defaultMessage:
+      "On a narrow screen, Complete shrinks to a check so the list name no longer gets squeezed or covered.",
+    id: "oOStXG",
+  },
+  emptyFixTitle: {
+    description: "ReleaseNotes 0.6.1 - fix title: new empty shopping lists",
+    defaultMessage: "Fresh lists look fresh",
+    id: "X4HKnN",
+  },
+  emptyFixDescription: {
+    description: "ReleaseNotes 0.6.1 - fix text: new empty shopping lists",
+    defaultMessage: "A list you just made says it has no items yet, instead of claiming everything's bought.",
+    id: "Z9cd+p",
+  },
+});
+
 const v060 = defineMessages({
   shoppingTitle: {
     description: "ReleaseNotes 0.6.0 - highlight title: shopping lists",
@@ -473,6 +497,14 @@ const v010 = defineMessages({
  * entry here; people who update see every entry newer than the last one they saw.
  */
 export const RELEASE_NOTES: ReleaseNote[] = [
+  {
+    version: "0.6.1",
+    highlights: [],
+    fixes: [
+      { emoji: "📱", title: v061.headerFixTitle, description: v061.headerFixDescription },
+      { emoji: "🛒", title: v061.emptyFixTitle, description: v061.emptyFixDescription },
+    ],
+  },
   {
     version: "0.6.0",
     highlights: [
