@@ -78,17 +78,11 @@ export function MyDayDisplayMenu({ display, variant, contextColor, className }: 
         defaultMessage: "Tags on tasks",
         id: "+jd8Yf",
       }),
-      hint: isSheet
-        ? intl.formatMessage({
-            description: "MyDayDisplayMenu - hint for the tags on tasks option on phones",
-            defaultMessage: "Each task's tags below its title",
-            id: "yKGkJS",
-          })
-        : intl.formatMessage({
-            description: "MyDayDisplayMenu - hint for the tags on tasks option",
-            defaultMessage: "Always show tags (hover shows them anyway)",
-            id: "PlTIAb",
-          }),
+      hint: intl.formatMessage({
+        description: "MyDayDisplayMenu - hint for the tags on tasks option",
+        defaultMessage: "Each task's tags below its title",
+        id: "yHCXGD",
+      }),
     },
     tagFilter: isSheet
       ? {

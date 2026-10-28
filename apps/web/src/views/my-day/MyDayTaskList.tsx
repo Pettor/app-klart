@@ -24,7 +24,7 @@ export interface MyDayTaskListProps {
   actions: MyDayTaskActions;
   /** The task open in the editor, highlighted in the list. */
   selectedTaskId?: string | null;
-  /** Shows every task's tags; otherwise they appear on hover or focus. */
+  /** Shows every task's tags; otherwise they're hidden. */
   showTags?: boolean;
   /** Shows due dates and reminders under titles. */
   showMeta?: boolean;
