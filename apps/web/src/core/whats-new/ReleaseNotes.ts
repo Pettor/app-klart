@@ -15,6 +15,30 @@ export interface ReleaseNote {
   fixes: ReleaseNoteItem[];
 }
 
+const v053 = defineMessages({
+  tagsTitle: {
+    description: "ReleaseNotes 0.5.3 - highlight title: tags shown only via the display option",
+    defaultMessage: "Tags when you want them",
+    id: "aaBZFs",
+  },
+  tagsDescription: {
+    description: "ReleaseNotes 0.5.3 - highlight text: tags shown only via the display option",
+    defaultMessage:
+      "Tasks no longer stretch open when you hover or hold them. Turn on Tags on tasks in the Display menu to see every task's tags.",
+    id: "aO68Oy",
+  },
+  suggestionsFixTitle: {
+    description: "ReleaseNotes 0.5.3 - fix title: suggestions panel scrolls on its own",
+    defaultMessage: "Suggestions scroll on their own",
+    id: "oIWiad",
+  },
+  suggestionsFixDescription: {
+    description: "ReleaseNotes 0.5.3 - fix text: suggestions panel scrolls on its own",
+    defaultMessage: "A long list of suggestions scrolls inside its panel instead of stretching My Day.",
+    id: "T40bPV",
+  },
+});
+
 const v052 = defineMessages({
   iconTitle: {
     description: "ReleaseNotes 0.5.2 - highlight title: sharper app icon on phones",
@@ -393,6 +417,11 @@ const v010 = defineMessages({
  * entry here; people who update see every entry newer than the last one they saw.
  */
 export const RELEASE_NOTES: ReleaseNote[] = [
+  {
+    version: "0.5.3",
+    highlights: [{ emoji: "🏷️", title: v053.tagsTitle, description: v053.tagsDescription }],
+    fixes: [{ emoji: "📜", title: v053.suggestionsFixTitle, description: v053.suggestionsFixDescription }],
+  },
   {
     version: "0.5.2",
     highlights: [{ emoji: "📱", title: v052.iconTitle, description: v052.iconDescription }],
