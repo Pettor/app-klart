@@ -6,6 +6,7 @@ import type { Task } from "./Task";
 import { TASK_SCHEMA } from "./Task";
 import type { KlartContext } from "~/core/contexts/KlartContext";
 import { DEFAULT_CONTEXTS } from "~/core/contexts/KlartContext";
+import { createSampleShopping } from "~/core/shopping/ShoppingSampleData";
 
 /** Ids of sample tasks and contexts start with this, so they can be told apart from real ones. */
 export const SAMPLE_ID_PREFIX = "sample-";
@@ -317,15 +318,32 @@ function toDay(date: string, samples: SampleTask[], sourceOf: (sample: SampleTas
 export function createSampleData(now: Date = new Date()): KlartData {
   const today = toLocalDate(now);
   const yesterday = addDays(today, -1);
+  const shopping = createSampleShopping(SAMPLE_ID_PREFIX, today, now, "personal");
+  const todayDay = toDay(
+    today,
+    SAMPLE_TASKS.filter((sample) => sample.today),
+    (sample) => sample.today
+  );
   return {
     contexts: SAMPLE_CONTEXTS,
-    tasks: Object.fromEntries(SAMPLE_TASKS.map((sample) => [sampleId(sample.id), toTask(sample, today, now)])),
+    tasks: {
+      ...Object.fromEntries(SAMPLE_TASKS.map((sample) => [sampleId(sample.id), toTask(sample, today, now)])),
+      ...shopping.tasks,
+    },
+    lists: shopping.lists,
     days: {
-      [today]: toDay(
-        today,
-        SAMPLE_TASKS.filter((sample) => sample.today),
-        (sample) => sample.today
-      ),
+      [today]: {
+        ...todayDay,
+        items: [
+          ...todayDay.items,
+          ...Object.keys(shopping.tasks).map((taskId) => ({
+            taskId,
+            addedAt: `${today}T07:00:00Z`,
+            addedBy: "user" as const,
+            reason: null,
+          })),
+        ],
+      },
       [yesterday]: toDay(
         yesterday,
         SAMPLE_TASKS.filter((sample) => sample.yesterday),
@@ -352,9 +370,14 @@ export function withoutSampleData(data: KlartData): KlartData {
     contexts: data.contexts.filter((context) => !isSample(context.id) || usedContexts.has(context.id)),
     tasks,
     days,
+    lists: Object.fromEntries(Object.entries(data.lists).filter(([id]) => !isSample(id))),
   };
 }
 
 export function hasSampleData(data: KlartData): boolean {
-  return Object.keys(data.tasks).some(isSample) || data.contexts.some((context) => isSample(context.id));
+  return (
+    Object.keys(data.tasks).some(isSample) ||
+    Object.keys(data.lists).some(isSample) ||
+    data.contexts.some((context) => isSample(context.id))
+  );
 }

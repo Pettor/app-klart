@@ -330,6 +330,7 @@
   /* The design shows only the link and star; the actions menu fades in on hover. */
   .slab:hover .slab-reveal,
   .slab-done:hover .slab-reveal,
+  .shop-row:hover .slab-reveal,
   .slab-reveal:focus-within,
   .slab-reveal[aria-expanded="true"] {
     opacity: 1;
@@ -500,7 +501,7 @@
 .sidebar-in {
   animation: sidebar-in 0.22s cubic-bezier(0.2, 0.9, 0.25, 1.1);
 }
-/* A settings section rises into place when picked. */
+/* A settings section rises into place when picked; so do the shopping screen's new-list form, complete dialog and cart. */
 .settings-pane-in {
   animation: settings-pane-in 0.22s ease;
 }

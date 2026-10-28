@@ -11,6 +11,7 @@ export interface MyDayMobileBarProps {
   context: MyDayContextProps;
   smartViews: MyDaySidebarProps["smartViews"];
   sync: MyDaySidebarProps["sync"];
+  shopping: MyDaySidebarProps["shopping"];
   onOpenNotifications: () => void;
   onOpenSettings: () => void;
   className?: string;
@@ -21,6 +22,7 @@ export function MyDayMobileBar({
   context,
   smartViews,
   sync,
+  shopping,
   onOpenNotifications,
   onOpenSettings,
   className,
@@ -68,6 +70,7 @@ export function MyDayMobileBar({
         onOpenChange={setIsDrawerOpen}
         smartViews={smartViews}
         sync={sync}
+        shopping={shopping}
         onOpenSettings={onOpenSettings}
       />
     </div>

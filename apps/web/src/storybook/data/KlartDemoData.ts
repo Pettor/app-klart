@@ -1,4 +1,5 @@
 import type { KlartContext } from "~/core/contexts/KlartContext";
+import { createSampleShopping } from "~/core/shopping/ShoppingSampleData";
 import type { DayFile } from "~/core/tasks/Day";
 import type { KlartData } from "~/core/tasks/KlartData";
 import type { Task } from "~/core/tasks/Task";
@@ -103,15 +104,22 @@ function toDay(date: string, ids: string[]): DayFile {
   };
 }
 
+/** The Shopping design's lists, two items of which are tasks in today's My Day. */
+export const DEMO_SHOPPING = createSampleShopping("", DEMO_TODAY, new Date("2026-10-21T10:00:00Z"), "personal");
+
 /** The sample data from the Klart design, as a full data folder. */
 export const DEMO_DATA: KlartData = {
   contexts: DEMO_CONTEXTS,
-  tasks: Object.fromEntries(DEMO_TASKS.map((demo, index) => [demo.id, toTask(demo, index)])),
+  tasks: {
+    ...Object.fromEntries(DEMO_TASKS.map((demo, index) => [demo.id, toTask(demo, index)])),
+    ...DEMO_SHOPPING.tasks,
+  },
+  lists: DEMO_SHOPPING.lists,
   days: {
-    [DEMO_TODAY]: toDay(
-      DEMO_TODAY,
-      DEMO_TASKS.filter((demo) => demo.inToday).map((demo) => demo.id)
-    ),
+    [DEMO_TODAY]: toDay(DEMO_TODAY, [
+      ...DEMO_TASKS.filter((demo) => demo.inToday).map((demo) => demo.id),
+      ...Object.keys(DEMO_SHOPPING.tasks),
+    ]),
     "2026-10-20": toDay(
       "2026-10-20",
       DEMO_TASKS.filter((demo) => demo.inYesterday).map((demo) => demo.id)

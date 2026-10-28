@@ -63,11 +63,20 @@ core/
 │   ├── KlartAtoms.ts          # Persisted data + UI selection atoms
 │   ├── QuickAdd.ts            # Quick-add syntax parser
 │   ├── Suggestions.ts         # My Day suggestion ranking
-│   ├── AgentViews.ts          # views/today.json + views/suggestions.json
+│   ├── AgentViews.ts          # views/today.json + views/suggestions.json + views/shopping.json
 │   ├── LocalDate.ts / TaskId.ts
 │   ├── UseKlartActions.ts     # All mutations
 │   ├── UseMyDay.ts            # Derived lists, counts, tags, suggestions
 │   └── UseToday.ts            # Keeps today's date current
+│
+├── shopping/             # Shopping lists, linked to My Day
+│   ├── ShoppingList.ts        # Domain types + Zod file schema (klart.list/v1)
+│   ├── ShoppingCategory.ts    # Store sections + guessing one from a name
+│   ├── ShoppingItemParse.ts   # Add-item syntax: 2x, 199 kr, links
+│   ├── ShoppingData.ts        # Pure transitions + the two-way task link (reconcileShoppingTasks)
+│   ├── ShoppingSampleData.ts  # Lists from the design, for dev data and stories
+│   ├── UseShoppingActions.ts  # All list mutations
+│   └── UseShopping.ts         # Derived lists and items left
 │
 ├── config/               # App-level config constants / lookups
 │   └── UseAppInfo.ts          # App name, version, build info
@@ -159,11 +168,17 @@ components/
 ```
 views/
 ├── my-day/
-│   ├── MyDayView.tsx            # Sidebar + list + quick add + suggestions
+│   ├── MyDayView.tsx            # Sidebar + list + quick add + suggestions; `page` swaps the main area (Shopping)
 │   ├── MyDaySidebar.tsx / MyDayHeader.tsx / MyDayTaskList.tsx
 │   ├── MyDaySuggestionsPanel.tsx  # Side panel (xl) or bottom sheet
 │   ├── MyDayMobileBar.tsx / MyDayAgentJson.tsx
 │   └── MyDayTypes.ts
+├── shopping/
+│   ├── ShoppingView.tsx         # Lists column + selected list, shown in MyDayView's `page`
+│   ├── ShoppingListsPanel.tsx / ShoppingNewListForm.tsx
+│   ├── ShoppingListPanel.tsx    # Header, add-item field, grouped items, cart
+│   ├── ShoppingCompleteDialog.tsx / ShoppingItemInput.tsx
+│   └── ShoppingTypes.ts / ShoppingLabels.ts
 └── settings/
     ├── SettingsView.tsx
     └── Settings*Section.tsx     # Contexts, Sync, Agents & files, Notifications
@@ -179,7 +194,7 @@ A view folder contains:
 
 ## `routes/` — TanStack file-based routing
 
-Klart's routes are `index/` (My Day, `-UseMyDayRoute.ts`) and `settings/` (`-UseSettingsRoute.ts`, `?section=` search param). The tree below shows the template's full pattern, including auth layouts.
+Klart's routes are `index/` (My Day, `-UseMyDayRoute.ts`), `shopping/` (`-UseShoppingRoute.ts` plus `useMyDayRoute(null, "shop")` for the shared sidebar, `?list=` search param) and `settings/` (`-UseSettingsRoute.ts`, `?section=` search param). The tree below shows the template's full pattern, including auth layouts.
 
 ```
 routes/

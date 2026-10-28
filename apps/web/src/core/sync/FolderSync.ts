@@ -3,7 +3,10 @@ import type { FolderBackend, FolderFileInfo } from "./FolderBackend";
 import { LLMS_TXT } from "./LlmsTxt";
 import type { KlartContext } from "~/core/contexts/KlartContext";
 import { CONTEXT_COLORS, findContext } from "~/core/contexts/KlartContext";
-import { buildSuggestionsView, buildTodayView } from "~/core/tasks/AgentViews";
+import { reconcileShoppingTasks } from "~/core/shopping/ShoppingData";
+import type { ShoppingList } from "~/core/shopping/ShoppingList";
+import { ShoppingListFileSchema } from "~/core/shopping/ShoppingList";
+import { buildShoppingView, buildSuggestionsView, buildTodayView } from "~/core/tasks/AgentViews";
 import type { DayFile } from "~/core/tasks/Day";
 import { DayFileSchema } from "~/core/tasks/Day";
 import type { KlartData } from "~/core/tasks/KlartData";
@@ -43,7 +46,7 @@ export interface DeviceInfo {
 }
 
 export interface AgentFileOptions {
-  /** Write `views/today.json` and `views/suggestions.json`. */
+  /** Write `views/today.json`, `views/suggestions.json` and `views/shopping.json`. */
   writeViews: boolean;
   /** Turn files dropped into `inbox/` into tasks. */
   acceptInbox: boolean;
@@ -72,6 +75,10 @@ export function taskPath(task: Task): string {
 
 export function dayPath(date: string): string {
   return `days/${date}.json`;
+}
+
+export function listPath(list: ShoppingList): string {
+  return `lists/${list.id}.json`;
 }
 
 export function toDeviceId(name: string): string {
@@ -189,6 +196,28 @@ export class FolderSync {
       }
     }
 
+    const listFiles = (await this.folder.list("lists", 0)).filter((file) => file.path.endsWith(".json"));
+    for (const file of listFiles) {
+      const read = await this.readChangedSafely(file);
+      const parsed = read && ShoppingListFileSchema.safeParse(read.json);
+      if (!read || !parsed?.success) {
+        continue;
+      }
+      const remote = parsed.data as ShoppingList;
+      const current = data.lists[remote.id];
+      if (!current || remote.updatedAt > current.updatedAt) {
+        data = { ...data, lists: { ...data.lists, [remote.id]: remote } };
+        changed = true;
+      } else if (remote.updatedAt < current.updatedAt && !read.isNew) {
+        await this.write(`.conflicts/list-${remote.id}-${remote.updatedAt.replace(/[:]/g, "")}.json`, read.text);
+      }
+    }
+
+    // A task completed in another app or by an agent marks its shopping item bought.
+    if (changed) {
+      data = reconcileShoppingTasks(data);
+    }
+
     let inboxCount = 0;
     if (acceptInbox) {
       const result = await this.pullInbox(data, today);
@@ -285,6 +314,9 @@ export class FolderSync {
     for (const day of Object.values(data.days)) {
       desired.set(dayPath(day.date), serialize(day));
     }
+    for (const list of Object.values(data.lists)) {
+      desired.set(listPath(list), serialize(list));
+    }
     if (options.keepLlmsTxt) {
       desired.set(LLMS_FILE, LLMS_TXT);
     }
@@ -310,6 +342,7 @@ export class FolderSync {
       const views = {
         "views/today.json": buildTodayView(data, today, generatedAt),
         "views/suggestions.json": buildSuggestionsView(data, today, generatedAt),
+        "views/shopping.json": buildShoppingView(data, today, generatedAt),
       };
       for (const [path, view] of Object.entries(views)) {
         const signature = JSON.stringify({ ...view, generatedAt: null });

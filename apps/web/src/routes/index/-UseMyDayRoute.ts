@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useBreakpoint } from "@package/react";
-import { useAtom, useSetAtom } from "jotai";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { useIntl } from "react-intl";
 import type { ContextSwitcherOption } from "~/components/actions/context-switcher/ContextSwitcher";
 import type { SuggestionListGroup } from "~/components/display/suggestion-list/SuggestionList";
@@ -9,10 +9,14 @@ import type { KlartContext } from "~/core/contexts/KlartContext";
 import { ALL_CONTEXTS, findContext } from "~/core/contexts/KlartContext";
 import { useHierarchyNavigation } from "~/core/routes/UseHierarchyNavigation";
 import type { SettingsSectionId } from "~/core/settings/SettingsSection";
+import type { ShoppingList } from "~/core/shopping/ShoppingList";
+import { SHOPPING_KIND_COLORS } from "~/core/shopping/ShoppingList";
+import { useShopping } from "~/core/shopping/UseShopping";
 import { taskPath } from "~/core/sync/FolderSync";
 import { useFolderSync } from "~/core/sync/UseFolderSync";
 import {
   displayOptionsAtom,
+  klartDataAtom,
   searchFocusRequestAtom,
   showSuggestionsAtom,
   sidebarCollapsedAtom,
@@ -30,8 +34,15 @@ import type { MyDayViewProps } from "~/views/my-day/MyDayView";
 /** Suggestion groups longer than this are truncated in the panel (the agent file keeps everything). */
 const MAX_ITEMS_PER_GROUP = 12;
 
-function toMyDayTask(task: Task, contexts: KlartContext[], inTodayIds: Set<string>): MyDayTask {
+function toMyDayTask(
+  task: Task,
+  contexts: KlartContext[],
+  inTodayIds: Set<string>,
+  lists: Record<string, ShoppingList> = {}
+): MyDayTask {
   const context = findContext(contexts, task.context);
+  const list = task.shopping ? lists[task.shopping.listId] : undefined;
+  const isListShown = !!list && !list.deletedAt;
   return {
     id: task.id,
     title: task.title,
@@ -46,6 +57,7 @@ function toMyDayTask(task: Task, contexts: KlartContext[], inTodayIds: Set<strin
     contextName: context?.name ?? task.context,
     contextColor: context?.color ?? "blue",
     isInMyDay: inTodayIds.has(task.id),
+    shopping: isListShown ? { listName: list.name, color: SHOPPING_KIND_COLORS[list.kind] } : undefined,
   };
 }
 
@@ -68,7 +80,8 @@ function toEditorTask(task: Task, contexts: KlartContext[], inTodayIds: Set<stri
   };
 }
 
-export function useMyDayRoute(editingId: string | null): MyDayViewProps {
+/** Builds My Day's props. On the `shop` page the sidebar is shared, and picking a view or tag leaves Shopping. */
+export function useMyDayRoute(editingId: string | null, page: "day" | "shop" = "day"): MyDayViewProps {
   const intl = useIntl();
   const navigation = useHierarchyNavigation();
   const myDay = useMyDay();
@@ -82,6 +95,8 @@ export function useMyDayRoute(editingId: string | null): MyDayViewProps {
   const requestSearchFocus = useSetAtom(searchFocusRequestAtom);
   const [draft, setDraft] = useState("");
   const editingTask = useTask(editingId);
+  const { lists, tasks: allTasks } = useAtomValue(klartDataAtom);
+  const shopping = useShopping();
 
   const { contexts, currentContext, today, inTodayIds } = myDay;
   const selected = findContext(contexts, currentContext);
@@ -95,8 +110,24 @@ export function useMyDayRoute(editingId: string | null): MyDayViewProps {
     navigation.down({ to: "/settings", search: section ? { section } : {} });
   }
 
+  function openShopping(listId?: string): void {
+    navigation.down({ to: "/shopping", search: listId ? { list: listId } : {} });
+  }
+
+  function leaveShopping(): void {
+    if (page === "shop") {
+      navigation.up({ to: "/" });
+    }
+  }
+
   function openTask(taskId: string): void {
     if (taskId === editingId) {
+      return;
+    }
+    // A task made from a shopping list opens the list, where the item is edited.
+    const listId = allTasks[taskId]?.shopping?.listId;
+    if (listId && lists[listId] && !lists[listId].deletedAt) {
+      openShopping(listId);
       return;
     }
     // Switching tasks replaces the entry, so Back from any task lands on the list.
@@ -210,9 +241,19 @@ export function useMyDayRoute(editingId: string | null): MyDayViewProps {
     smartViews: {
       items: (["day", "important", "planned", "tasks"] as const).map((id) => ({ id, count: myDay.smartCounts[id] })),
       active: myDay.smartView,
-      onSelect: myDay.setSmartView,
+      onSelect: (view) => {
+        myDay.setSmartView(view);
+        leaveShopping();
+      },
     },
-    tags: { items: myDay.tags, active: myDay.tag, onSelect: myDay.setTag },
+    tags: {
+      items: myDay.tags,
+      active: myDay.tag,
+      onSelect: (tag) => {
+        myDay.setTag(tag);
+        leaveShopping();
+      },
+    },
     sync: {
       status: sync.status,
       onPress: () => {
@@ -223,8 +264,14 @@ export function useMyDayRoute(editingId: string | null): MyDayViewProps {
         }
       },
     },
-    tasks: myDay.listTasks.map((task) => toMyDayTask(task, contexts, inTodayIds)),
-    doneTasks: myDay.smartView === "day" ? myDay.doneTasks.map((task) => toMyDayTask(task, contexts, inTodayIds)) : [],
+    shopping: {
+      count: shopping.itemsLeft,
+      isActive: page === "shop",
+      onOpen: () => page === "day" && openShopping(),
+    },
+    tasks: myDay.listTasks.map((task) => toMyDayTask(task, contexts, inTodayIds, lists)),
+    doneTasks:
+      myDay.smartView === "day" ? myDay.doneTasks.map((task) => toMyDayTask(task, contexts, inTodayIds, lists)) : [],
     showContextOnTasks: currentContext === ALL_CONTEXTS,
     taskActions: {
       onToggleDone: actions.setDone,

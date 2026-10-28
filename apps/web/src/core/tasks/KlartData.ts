@@ -7,12 +7,16 @@ import { TASK_SCHEMA, TaskFileSchema } from "./Task";
 import { createTaskId } from "./TaskId";
 import type { KlartContext } from "~/core/contexts/KlartContext";
 import { DEFAULT_CONTEXTS, getDefaultContextId } from "~/core/contexts/KlartContext";
+import type { ShoppingList } from "~/core/shopping/ShoppingList";
+import { ShoppingListFileSchema } from "~/core/shopping/ShoppingList";
 
 /** Everything Klart knows. Mirrors the data folder one to one. */
 export interface KlartData {
   contexts: KlartContext[];
   tasks: Record<string, Task>;
   days: Record<string, DayFile>;
+  /** Shopping lists by id. */
+  lists: Record<string, ShoppingList>;
 }
 
 export type TaskPatch = Partial<
@@ -20,7 +24,7 @@ export type TaskPatch = Partial<
 >;
 
 export function createEmptyData(): KlartData {
-  return { contexts: DEFAULT_CONTEXTS, tasks: {}, days: {} };
+  return { contexts: DEFAULT_CONTEXTS, tasks: {}, days: {}, lists: {} };
 }
 
 /**
@@ -35,10 +39,18 @@ export function normalizeData(data: KlartData): KlartData {
       tasks[id] = parsed.data as Task;
     }
   }
+  const lists: Record<string, ShoppingList> = {};
+  for (const [id, stored] of Object.entries(data.lists ?? {})) {
+    const parsed = ShoppingListFileSchema.safeParse(stored);
+    if (parsed.success) {
+      lists[id] = parsed.data as ShoppingList;
+    }
+  }
   return {
     contexts: data.contexts ?? DEFAULT_CONTEXTS,
     tasks,
     days: data.days ?? {},
+    lists,
   };
 }
 

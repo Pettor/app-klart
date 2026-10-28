@@ -86,6 +86,15 @@ export interface MyDaySidebarProps {
   smartViews: { items: MyDaySmartViewItem[]; active: SmartView; onSelect: (view: SmartView) => void };
   tags: { items: MyDayTagItem[]; active: string | null; onSelect: (tag: string | null) => void };
   sync: { status: SyncStatus; onPress: () => void };
+  /** The Shopping row under the smart views; `count` is how many items are left to buy. */
+  shopping: MyDayShoppingNavProps;
+}
+
+export interface MyDayShoppingNavProps {
+  count: number;
+  /** Shopping is the page shown, so it's the active row instead of a smart view. */
+  isActive: boolean;
+  onOpen: () => void;
 }
 
 export interface MyDayDisplayProps {

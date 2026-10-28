@@ -2,6 +2,14 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { BrowserFolderBackend } from "./BrowserFolderBackend";
 import { FolderSync, serialize } from "./FolderSync";
 import { LLMS_TXT } from "./LlmsTxt";
+import {
+  addItemToDay,
+  addShoppingItem,
+  createShoppingItem,
+  createShoppingList,
+  upsertList,
+} from "~/core/shopping/ShoppingData";
+import { parseShoppingItem } from "~/core/shopping/ShoppingItemParse";
 import type { KlartData } from "~/core/tasks/KlartData";
 import { addToDay, createEmptyData, createTask, updateTask } from "~/core/tasks/KlartData";
 import { parseQuickAdd } from "~/core/tasks/QuickAdd";
@@ -136,6 +144,7 @@ describe("FolderSync", () => {
     expect(JSON.parse(root.read(`days/${TODAY}.json`)!).items[0].taskId).toBe("T1");
     expect(JSON.parse(root.read("views/today.json")!).items[0].task.id).toBe("T1");
     expect(JSON.parse(root.read("views/suggestions.json")!).schema).toBe("klart.suggestions/v1");
+    expect(JSON.parse(root.read("views/shopping.json")!).schema).toBe("klart.view.shopping/v1");
     expect(root.read("LLMS.txt")).toBe(LLMS_TXT);
   });
 
@@ -299,5 +308,42 @@ describe("FolderSync", () => {
       "2026-10-21T09:00:00Z"
     );
     expect((await sync.listDevices()).map((device) => device.id)).toEqual(["work-pc", "macbook-air"]);
+  });
+
+  it("writes shopping lists and carries a task completed elsewhere back to its item", async () => {
+    const T0 = new Date("2026-10-21T08:00:00Z");
+    let data = upsertList(seed(), createShoppingList("L1", "Week", "grocery", null, T0));
+    data = addShoppingItem(data, "L1", createShoppingItem("milk", parseShoppingItem("2x mjölk"), T0), T0);
+    data = addItemToDay(data, "L1", "milk", { id: "B1", title: "Buy: mjölk", context: "personal" }, TODAY, T0);
+    await sync.push(data, { today: TODAY, options: OPTIONS });
+
+    const file = JSON.parse(root.read("lists/L1.json")!);
+    expect(file).toMatchObject({
+      schema: "klart.list/v1",
+      name: "Week",
+      items: [{ id: "milk", qty: 2, taskId: "B1" }],
+    });
+    expect(JSON.parse(root.read("tasks/personal/B1.json")!).shopping).toEqual({ listId: "L1", itemId: "milk" });
+
+    // An agent completes the task file.
+    const task = JSON.parse(root.read("tasks/personal/B1.json")!);
+    await root.write(
+      "tasks/personal/B1.json",
+      JSON.stringify({
+        ...task,
+        status: "done",
+        completedAt: "2026-10-21T09:00:00Z",
+        updatedAt: "2026-10-21T09:00:00Z",
+      })
+    );
+    const pulled = await sync.pull(data, { today: TODAY, acceptInbox: false });
+    expect(pulled.data.lists.L1!.items[0]!.bought).toBe(true);
+  });
+
+  it("takes a newer list file from the folder", async () => {
+    const list = createShoppingList("L9", "Gifts", "gift", "2026-11-07", new Date("2026-10-21T08:00:00Z"));
+    await root.write("lists/L9.json", JSON.stringify(list));
+    const pulled = await sync.pull(seed(), { today: TODAY, acceptInbox: false });
+    expect(pulled.data.lists.L9).toEqual(list);
   });
 });
