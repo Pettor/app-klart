@@ -94,8 +94,8 @@ export function SettingsAgentsSection({ options, onChange, llmsTxt }: SettingsAg
             {
               description: "SettingsAgents - toggle writing generated view files",
               defaultMessage:
-                "Write <code>views/today.json</code> and <code>views/suggestions.json</code> on every change",
-              id: "zmT9pN",
+                "Write <code>views/today.json</code>, <code>views/suggestions.json</code> and <code>views/shopping.json</code> on every change",
+              id: "ZIvsQa",
             },
             { code }
           )}

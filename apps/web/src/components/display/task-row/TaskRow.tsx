@@ -4,6 +4,7 @@ import {
   Bars3BottomLeftIcon,
   BellIcon,
   EllipsisHorizontalIcon,
+  ShoppingCartIcon,
   StarIcon,
   SunIcon,
 } from "@heroicons/react/20/solid";
@@ -39,6 +40,8 @@ export interface TaskRowTask {
   hasNotes?: boolean;
   contextName: string;
   contextColor: ContextColor;
+  /** Set when the task was made from a shopping list or item: the list's name and color. */
+  shopping?: { listName: string; color: ContextColor };
 }
 
 export interface TaskRowProps {
@@ -122,10 +125,11 @@ export function TaskRow({
   const hasNoteMarker = showNotes && !!task.hasNotes;
   const hasMeta = isLean
     ? showContext ||
+      !!task.shopping ||
       (showLinks && task.links.length > 0) ||
       hasNoteMarker ||
       (showMeta && (!!task.due || !!task.remindAt))
-    : hasNoteMarker || (showMeta && (showContext || !!task.due || !!task.remindAt));
+    : hasNoteMarker || !!task.shopping || (showMeta && (showContext || !!task.due || !!task.remindAt));
 
   return (
     // Collapses to nothing while a completed card sinks away, so the list closes the gap.
@@ -264,6 +268,15 @@ export function TaskRow({
               )}
               {!task.done && hasMeta && !isLean && (
                 <span className="text-muted hero:gap-x-1.5 hero:gap-y-1 flex flex-wrap items-center gap-x-2.5 gap-y-0.5 text-xs">
+                  {task.shopping && (
+                    <span
+                      className={clsx(`ctx-${task.shopping.color}`, META_CHIP, "hero:bg-(--ctx)/16 gap-1")}
+                      data-testid="task-row__shopping"
+                    >
+                      <ShoppingCartIcon className="size-3 text-(--ctx)" aria-hidden />
+                      {task.shopping.listName}
+                    </span>
+                  )}
                   {showMeta && showContext && (
                     <span className={clsx(META_CHIP, "hero:bg-(--ctx)/16 hero:text-(--ctx) gap-1.5")}>
                       <span className="size-1.5 rounded-full bg-(--ctx)" aria-hidden />

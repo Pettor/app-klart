@@ -4,6 +4,7 @@ import type { MyDayTask } from "./MyDayTypes";
 import { MyDayView as Component } from "./MyDayView";
 import type { MyDayViewProps as Props } from "./MyDayView";
 import { ALL_CONTEXTS, findContext } from "~/core/contexts/KlartContext";
+import { SHOPPING_KIND_COLORS } from "~/core/shopping/ShoppingList";
 import { taskPath } from "~/core/sync/FolderSync";
 import { buildTodayView } from "~/core/tasks/AgentViews";
 import type { DisplayOptions } from "~/core/tasks/DisplayOptions";
@@ -12,11 +13,13 @@ import { addDays } from "~/core/tasks/LocalDate";
 import { buildSuggestions, selectDueSuggestions } from "~/core/tasks/Suggestions";
 import type { Task } from "~/core/tasks/Task";
 import { DEMO_DATA, DEMO_TODAY } from "~/storybook/data/KlartDemoData";
+import { ShoppingView } from "~/views/shopping/ShoppingView";
 
 const inToday = new Set(DEMO_DATA.days[DEMO_TODAY]!.items.map((item) => item.taskId));
 
 function toRow(task: Task): MyDayTask {
   const context = findContext(DEMO_DATA.contexts, task.context)!;
+  const list = task.shopping ? DEMO_DATA.lists[task.shopping.listId] : undefined;
   return {
     id: task.id,
     title: task.title,
@@ -31,6 +34,7 @@ function toRow(task: Task): MyDayTask {
     contextName: context.name,
     contextColor: context.color,
     isInMyDay: inToday.has(task.id),
+    shopping: list ? { listName: list.name, color: SHOPPING_KIND_COLORS[list.kind] } : undefined,
   };
 }
 
@@ -91,6 +95,7 @@ function buildArgs(contextId: string): Props {
       status: { state: "synced", method: "folder", folderName: "OneDrive/Klart", lastSyncedAt: "2026-10-21T09:58:00Z" },
       onPress: fn(),
     },
+    shopping: { count: 11, isActive: false, onOpen: fn() },
     tasks: dayTasks.filter((task) => task.status === "open").map(toRow),
     doneTasks: dayTasks.filter((task) => task.status === "done").map(toRow),
     showContextOnTasks: contextId === ALL_CONTEXTS,
@@ -161,6 +166,45 @@ export const Work: Story = {
 
 export const AllContexts: Story = {
   args: buildArgs(ALL_CONTEXTS),
+};
+
+/** Shopping takes My Day's place beside the sidebar; the suggestions panel goes with My Day. */
+export const ShoppingPage: Story = {
+  args: {
+    ...buildArgs("personal"),
+    shopping: { count: 11, isActive: true, onOpen: fn() },
+    page: (
+      <ShoppingView
+        today={DEMO_TODAY}
+        openLists={[]}
+        doneLists={[]}
+        selected={null}
+        isListShownOnPhone={false}
+        onSelectList={fn()}
+        onBackToLists={fn()}
+        newList={{ onCreate: fn() }}
+        draft={{ value: "", onChange: fn(), onSubmit: fn(), preview: null }}
+        moveTargets={[]}
+        listActions={{
+          onToggleBought: fn(),
+          onToggleImportant: fn(),
+          onToggleItemMyDay: fn(),
+          onRemoveItem: fn(),
+          onComplete: fn(),
+          onReopen: fn(),
+          onRename: fn(),
+          onDelete: fn(),
+        }}
+      />
+    ),
+  },
+  parameters: { viewport: { value: "full" } },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByTestId("sidebar__shopping")).toHaveAttribute("aria-current", "page");
+    await expect(canvas.getByTestId("sidebar__view-day")).not.toHaveAttribute("aria-current");
+    await expect(canvas.getByRole("heading", { name: "Shopping", level: 1 })).toBeVisible();
+    await expect(canvas.queryByRole("complementary", { name: "Suggestions" })).toBeNull();
+  },
 };
 
 function withDisplay(context: string, options: Partial<DisplayOptions>): Props {

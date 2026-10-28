@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root/route'
 import { Route as IndexRouteRouteImport } from './routes/index/route'
 import { Route as SplatRouteRouteImport } from './routes/$/route'
 import { Route as SettingsRouteRouteImport } from './routes/settings/route'
+import { Route as ShoppingRouteRouteImport } from './routes/shopping/route'
 
 const IndexRouteRoute = IndexRouteRouteImport.update({
   id: '/',
@@ -28,35 +29,44 @@ const SettingsRouteRoute = SettingsRouteRouteImport.update({
   path: '/settings',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ShoppingRouteRoute = ShoppingRouteRouteImport.update({
+  id: '/shopping',
+  path: '/shopping',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRouteRoute
   '/$': typeof SplatRouteRoute
   '/settings': typeof SettingsRouteRoute
+  '/shopping': typeof ShoppingRouteRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRouteRoute
   '/$': typeof SplatRouteRoute
   '/settings': typeof SettingsRouteRoute
+  '/shopping': typeof ShoppingRouteRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRouteRoute
   '/$': typeof SplatRouteRoute
   '/settings': typeof SettingsRouteRoute
+  '/shopping': typeof ShoppingRouteRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/$' | '/settings'
+  fullPaths: '/' | '/$' | '/settings' | '/shopping'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/$' | '/settings'
-  id: '__root__' | '/' | '/$' | '/settings'
+  to: '/' | '/$' | '/settings' | '/shopping'
+  id: '__root__' | '/' | '/$' | '/settings' | '/shopping'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRouteRoute: typeof IndexRouteRoute
   SplatRouteRoute: typeof SplatRouteRoute
   SettingsRouteRoute: typeof SettingsRouteRoute
+  ShoppingRouteRoute: typeof ShoppingRouteRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -82,6 +92,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SettingsRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/shopping': {
+      id: '/shopping'
+      path: '/shopping'
+      fullPath: '/shopping'
+      preLoaderRoute: typeof ShoppingRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -89,6 +106,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRouteRoute: IndexRouteRoute,
   SplatRouteRoute: SplatRouteRoute,
   SettingsRouteRoute: SettingsRouteRoute,
+  ShoppingRouteRoute: ShoppingRouteRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

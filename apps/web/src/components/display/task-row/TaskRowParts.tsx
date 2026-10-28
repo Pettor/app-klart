@@ -5,6 +5,7 @@ import {
   BellIcon,
   CheckIcon,
   LinkIcon,
+  ShoppingCartIcon,
 } from "@heroicons/react/20/solid";
 import { Button, Link } from "@heroui/react";
 import clsx from "clsx";
@@ -139,6 +140,12 @@ export function TaskRowLeanMeta({
       className="text-muted flex items-center gap-2.5 overflow-hidden text-[12.5px] whitespace-nowrap"
       data-testid="task-row__meta"
     >
+      {task.shopping && (
+        <span className={clsx(`ctx-${task.shopping.color}`, "inline-flex items-center gap-1")}>
+          <ShoppingCartIcon className="size-3 text-(--ctx)" aria-hidden />
+          {task.shopping.listName}
+        </span>
+      )}
       {showContext && (
         <span className="inline-flex items-center gap-1.5">
           <span className="size-1.5 rounded-full bg-(--ctx)" aria-hidden />

@@ -5,6 +5,12 @@ export const TASK_SCHEMA = "klart.task/v1";
 
 export type TaskStatus = "open" | "done" | "archived";
 
+/** Ties a task to a shopping list, or to one item on it (`itemId`). Completing the item's task marks it bought. */
+export interface TaskShoppingLink {
+  listId: string;
+  itemId: string | null;
+}
+
 /** One task, stored as `tasks/<context>/<id>.json` in the data folder. */
 export interface Task {
   schema: typeof TASK_SCHEMA;
@@ -27,6 +33,8 @@ export interface Task {
   completedAt: string | null;
   /** The quick-add line the task was created from. */
   raw: string;
+  /** Set on tasks made from a shopping list or item. Absent on other tasks. */
+  shopping?: TaskShoppingLink;
 }
 
 const nullableString = z.string().nullable().catch(null);
@@ -51,6 +59,10 @@ export const TaskFileSchema = z.object({
   updatedAt: z.string(),
   completedAt: nullableString,
   raw: z.string().catch(""),
+  shopping: z
+    .object({ listId: z.string().min(1), itemId: z.string().min(1).nullable().catch(null) })
+    .optional()
+    .catch(undefined),
 });
 
 /** What an agent may drop into `inbox/` as JSON. Only `title` is required. */

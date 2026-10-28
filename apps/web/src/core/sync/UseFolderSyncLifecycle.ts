@@ -66,8 +66,14 @@ function rebase(base: KlartData, pulled: KlartData, current: KlartData): KlartDa
       days[date] = day;
     }
   }
+  const lists = { ...current.lists };
+  for (const [id, list] of Object.entries(pulled.lists)) {
+    if (list !== base.lists[id]) {
+      lists[id] = list;
+    }
+  }
   const contexts = pulled.contexts !== base.contexts ? pulled.contexts : current.contexts;
-  return { contexts, tasks, days };
+  return { contexts, tasks, days, lists };
 }
 
 function describe(error: unknown): string {

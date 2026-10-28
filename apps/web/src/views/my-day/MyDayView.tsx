@@ -1,4 +1,4 @@
-import type { ReactElement } from "react";
+import type { ReactElement, ReactNode } from "react";
 import { LightBulbIcon } from "@heroicons/react/24/outline";
 import { Button } from "@heroui/react";
 import { useBreakpoint } from "@package/react";
@@ -42,6 +42,8 @@ export interface MyDayViewProps extends MyDaySidebarProps {
   sidebar: MyDaySidebarCollapseProps;
   onOpenSettings: () => void;
   onOpenNotifications: () => void;
+  /** Shown instead of My Day beside the sidebar, e.g. Shopping. The suggestions and editor go with My Day. */
+  page?: ReactNode;
 }
 
 export function MyDayView({
@@ -51,6 +53,7 @@ export function MyDayView({
   smartViews,
   tags,
   sync,
+  shopping,
   tasks,
   doneTasks,
   showContextOnTasks,
@@ -63,6 +66,7 @@ export function MyDayView({
   sidebar,
   onOpenSettings,
   onOpenNotifications,
+  page,
 }: MyDayViewProps): ReactElement {
   const intl = useIntl();
   const isPhone = !useBreakpoint("sm");
@@ -85,6 +89,7 @@ export function MyDayView({
         smartViews={smartViews}
         tags={tags}
         sync={sync}
+        shopping={shopping}
         collapse={sidebar}
         showTags={showTagFilter}
         className={clsx("sticky top-0 hidden h-dvh", !sidebar.isCollapsed && "lg:flex")}
@@ -96,109 +101,133 @@ export function MyDayView({
           smartViews={smartViews}
           tags={tags}
           sync={sync}
+          shopping={shopping}
           collapse={sidebar}
           showTags={showTagFilter}
           className="sticky top-0 hidden h-dvh lg:flex"
         />
       )}
 
-      <main
-        className={clsx(
-          `ctx-${context.selectedColor}`,
-          "hero-glow flex min-w-0 flex-1 flex-col gap-5 bg-(--ctx-backdrop) bg-no-repeat px-4 pt-4 pb-[calc(env(safe-area-inset-bottom)+12px)] sm:px-8 sm:pb-0 lg:pt-10"
-        )}
-      >
-        <MyDayMobileBar
-          context={context}
-          smartViews={smartViews}
-          sync={sync}
-          onOpenNotifications={onOpenNotifications}
-          onOpenSettings={onOpenSettings}
-          className="lg:hidden"
-        />
-
-        <MyDayHeader
-          today={today}
-          smartView={smartViews.active}
-          contextName={context.selectedName}
-          tag={tags.active}
-          onClearTag={() => tags.onSelect(null)}
-          suggestionCount={suggestions.count}
-          isSuggestionsOpen={suggestions.isOpen}
-          onToggleSuggestions={suggestions.onToggle}
-          onOpenNotifications={onOpenNotifications}
-          display={display}
-          contextColor={context.selectedColor}
-        />
-
-        {options.tagFilter && (
-          <MyDayTagChips tags={tags.items} active={tags.active} onSelect={tags.onSelect} className="lg:hidden" />
-        )}
-
-        {options.agentJson && <MyDayAgentJson json={agentJson} className="max-lg:hidden" />}
-
-        <MyDayTaskList
-          today={today}
-          smartView={smartViews.active}
-          tasks={tasks}
-          doneTasks={doneTasks}
-          showContext={showContextOnTasks}
-          actions={taskActions}
-          selectedTaskId={editor.task?.id}
-          showTags={options.taskTags}
-          showMeta={options.details}
-          showLinks={options.links}
-          showNotes={options.notes}
-          isCompletedExpanded={options.completed}
-          onToggleCompleted={() => display.onChange({ ...options, completed: !options.completed })}
-          arrivingIds={arrivingIds}
-        />
-
-        {/* On phones it floats above the list, clear of the screen's bottom edge. */}
+      {page ? (
         <div
           className={clsx(
-            "sticky mt-auto flex flex-col gap-2",
-            "max-sm:bg-surface/85 max-sm:bottom-[calc(env(safe-area-inset-bottom)+12px)] max-sm:rounded-3xl max-sm:p-2 max-sm:shadow-lg max-sm:backdrop-blur-md",
-            "sm:bottom-0 sm:bg-(--ctx-backdrop) sm:pt-2 sm:pb-[calc(env(safe-area-inset-bottom)+16px)]"
+            `ctx-${context.selectedColor}`,
+            "flex min-w-0 flex-1 flex-col bg-(--ctx-backdrop) bg-no-repeat"
           )}
         >
-          <Button
-            variant="secondary"
-            onPress={suggestions.onToggle}
-            className="h-11 self-start rounded-full sm:hidden"
-            data-testid="my-day__open-suggestions"
-          >
-            <LightBulbIcon className="size-[18px]" aria-hidden />
-            {intl.formatMessage(
-              {
-                description: "MyDayView - mobile button opening the suggestions sheet",
-                defaultMessage: "Suggestions · {count}",
-                id: "70RKSI",
-              },
-              { count: suggestions.count }
-            )}
-          </Button>
-          <QuickAddInput
-            value={quickAdd.value}
-            onChange={quickAdd.onChange}
-            onSubmit={quickAdd.onSubmit}
-            preview={quickAdd.preview}
-            today={today}
-            compact={isPhone}
+          <MyDayMobileBar
+            context={context}
+            smartViews={smartViews}
+            sync={sync}
+            shopping={shopping}
+            onOpenNotifications={onOpenNotifications}
+            onOpenSettings={onOpenSettings}
+            className="px-4 pt-4 lg:hidden"
           />
+          {page}
         </div>
-      </main>
+      ) : (
+        <>
+          <main
+            className={clsx(
+              `ctx-${context.selectedColor}`,
+              "hero-glow flex min-w-0 flex-1 flex-col gap-5 bg-(--ctx-backdrop) bg-no-repeat px-4 pt-4 pb-[calc(env(safe-area-inset-bottom)+12px)] sm:px-8 sm:pb-0 lg:pt-10"
+            )}
+          >
+            <MyDayMobileBar
+              context={context}
+              smartViews={smartViews}
+              sync={sync}
+              shopping={shopping}
+              onOpenNotifications={onOpenNotifications}
+              onOpenSettings={onOpenSettings}
+              className="lg:hidden"
+            />
 
-      {/* On wide screens the editor takes the suggestions panel's place. */}
-      <MyDayTaskEditorPanel editor={editor} pane={pane} />
-      {!(isWide && editor.task) && (
-        <MyDaySuggestionsPanel
-          today={today}
-          contextColor={context.selectedColor}
-          suggestions={suggestions}
-          onOpenTask={taskActions.onOpen}
-          pane={pane}
-        />
+            <MyDayHeader
+              today={today}
+              smartView={smartViews.active}
+              contextName={context.selectedName}
+              tag={tags.active}
+              onClearTag={() => tags.onSelect(null)}
+              suggestionCount={suggestions.count}
+              isSuggestionsOpen={suggestions.isOpen}
+              onToggleSuggestions={suggestions.onToggle}
+              onOpenNotifications={onOpenNotifications}
+              display={display}
+              contextColor={context.selectedColor}
+            />
+
+            {options.tagFilter && (
+              <MyDayTagChips tags={tags.items} active={tags.active} onSelect={tags.onSelect} className="lg:hidden" />
+            )}
+
+            {options.agentJson && <MyDayAgentJson json={agentJson} className="max-lg:hidden" />}
+
+            <MyDayTaskList
+              today={today}
+              smartView={smartViews.active}
+              tasks={tasks}
+              doneTasks={doneTasks}
+              showContext={showContextOnTasks}
+              actions={taskActions}
+              selectedTaskId={editor.task?.id}
+              showTags={options.taskTags}
+              showMeta={options.details}
+              showLinks={options.links}
+              showNotes={options.notes}
+              isCompletedExpanded={options.completed}
+              onToggleCompleted={() => display.onChange({ ...options, completed: !options.completed })}
+              arrivingIds={arrivingIds}
+            />
+
+            {/* On phones it floats above the list, clear of the screen's bottom edge. */}
+            <div
+              className={clsx(
+                "sticky mt-auto flex flex-col gap-2",
+                "max-sm:bg-surface/85 max-sm:bottom-[calc(env(safe-area-inset-bottom)+12px)] max-sm:rounded-3xl max-sm:p-2 max-sm:shadow-lg max-sm:backdrop-blur-md",
+                "sm:bottom-0 sm:bg-(--ctx-backdrop) sm:pt-2 sm:pb-[calc(env(safe-area-inset-bottom)+16px)]"
+              )}
+            >
+              <Button
+                variant="secondary"
+                onPress={suggestions.onToggle}
+                className="h-11 self-start rounded-full sm:hidden"
+                data-testid="my-day__open-suggestions"
+              >
+                <LightBulbIcon className="size-[18px]" aria-hidden />
+                {intl.formatMessage(
+                  {
+                    description: "MyDayView - mobile button opening the suggestions sheet",
+                    defaultMessage: "Suggestions · {count}",
+                    id: "70RKSI",
+                  },
+                  { count: suggestions.count }
+                )}
+              </Button>
+              <QuickAddInput
+                value={quickAdd.value}
+                onChange={quickAdd.onChange}
+                onSubmit={quickAdd.onSubmit}
+                preview={quickAdd.preview}
+                today={today}
+                compact={isPhone}
+              />
+            </div>
+          </main>
+
+          {/* On wide screens the editor takes the suggestions panel's place. */}
+          <MyDayTaskEditorPanel editor={editor} pane={pane} />
+          {!(isWide && editor.task) && (
+            <MyDaySuggestionsPanel
+              today={today}
+              contextColor={context.selectedColor}
+              suggestions={suggestions}
+              onOpenTask={taskActions.onOpen}
+              pane={pane}
+            />
+          )}
+        </>
       )}
     </div>
   );

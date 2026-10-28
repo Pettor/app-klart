@@ -5,7 +5,7 @@ import clsx from "clsx";
 import { useIntl } from "react-intl";
 import { getSmartViewLabel } from "./MyDayLabels";
 import { MyDaySidebarIcon } from "./MyDaySidebarIcon";
-import { SMART_VIEW_ICONS } from "./MyDaySmartViewNav";
+import { SHOPPING_ICON, SMART_VIEW_ICONS } from "./MyDaySmartViewNav";
 import type { MyDaySidebarCollapseProps, MyDaySidebarProps } from "./MyDayTypes";
 import { isMac } from "~/components/actions/command-palette/CommandShortcut";
 import { ContextSwitcher } from "~/components/actions/context-switcher/ContextSwitcher";
@@ -58,6 +58,7 @@ export function MyDaySidebarRail({
   smartViews,
   tags,
   sync,
+  shopping,
   collapse,
   showTags,
   className,
@@ -67,6 +68,11 @@ export function MyDaySidebarRail({
     description: "MyDaySidebarRail - aria-label of the button expanding the sidebar",
     defaultMessage: "Expand sidebar",
     id: "R0EQCk",
+  });
+  const shoppingLabel = intl.formatMessage({
+    description: "MyDaySidebarRail - aria-label of the button opening the shopping lists",
+    defaultMessage: "Shopping",
+    id: "l3AXLa",
   });
 
   return (
@@ -131,7 +137,7 @@ export function MyDaySidebarRail({
               label={item.count > 0 ? `${label}, ${item.count}` : label}
               tooltip={label}
               onPress={() => smartViews.onSelect(item.id)}
-              isActive={item.id === smartViews.active}
+              isActive={!shopping.isActive && item.id === smartViews.active}
               testId={`rail__view-${item.id}`}
             >
               {SMART_VIEW_ICONS[item.id]}
@@ -146,6 +152,23 @@ export function MyDaySidebarRail({
             </RailButton>
           );
         })}
+        <RailButton
+          label={shopping.count > 0 ? `${shoppingLabel}, ${shopping.count}` : shoppingLabel}
+          tooltip={shoppingLabel}
+          onPress={shopping.onOpen}
+          isActive={shopping.isActive}
+          testId="rail__shopping"
+        >
+          {SHOPPING_ICON}
+          {shopping.count > 0 && (
+            <span
+              aria-hidden
+              className="bg-separator text-foreground absolute top-[3px] right-[3px] h-4 min-w-4 rounded-full px-1 text-center text-[10px] leading-4 font-semibold"
+            >
+              {shopping.count}
+            </span>
+          )}
+        </RailButton>
       </nav>
 
       {showTags && (

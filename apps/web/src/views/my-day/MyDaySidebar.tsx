@@ -23,6 +23,7 @@ export function MyDaySidebar({
   smartViews,
   tags,
   sync,
+  shopping,
   collapse,
   showTags,
   className,
@@ -90,7 +91,7 @@ export function MyDaySidebar({
         shortcutHint="/"
       />
 
-      <MyDaySmartViewNav smartViews={smartViews} testIdPrefix="sidebar" />
+      <MyDaySmartViewNav smartViews={smartViews} shopping={shopping} testIdPrefix="sidebar" />
 
       {showTags && tags.items.length > 0 && <Separator className="mx-2 w-auto" />}
 

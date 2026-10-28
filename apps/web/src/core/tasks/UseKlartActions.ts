@@ -20,6 +20,7 @@ import { parseQuickAdd } from "./QuickAdd";
 import type { Task } from "./Task";
 import type { ContextColor, KlartContext } from "~/core/contexts/KlartContext";
 import { createContextId, toContextTag } from "~/core/contexts/KlartContext";
+import { reconcileShoppingTasks } from "~/core/shopping/ShoppingData";
 
 export interface KlartActions {
   /** Parses a quick-add line, creates the task and puts it in today's My Day. Returns `null` for an empty title. */
@@ -38,7 +39,10 @@ export interface KlartActions {
   moveContext: (id: string, direction: -1 | 1) => void;
 }
 
-/** All mutations of Klart's data. Each one stamps `updatedAt` so sync can resolve conflicts. */
+/**
+ * All mutations of Klart's data. Each one stamps `updatedAt` so sync can resolve conflicts, and carries task
+ * changes over to linked shopping items (completing "Buy: milk" marks the milk bought).
+ */
 export function useKlartActions(): KlartActions {
   const setData = useSetAtom(klartDataAtom);
   const data = useAtomValue(klartDataAtom);
@@ -47,7 +51,7 @@ export function useKlartActions(): KlartActions {
 
   const change = useCallback(
     (fn: (current: KlartData, now: Date) => KlartData) => {
-      setData((current) => fn(current, new Date()));
+      setData((current) => reconcileShoppingTasks(fn(current, new Date())));
     },
     [setData]
   );

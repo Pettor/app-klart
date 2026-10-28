@@ -11,6 +11,7 @@ export interface MyDayNavDrawerProps {
   onOpenChange: (isOpen: boolean) => void;
   smartViews: MyDaySidebarProps["smartViews"];
   sync: MyDaySidebarProps["sync"];
+  shopping: MyDaySidebarProps["shopping"];
   onOpenSettings: () => void;
 }
 
@@ -20,6 +21,7 @@ export function MyDayNavDrawer({
   onOpenChange,
   smartViews,
   sync,
+  shopping,
   onOpenSettings,
 }: MyDayNavDrawerProps): ReactElement {
   const intl = useIntl();
@@ -58,6 +60,7 @@ export function MyDayNavDrawer({
             <Drawer.Body className="flex flex-col gap-4">
               <MyDaySmartViewNav
                 smartViews={{ ...smartViews, onSelect: closeAfter(smartViews.onSelect) }}
+                shopping={{ ...shopping, onOpen: closeAfter(shopping.onOpen) }}
                 testIdPrefix="nav-drawer"
                 isLarge
               />
