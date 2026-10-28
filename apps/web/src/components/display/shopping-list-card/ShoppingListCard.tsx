@@ -97,11 +97,17 @@ export function ShoppingListCard({ list, today, isSelected = false, onPress }: S
                   },
                   { count: left }
                 )
-              : intl.formatMessage({
-                  description: "ShoppingListCard - every item on the list is bought",
-                  defaultMessage: "All bought",
-                  id: "T2gLYl",
-                })}
+              : list.total === 0
+                ? intl.formatMessage({
+                    description: "ShoppingListCard - no item has been added to the list yet",
+                    defaultMessage: "No items yet",
+                    id: "kkZvzF",
+                  })
+                : intl.formatMessage({
+                    description: "ShoppingListCard - every item on the list is bought",
+                    defaultMessage: "All bought",
+                    id: "T2gLYl",
+                  })}
           </span>
         </span>
         <span aria-hidden className="bg-separator block h-1 overflow-hidden rounded-sm">

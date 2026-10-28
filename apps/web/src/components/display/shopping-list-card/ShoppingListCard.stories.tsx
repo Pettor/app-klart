@@ -64,6 +64,13 @@ export const AllBought: Story = {
   },
 };
 
+export const Empty: Story = {
+  args: { ...defaultArgs, list: { ...defaultArgs.list, total: 0, bought: 0 } },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByText("No items yet")).toBeVisible();
+  },
+};
+
 export const Completed: Story = {
   args: { ...defaultArgs, list: { ...defaultArgs.list, name: "Fredagsmys", total: 4, bought: 3, isCompleted: true } },
   play: async ({ canvas }) => {
