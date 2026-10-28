@@ -17,7 +17,6 @@ import { DUE_TONE_CLASS, formatDue, formatReminder, getDueTone } from "./TaskDat
 import { TaskLinksButton } from "./TaskLinksButton";
 import { TaskCheck, TaskRowLeanMeta } from "./TaskRowParts";
 import { useStarPop } from "./UseStarPop";
-import { useTagsLongPress } from "./UseTagsLongPress";
 import { useTaskCompletion } from "./UseTaskCompletion";
 import type { TaskRowReorder } from "./UseTaskReorder";
 import { REORDER_HANDLE_ATTRIBUTE, REORDER_ID_ATTRIBUTE } from "./UseTaskReorder";
@@ -120,7 +119,6 @@ export function TaskRow({
   const star = useStarPop(task.id, task.important, onToggleImportant);
   // Phones get the lean row: the title takes the width, and links, star and actions move to the details sheet.
   const isLean = !useBreakpoint("sm");
-  const tags = useTagsLongPress(isLean && !task.done && task.tags.length > 0);
   const hasNoteMarker = showNotes && !!task.hasNotes;
   const hasMeta = isLean
     ? showContext ||
@@ -153,7 +151,6 @@ export function TaskRow({
             !task.done && (isLean && reorder ? "pl-1" : "pl-2"),
             isLean && "slab-lean select-none [-webkit-touch-callout:none]",
             reorder && "slab-draggable select-none",
-            tags.isOpen && "slab-tags-open",
             reorder?.isLifted && "slab-lifted",
             reorder?.isSettled && "slab-settled",
             completion.isChecking && "slab-checking",
@@ -207,7 +204,7 @@ export function TaskRow({
               className={clsx(isLean && "w-9")}
             />
 
-            <div className="relative flex min-w-0 flex-1 flex-col gap-1 py-1" {...tags.pressProps}>
+            <div className="relative flex min-w-0 flex-1 flex-col gap-1 py-1">
               {onOpen && (
                 // An invisible button over the whole column, so the meta line opens the task too.
                 // It must be the pressed element itself: React Aria drops a press released outside the button's box.
@@ -233,7 +230,7 @@ export function TaskRow({
                           { title: task.title }
                         )
                   }
-                  onPress={() => !reorder?.isDropping() && !tags.wasLongPress() && onOpen(task.id)}
+                  onPress={() => !reorder?.isDropping() && onOpen(task.id)}
                   onKeyDown={reorder?.onRowKeyDown}
                   {...{ [REORDER_HANDLE_ATTRIBUTE]: "" }}
                   // Clears the ghost button's hover and press fills, which would cover the title it sits over.

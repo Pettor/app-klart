@@ -6,7 +6,7 @@ export interface DisplayOptions {
   notes: boolean;
   /** A button per task link that opens it in one click. */
   links: boolean;
-  /** Every task's tags; off, they still appear on hover or focus. */
+  /** Every task's tags below its title; off, tags are hidden. */
   taskTags: boolean;
   /** The tag list in the sidebar, or the tag chips on phones. */
   tagFilter: boolean;

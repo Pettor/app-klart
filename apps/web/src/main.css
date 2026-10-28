@@ -125,10 +125,8 @@
 
 /*
  * Slab task cards from the design: a raised card that lifts on hover and presses down on click.
- * `.slab-tags` (a line of tag chips under the title) stays closed until the card is hovered or focused,
- * held on a touch screen (`.slab-tags-open`), or a `.slab-tags-on` ancestor asks for tags on every card. A tap
- * on a touch screen focuses the card without opening them, so opening the task doesn't flash its tags. `.slab-reveal` (the actions menu) fades in on
- * hover. A `.slab-draggable` card is dragged by pressing it with a mouse; touch screens show `.slab-grip`.
+ * `.slab-tags` (a line of tag chips under the title) stays closed unless a `.slab-tags-on` ancestor asks for tags
+ * on every card. `.slab-reveal` (the actions menu) fades in on hover. A `.slab-draggable` card is dragged by pressing it with a mouse; touch screens show `.slab-grip`.
  */
 :root {
   --slab: #ffffff;
@@ -293,9 +291,7 @@
     opacity 0.2s ease,
     margin 0.28s ease;
 }
-.slab-tags-on .slab-tags,
-.slab-tags-open .slab-tags,
-.slab:has(:focus-visible) .slab-tags {
+.slab-tags-on .slab-tags {
   max-height: 28px;
   margin-top: 8px;
   opacity: 1;
@@ -327,12 +323,6 @@
   }
 }
 @media (hover: hover) {
-  .slab:hover .slab-tags,
-  .slab:focus-within .slab-tags {
-    max-height: 28px;
-    margin-top: 8px;
-    opacity: 1;
-  }
   .slab-reveal {
     opacity: 0;
     transition: opacity 0.15s;
