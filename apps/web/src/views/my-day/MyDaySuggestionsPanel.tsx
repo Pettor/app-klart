@@ -53,12 +53,13 @@ export function MyDaySuggestionsPanel({
         })}
         className={clsx(
           `ctx-${contextColor}`,
-          "bg-surface hero:bg-[#111114] border-separator relative flex max-w-[60vw] shrink-0 flex-col border-l px-4 pt-10 pb-4"
+          // Pinned to the screen's height, so a long list scrolls inside the panel instead of stretching the page.
+          "bg-surface hero:bg-[#111114] border-separator sticky top-0 flex h-dvh max-w-[60vw] shrink-0 flex-col border-l"
         )}
         style={{ width: pane.width }}
       >
         {pane.handle}
-        {list(false)}
+        <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-4 pt-10 pb-4">{list(false)}</div>
       </aside>
     );
   }
