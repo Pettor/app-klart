@@ -15,6 +15,19 @@ export interface ReleaseNote {
   fixes: ReleaseNoteItem[];
 }
 
+const v091 = defineMessages({
+  sidebarFixTitle: {
+    description: "ReleaseNotes 0.9.1 - fix title: sidebar wobble when switching pages",
+    defaultMessage: "A steadier sidebar",
+    id: "6QP5Y6",
+  },
+  sidebarFixDescription: {
+    description: "ReleaseNotes 0.9.1 - fix text: sidebar wobble when switching pages",
+    defaultMessage: "Switching between Shopping and My Day no longer makes the sidebar wobble.",
+    id: "Ly+nPE",
+  },
+});
+
 const v090 = defineMessages({
   homeTitle: {
     description: "ReleaseNotes 0.9.0 - highlight title: contexts live in the sync they were created in",
@@ -582,6 +595,11 @@ const v010 = defineMessages({
  * entry here; people who update see every entry newer than the last one they saw.
  */
 export const RELEASE_NOTES: ReleaseNote[] = [
+  {
+    version: "0.9.1",
+    highlights: [],
+    fixes: [{ emoji: "🧘", title: v091.sidebarFixTitle, description: v091.sidebarFixDescription }],
+  },
   {
     version: "0.9.0",
     highlights: [
