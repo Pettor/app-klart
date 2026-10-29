@@ -5,13 +5,13 @@ import { buildTodayView } from "./AgentViews";
 import type { SmartView } from "./KlartAtoms";
 import {
   currentContextAtom,
-  klartDataAtom,
   searchFocusRequestAtom,
   searchQueryAtom,
   smartViewAtom,
   suggestionSettingsAtom,
   tagFilterAtom,
   todayAtom,
+  visibleKlartDataAtom,
 } from "./KlartAtoms";
 import { addDays, toUtcTimestamp } from "./LocalDate";
 import type { SuggestionGroup } from "./Suggestions";
@@ -70,7 +70,7 @@ function matchesSearch(task: Task, search: string): boolean {
 
 /** Everything the My Day screen derives from the data: lists, counts, tags and suggestions. */
 export function useMyDay(): MyDayState {
-  const data = useAtomValue(klartDataAtom);
+  const data = useAtomValue(visibleKlartDataAtom);
   const today = useAtomValue(todayAtom);
   const [currentContextRaw, setCurrentContext] = useAtom(currentContextAtom);
   const [smartView, setSmartView] = useAtom(smartViewAtom);

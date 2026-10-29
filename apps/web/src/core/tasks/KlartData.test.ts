@@ -12,6 +12,7 @@ import {
   removeFromDay,
   setTaskDone,
   updateTask,
+  withoutHiddenContexts,
 } from "./KlartData";
 import { parseQuickAdd } from "./QuickAdd";
 import { createShoppingList, upsertList } from "~/core/shopping/ShoppingData";
@@ -142,6 +143,28 @@ describe("context changes", () => {
     expect(moveContext(setup(), "work", -1).contexts.map((context) => context.id)).toEqual(["work", "personal"]);
     const data = setup();
     expect(moveContext(data, "work", 1)).toBe(data);
+  });
+});
+
+describe("withoutHiddenContexts", () => {
+  it("leaves out a hidden context's tasks, My Day items and lists", () => {
+    let data = addToDay(setup(), TODAY, [{ taskId: "T1", reason: null, addedBy: "quick_add" }], CREATED);
+    data = upsertList(data, createShoppingList("L1", "Office", "other", "work", null, CREATED));
+    data = upsertList(data, { ...createShoppingList("L2", "Old", "other", "personal", null, CREATED), context: null });
+
+    const shown = withoutHiddenContexts(data, ["work"]);
+    expect(shown.contexts.map((context) => context.id)).toEqual(["personal"]);
+    expect(shown.tasks).toEqual({});
+    expect(shown.days[TODAY]?.items).toEqual([]);
+    // A list without a context still belongs to the first one, even with that one hidden.
+    expect(Object.keys(shown.lists)).toEqual(["L2"]);
+    expect(Object.keys(withoutHiddenContexts(data, ["personal"]).lists)).toEqual(["L1"]);
+  });
+
+  it("hides nothing when nothing, or every context, is hidden", () => {
+    const data = setup();
+    expect(withoutHiddenContexts(data, [])).toBe(data);
+    expect(withoutHiddenContexts(data, ["personal", "work"])).toBe(data);
   });
 });
 

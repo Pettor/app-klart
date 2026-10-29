@@ -13,7 +13,13 @@ import { LLMS_TXT } from "~/core/sync/LlmsTxt";
 import { DEVICE_ONLY } from "~/core/sync/SyncTargets";
 import type { GitConnectResult, GitHubConnectResult, GitHubCredentials } from "~/core/sync/UseFolderSync";
 import { useFolderSync } from "~/core/sync/UseFolderSync";
-import { klartDataAtom, startContextAtom, suggestionSettingsAtom } from "~/core/tasks/KlartAtoms";
+import {
+  hiddenContextIdsAtom,
+  klartDataAtom,
+  startContextAtom,
+  suggestionSettingsAtom,
+  visibleKlartDataAtom,
+} from "~/core/tasks/KlartAtoms";
 import { useKlartActions } from "~/core/tasks/UseKlartActions";
 import { densityAtom, motionAtom, tintByContextAtom } from "~/core/theme/ThemeAtoms";
 import { useWhatsNew } from "~/core/whats-new/UseWhatsNew";
@@ -30,6 +36,8 @@ export function useSettingsRoute(section?: SettingsSectionId): SettingsViewProps
   const themeSelector = useThemeSelector();
   const { appName, appVersion } = useAppInfo();
   const whatsNew = useWhatsNew();
+  const visibleContexts = useAtomValue(visibleKlartDataAtom).contexts;
+  const [hiddenContextIds, setHiddenContextIds] = useAtom(hiddenContextIdsAtom);
   const [startContext, setStartContext] = useAtom(startContextAtom);
   const [suggestionSettings, setSuggestionSettings] = useAtom(suggestionSettingsAtom);
   const [density, setDensity] = useAtom(densityAtom);
@@ -129,6 +137,8 @@ export function useSettingsRoute(section?: SettingsSectionId): SettingsViewProps
     return sync.connectGitHub(credentials, targetId).then(reportGitHub, reportGitHubError);
   }
 
+  const syncNames = new Map(sync.overview.targets.map((target) => [target.id, target.name]));
+
   const openCounts = new Map<string, number>();
   for (const task of Object.values(data.tasks)) {
     if (task.status === "open") {
@@ -141,24 +151,34 @@ export function useSettingsRoute(section?: SettingsSectionId): SettingsViewProps
     onBack: () => navigation.up({ to: "/" }),
     general: {
       startContext,
-      contexts: data.contexts.map(({ id, name, color }) => ({ id, name, color })),
+      contexts: visibleContexts.map(({ id, name, color }) => ({ id, name, color })),
       onStartContextChange: setStartContext,
     },
     contexts: {
-      contexts: data.contexts.map((context) => ({ ...context, openTaskCount: openCounts.get(context.id) ?? 0 })),
-      onCreate: (name, color) => void actions.createContext(name, color),
+      contexts: data.contexts.map((context) => ({
+        ...context,
+        openTaskCount: openCounts.get(context.id) ?? 0,
+        isHidden: hiddenContextIds.includes(context.id),
+        syncName:
+          syncNames.size > 0 ? (syncNames.get(sync.contextTargets[context.id] ?? DEVICE_ONLY) ?? null) : undefined,
+      })),
+      syncs: sync.overview.targets.map(({ id, name }) => ({ id, name })),
+      onCreate: (name, color, syncId) => {
+        const context = actions.createContext(name, color);
+        if (syncId) {
+          sync.placeNewContext(context.id, syncId);
+        }
+      },
       onUpdate: actions.updateContext,
       onRemove: actions.removeContext,
       onMove: actions.moveContext,
+      onHiddenChange: (id, isHidden) =>
+        setHiddenContextIds((current) =>
+          isHidden ? [...current.filter((hidden) => hidden !== id), id] : current.filter((hidden) => hidden !== id)
+        ),
     },
     sync: {
       overview: sync.overview,
-      contexts: data.contexts.map(({ id, name, color }) => ({
-        id,
-        name,
-        color,
-        targetId: sync.contextTargets[id] ?? DEVICE_ONLY,
-      })),
       isSupported: sync.isSupported,
       isDesktop: sync.isDesktop,
       isGitSupported: sync.isGitSupported,
@@ -173,7 +193,6 @@ export function useSettingsRoute(section?: SettingsSectionId): SettingsViewProps
       onRemove: (targetId) => void sync.remove(targetId),
       onRename: sync.rename,
       onMakePrimary: sync.makePrimary,
-      onAssignContext: sync.assignContext,
       onSyncNow: sync.syncNow,
       onDeviceNameChange: sync.setDeviceName,
     },
@@ -184,7 +203,7 @@ export function useSettingsRoute(section?: SettingsSectionId): SettingsViewProps
     },
     notifications: {
       settings: notifications.settings,
-      contexts: data.contexts.map((context) => ({
+      contexts: visibleContexts.map((context) => ({
         id: context.id,
         name: context.name,
         color: context.color,

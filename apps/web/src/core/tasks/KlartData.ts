@@ -168,6 +168,37 @@ export function moveDayItemNextTo(
   return moveDayItem(data, date, taskId, position === "before" ? targetIndex : targetIndex + 1);
 }
 
+/**
+ * What a device shows when it hides some contexts: those contexts, their tasks, My Day items and
+ * shopping lists left out. Hiding every context hides none. Read-only; mutations work on the full data.
+ */
+export function withoutHiddenContexts(data: KlartData, hiddenIds: string[]): KlartData {
+  const hidden = new Set(hiddenIds);
+  const contexts = data.contexts.filter((context) => !hidden.has(context.id));
+  if (contexts.length === data.contexts.length || contexts.length === 0) {
+    return data;
+  }
+  const tasks: Record<string, Task> = {};
+  for (const task of Object.values(data.tasks)) {
+    if (!hidden.has(task.context)) {
+      tasks[task.id] = task;
+    }
+  }
+  const days: Record<string, DayFile> = {};
+  for (const day of Object.values(data.days)) {
+    days[day.date] = { ...day, items: day.items.filter((item) => !data.tasks[item.taskId] || !!tasks[item.taskId]) };
+  }
+  const lists: Record<string, ShoppingList> = {};
+  for (const list of Object.values(data.lists)) {
+    // Pinned, since a list without a context belongs to the first one, which may be hidden.
+    const context = list.context ?? getDefaultContextId(data.contexts);
+    if (!hidden.has(context)) {
+      lists[list.id] = { ...list, context };
+    }
+  }
+  return { contexts, tasks, days, lists };
+}
+
 export function addContext(data: KlartData, context: KlartContext): KlartData {
   return { ...data, contexts: [...data.contexts, context] };
 }

@@ -22,6 +22,7 @@ import {
   DEVICE_ONLY,
   getContextTargetId,
   makePrimarySyncTarget,
+  placeNewContext,
   removeSyncTarget,
   withoutKey,
 } from "./SyncTargets";
@@ -78,8 +79,8 @@ export interface UseFolderSyncResult {
   disconnect: () => Promise<void>;
   rename: (targetId: string, name: string) => void;
   makePrimary: (targetId: string) => void;
-  /** Moves a context's data to another sync, or keeps it on this device with {@link DEVICE_ONLY}. */
-  assignContext: (contextId: string, targetId: string) => void;
+  /** Puts a just-created context in a sync. Contexts live where they were created and can't be moved. */
+  placeNewContext: (contextId: string, targetId: string) => void;
   syncNow: () => void;
   setDeviceName: (name: string) => void;
   setAgentOption: (key: keyof AgentFileOptions, value: boolean) => void;
@@ -244,8 +245,7 @@ export function useFolderSync(): UseFolderSyncResult {
         targets: current.targets.map((target) => (target.id === targetId ? { ...target, name } : target)),
       })),
     makePrimary: (targetId) => setSetup((current) => makePrimarySyncTarget(current, targetId, data.contexts)),
-    assignContext: (contextId, targetId) =>
-      setSetup((current) => ({ ...current, contextTargets: { ...current.contextTargets, [contextId]: targetId } })),
+    placeNewContext: (contextId, targetId) => setSetup((current) => placeNewContext(current, contextId, targetId)),
     syncNow: () => setSyncRequest((count) => count + 1),
     setDeviceName: (deviceName) => setSettings((current) => ({ ...current, deviceName })),
     setAgentOption: (key, value) =>

@@ -8,6 +8,7 @@ import {
   getContextTargetId,
   getSyncScope,
   makePrimarySyncTarget,
+  placeNewContext,
   removeSyncTarget,
 } from "./SyncTargets";
 import type { KlartContext } from "~/core/contexts/KlartContext";
@@ -44,10 +45,32 @@ describe("SyncTargets", () => {
     expect(getSyncScope(SETUP, "home").isPrimary).toBe(true);
   });
 
-  it("assigns contexts found in a secondary sync to it, but never overrides a choice", () => {
-    const next = assignFoundContexts({ ...SETUP, contextTargets: { work: DEVICE_ONLY } }, "office", ["work", "club"]);
-    expect(next.contextTargets).toEqual({ work: DEVICE_ONLY, club: "office" });
+  it("assigns contexts found in a sync to it, unless they already live in another sync", () => {
+    const next = assignFoundContexts(SETUP, "office", ["work", "club"]);
+    expect(next.contextTargets).toEqual({ work: "office", club: "office" });
     expect(assignFoundContexts(SETUP, "home", ["club"])).toBe(SETUP);
+    expect(
+      assignFoundContexts({ ...SETUP, contextTargets: { work: "office", club: "home" } }, "office", ["club"])
+    ).toEqual({ ...SETUP, contextTargets: { work: "office", club: "home" } });
+  });
+
+  it("picks up contexts kept on this device when a sync holds them", () => {
+    const local = { ...SETUP, contextTargets: { work: DEVICE_ONLY, club: DEVICE_ONLY } };
+    expect(assignFoundContexts(local, "office", ["work"]).contextTargets).toEqual({
+      work: "office",
+      club: DEVICE_ONLY,
+    });
+    expect(assignFoundContexts(local, "home", ["club"]).contextTargets).toEqual({ work: DEVICE_ONLY, club: "home" });
+  });
+
+  it("claims contexts assigned to a sync that was removed", () => {
+    const stale = { ...SETUP, contextTargets: { club: "gone" } };
+    expect(assignFoundContexts(stale, "office", ["club"]).contextTargets).toEqual({ club: "office" });
+  });
+
+  it("places a new context in the sync it was created in", () => {
+    expect(placeNewContext(SETUP, "club", "office").contextTargets).toEqual({ work: "office", club: "office" });
+    expect(placeNewContext(SETUP, "club", "gone")).toBe(SETUP);
   });
 
   it("keeps a removed sync's contexts on this device instead of moving them", () => {

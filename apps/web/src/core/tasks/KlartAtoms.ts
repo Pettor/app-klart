@@ -3,7 +3,7 @@ import { atomWithStorage, createJSONStorage } from "jotai/utils";
 import type { DisplayOptions } from "./DisplayOptions";
 import { MINIMAL_DISPLAY_OPTIONS } from "./DisplayOptions";
 import type { KlartData } from "./KlartData";
-import { createEmptyData, normalizeData } from "./KlartData";
+import { createEmptyData, normalizeData, withoutHiddenContexts } from "./KlartData";
 import { toLocalDate } from "./LocalDate";
 import { createSampleData, SAMPLE_DATA_ENABLED } from "./SampleData";
 import type { SuggestionSettings } from "./SuggestionSettings";
@@ -45,6 +45,14 @@ export const klartDataAtom = atomWithStorage<KlartData>(
   klartDataStorage,
   { getOnInit: true }
 );
+
+/** Contexts hidden on this device (Settings › Contexts). They keep syncing; this device just doesn't show them. */
+export const hiddenContextIdsAtom = atomWithStorage<string[]>("klart-hidden-contexts", [], undefined, {
+  getOnInit: true,
+});
+
+/** {@link klartDataAtom} without the hidden contexts, for screens to read. Mutate `klartDataAtom`. */
+export const visibleKlartDataAtom = atom((get) => withoutHiddenContexts(get(klartDataAtom), get(hiddenContextIdsAtom)));
 
 const CONTEXT_KEY = "klart-context";
 const START_CONTEXT_KEY = "klart-start-context";

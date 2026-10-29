@@ -3,8 +3,6 @@ import { PlusIcon } from "@heroicons/react/20/solid";
 import { Alert, Button, Description, Input, Label, TextField } from "@heroui/react";
 import { FormattedRelativeTime, useIntl } from "react-intl";
 import { SettingsPanel, SettingsSectionShell } from "./SettingsSectionShell";
-import type { SettingsSyncContextItem } from "./SettingsSyncContexts";
-import { SettingsSyncContexts } from "./SettingsSyncContexts";
 import { SettingsSyncPicker } from "./SettingsSyncPicker";
 import { SettingsSyncTargetCard } from "./SettingsSyncTargetCard";
 import type { DeviceInfo } from "~/core/sync/FolderSync";
@@ -12,10 +10,8 @@ import type { SyncOverview } from "~/core/sync/SyncTargets";
 import type { GitHubCredentials } from "~/core/sync/UseFolderSync";
 
 export interface SettingsSyncSectionProps {
-  /** Every sync with its state and contexts. */
+  /** Every sync with its state and the contexts that live in it. */
   overview: SyncOverview;
-  /** Every context and the sync it uses. */
-  contexts: SettingsSyncContextItem[];
   isSupported: boolean;
   /** Running in the desktop app. */
   isDesktop: boolean;
@@ -35,8 +31,6 @@ export interface SettingsSyncSectionProps {
   onRemove: (targetId: string) => void;
   onRename: (targetId: string, name: string) => void;
   onMakePrimary: (targetId: string) => void;
-  /** Moves a context to a sync, or keeps it on this device with `DEVICE_ONLY`. */
-  onAssignContext: (contextId: string, targetId: string) => void;
   onSyncNow: () => void;
   onDeviceNameChange: (name: string) => void;
   /** Rendered at this time; injected so stories are stable. */
@@ -59,7 +53,6 @@ function RelativeTime({ iso, now }: { iso: string; now: number }): ReactElement 
 
 export function SettingsSyncSection({
   overview,
-  contexts,
   isSupported,
   isDesktop,
   isGitSupported,
@@ -74,7 +67,6 @@ export function SettingsSyncSection({
   onRemove,
   onRename,
   onMakePrimary,
-  onAssignContext,
   onSyncNow,
   onDeviceNameChange,
   now = Date.now(),
@@ -197,14 +189,6 @@ export function SettingsSyncSection({
             )}
           </div>
         ))}
-
-      {targets.length > 0 && isSplit && (
-        <SettingsSyncContexts
-          contexts={contexts}
-          targets={targets.map(({ id, name }) => ({ id, name }))}
-          onAssign={onAssignContext}
-        />
-      )}
 
       <div className="hero-card bg-surface flex flex-col gap-1 rounded-xl p-[18px]">
         <TextField className="flex max-w-sm flex-col gap-1">

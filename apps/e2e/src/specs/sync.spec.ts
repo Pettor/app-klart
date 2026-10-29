@@ -120,29 +120,35 @@ test.describe("sync.folder", () => {
     await expect(page.getByText("Found klart.json. Watching for changes.")).toHaveCount(0);
   });
 
-  test("syncs a context with a second folder of its own", async ({ page }) => {
-    await page.goto("/");
-    const input = page.getByTestId("quick-add__input");
-    await input.fill("#work write the report");
-    await input.press("Enter");
-    await input.fill("#personal water the plants");
-    await input.press("Enter");
-
+  test("creates a context in a second folder, where it lives from then on", async ({ page }) => {
     await page.goto("/#/settings?section=sync");
     await page.getByTestId("settings__sync-folder").click({ force: true });
-    await expect.poll(() => readFolderDir(page, "tasks")).toContain("Write the report");
+    await expect.poll(() => readFolderFile(page, "klart.json")).not.toBeNull();
 
     await page.getByTestId("settings__sync-add").click();
     await page.getByTestId("settings__sync-folder").click({ force: true });
     await expect(page.getByTestId("settings__sync-target")).toHaveCount(2);
 
-    await page.getByTestId("settings__sync-context-work").getByRole("button").click();
+    // A context picks its sync when it's created; Sync can't move it afterwards.
+    await page.getByTestId("settings__nav-contexts").click();
+    await page.getByTestId("settings__new-context-name").fill("Office");
+    await page.getByTestId("settings__new-context-sync").getByRole("button").click();
     await page.getByRole("option", { name: "Work" }).click();
+    await page.getByTestId("settings__new-context").click();
+    const office = page.getByTestId("settings-context-card").filter({ hasText: "Office" });
+    await expect(office.getByTestId("settings-context-card__sync")).toHaveText("Work");
 
-    // Work's tasks move to the second folder; Personal's stay in the first.
+    await page.goto("/");
+    const input = page.getByTestId("quick-add__input");
+    await input.fill("#office write the report");
+    await input.press("Enter");
+    await input.fill("#personal water the plants");
+    await input.press("Enter");
+
+    // Office's tasks go to the second folder; Personal's stay in the first.
     await expect.poll(() => readFolderDir(page, "tasks", "Work")).toContain("Write the report");
-    await expect.poll(() => readFolderDir(page, "tasks")).not.toContain("Write the report");
     await expect.poll(() => readFolderDir(page, "tasks")).toContain("Water the plants");
+    await expect.poll(() => readFolderDir(page, "tasks")).not.toContain("Write the report");
     await expect.poll(() => readFolderDir(page, "tasks", "Work")).not.toContain("Water the plants");
 
     // The sidebar lists both syncs, each with its contexts.

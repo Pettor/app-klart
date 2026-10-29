@@ -22,12 +22,12 @@ import { ALL_CONTEXTS } from "~/core/contexts/KlartContext";
 import { useHierarchyNavigation } from "~/core/routes/UseHierarchyNavigation";
 import {
   currentContextAtom,
-  klartDataAtom,
   searchFocusRequestAtom,
   showSuggestionsAtom,
   sidebarCollapsedAtom,
   smartViewAtom,
   tagFilterAtom,
+  visibleKlartDataAtom,
 } from "~/core/tasks/KlartAtoms";
 import { themeModeAtom } from "~/core/theme/ThemeAtoms";
 import type { ThemeMode } from "~/core/theme/ThemeMode";
@@ -44,7 +44,7 @@ export function useCommandPaletteController(): CommandPaletteProps {
   const navigation = useHierarchyNavigation();
   const setThemeMode = useSetAtom(themeModeAtom);
   const { isOpen, close } = useCommandPalette();
-  const { contexts } = useAtomValue(klartDataAtom);
+  const { contexts } = useAtomValue(visibleKlartDataAtom);
   const setCurrentContext = useSetAtom(currentContextAtom);
   const setTag = useSetAtom(tagFilterAtom);
   const setSmartView = useSetAtom(smartViewAtom);
