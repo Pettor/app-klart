@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { useAtomValue } from "jotai";
 import type { ShoppingList } from "./ShoppingList";
 import { getListContext, isListDeleted, isListOpen } from "./ShoppingList";
+import type { KlartContext } from "~/core/contexts/KlartContext";
 import { ALL_CONTEXTS } from "~/core/contexts/KlartContext";
 import { currentContextAtom, klartDataAtom, todayAtom } from "~/core/tasks/KlartAtoms";
 
@@ -15,6 +16,9 @@ export interface ShoppingState {
   itemsLeft: number;
   /** Ids of the tasks in today's My Day. */
   inTodayIds: Set<string>;
+  contexts: KlartContext[];
+  /** "All contexts" is selected, so the lists come from every context. */
+  isAllContexts: boolean;
 }
 
 /** Everything the Shopping page derives from the data. */
@@ -39,6 +43,8 @@ export function useShopping(): ShoppingState {
       doneLists,
       itemsLeft: openLists.reduce((sum, list) => sum + list.items.filter((item) => !item.bought).length, 0),
       inTodayIds,
+      contexts: data.contexts,
+      isAllContexts: currentContext === ALL_CONTEXTS,
     };
   }, [data, today, currentContext]);
 }

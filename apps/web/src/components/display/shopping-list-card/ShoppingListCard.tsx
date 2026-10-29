@@ -20,6 +20,13 @@ export interface ShoppingListCardList {
   total: number;
   bought: number;
   isCompleted: boolean;
+  /** The context the list belongs to, shown under "All contexts"; `null` hides it. */
+  context: ShoppingListContext | null;
+}
+
+export interface ShoppingListContext {
+  name: string;
+  color: ContextColor;
 }
 
 export interface ShoppingListCardProps {
@@ -29,7 +36,23 @@ export interface ShoppingListCardProps {
   onPress: (listId: string) => void;
 }
 
-/** A list in the lists column: its icon, name, items left with a progress bar, and its date when it has one. */
+/** The context's dot and name, in the context's own color. */
+function ContextLabel({ context }: { context: ShoppingListContext }): ReactElement {
+  return (
+    <span
+      className={clsx(`ctx-${context.color}`, "inline-flex min-w-0 items-center gap-1.5 text-xs")}
+      data-testid="shopping-list-card__context"
+    >
+      <span className="size-1.5 shrink-0 rounded-full bg-(--ctx)" aria-hidden />
+      <span className="truncate">{context.name}</span>
+    </span>
+  );
+}
+
+/**
+ * A list in the lists column: its icon, name, items left with a progress bar, and its date and context when
+ * it has them.
+ */
 export function ShoppingListCard({ list, today, isSelected = false, onPress }: ShoppingListCardProps): ReactElement {
   const intl = useIntl();
   const left = list.total - list.bought;
@@ -54,7 +77,7 @@ export function ShoppingListCard({ list, today, isSelected = false, onPress }: S
         </span>
         <span className="flex min-w-0 flex-1 flex-col gap-0.5">
           <span className="text-foreground/85 truncate">{list.name}</span>
-          <span className="text-xs">
+          <span className="flex items-center gap-2.5 text-xs">
             {intl.formatMessage(
               {
                 description: "ShoppingListCard - how many items of a completed list were bought",
@@ -63,6 +86,7 @@ export function ShoppingListCard({ list, today, isSelected = false, onPress }: S
               },
               { bought: list.bought, total: list.total }
             )}
+            {list.context && <ContextLabel context={list.context} />}
           </span>
         </span>
       </Button>
@@ -116,9 +140,14 @@ export function ShoppingListCard({ list, today, isSelected = false, onPress }: S
             style={{ width: `${percent}%` }}
           />
         </span>
-        {list.date && (
-          <span className={clsx("text-xs", isSoon ? "text-[#b8600f] dark:text-[#f5a524]" : "text-muted")}>
-            {formatRelativeDate(intl, list.date, today)}
+        {(list.date || list.context) && (
+          <span className="text-muted flex min-w-0 items-center gap-2.5">
+            {list.date && (
+              <span className={clsx("text-xs", isSoon ? "text-[#b8600f] dark:text-[#f5a524]" : "text-muted")}>
+                {formatRelativeDate(intl, list.date, today)}
+              </span>
+            )}
+            {list.context && <ContextLabel context={list.context} />}
           </span>
         )}
       </span>
