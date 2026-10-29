@@ -21,7 +21,12 @@ type Story = StoryObj<typeof meta>;
 const lists = Object.values(DEMO_SHOPPING.lists);
 const inToday = new Set(Object.keys(DEMO_SHOPPING.tasks));
 
-function toCard(list: ShoppingList): Props["openLists"][number] {
+/** Under "All contexts" each list shows its context; the demo splits them between Personal and Work. */
+function demoContext(list: ShoppingList): Props["openLists"][number]["context"] {
+  return list.kind === "home" ? { name: "Work", color: "orange" } : { name: "Personal", color: "blue" };
+}
+
+function toCard(list: ShoppingList, isAllContexts = false): Props["openLists"][number] {
   return {
     id: list.id,
     name: list.name,
@@ -31,6 +36,7 @@ function toCard(list: ShoppingList): Props["openLists"][number] {
     total: list.items.length,
     bought: list.items.filter((item) => item.bought).length,
     isCompleted: !!list.completedAt,
+    context: isAllContexts ? demoContext(list) : null,
   };
 }
 
@@ -48,7 +54,7 @@ function toRow(item: ShoppingItem): ShoppingItemGroup["items"][number] {
   };
 }
 
-function toSelected(list: ShoppingList): ShoppingSelectedList {
+function toSelected(list: ShoppingList, isAllContexts = false): ShoppingSelectedList {
   const left = list.items.filter((item) => !item.bought);
   const groups: ShoppingItemGroup[] =
     list.kind === "grocery"
@@ -59,7 +65,7 @@ function toSelected(list: ShoppingList): ShoppingSelectedList {
       : [{ category: null, items: left.map(toRow) }];
   const totals = list.items.map(itemTotal).filter((total) => total !== null);
   return {
-    ...toCard(list),
+    ...toCard(list, isAllContexts),
     completedAt: list.completedAt,
     sum: totals.length ? totals.reduce((sum, total) => sum + total, 0) : null,
     groups,
@@ -67,12 +73,12 @@ function toSelected(list: ShoppingList): ShoppingSelectedList {
   };
 }
 
-function buildArgs(listIndex: number): Props {
+function buildArgs(listIndex: number, isAllContexts = false): Props {
   return {
     today: DEMO_TODAY,
-    openLists: lists.filter((list) => !list.completedAt).map(toCard),
-    doneLists: lists.filter((list) => list.completedAt).map(toCard),
-    selected: toSelected(lists[listIndex]!),
+    openLists: lists.filter((list) => !list.completedAt).map((list) => toCard(list, isAllContexts)),
+    doneLists: lists.filter((list) => list.completedAt).map((list) => toCard(list, isAllContexts)),
+    selected: toSelected(lists[listIndex]!, isAllContexts),
     isListShownOnPhone: true,
     onSelectList: fn(),
     onBackToLists: fn(),
@@ -97,6 +103,26 @@ export const Groceries: Story = {
   play: async ({ canvas }) => {
     await expect(canvas.getByTestId("shopping__list-name")).toHaveTextContent("Veckohandling");
     await expect(canvas.getByRole("heading", { name: "Dairy" })).toBeVisible();
+  },
+};
+
+/** One context selected: every list is in it, so none shows its context. */
+export const OneContext: Story = {
+  args: buildArgs(0),
+  play: async ({ canvas }) => {
+    await expect(canvas.queryByTestId("shopping__list-context")).toBeNull();
+    await expect(canvas.queryAllByTestId("shopping-list-card__context")).toHaveLength(0);
+  },
+};
+
+/** "All contexts": each list shows which context it belongs to, in the lists column and the list's header. */
+export const AllContexts: Story = {
+  args: buildArgs(0, true),
+  play: async ({ canvas }) => {
+    await expect(canvas.getByTestId("shopping__list-context")).toHaveTextContent("Personal");
+    const labels = canvas.getAllByTestId("shopping-list-card__context").map((label) => label.textContent);
+    await expect(labels).toContain("Personal");
+    await expect(labels).toContain("Work");
   },
 };
 

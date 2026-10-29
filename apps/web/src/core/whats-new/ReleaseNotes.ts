@@ -35,8 +35,8 @@ const v070 = defineMessages({
   shoppingDescription: {
     description: "ReleaseNotes 0.7.0 - highlight text: shopping lists per context",
     defaultMessage:
-      "Each shopping list belongs to a context, so Work shows the office snacks and Personal shows the groceries. Pick All contexts to see every list at once.",
-    id: "fNzyUa",
+      "Each shopping list belongs to a context, so Work shows the office snacks and Personal shows the groceries. Pick All contexts to see every list at once, each marked with its context.",
+    id: "LTCNzC",
   },
   settingsTitle: {
     description: "ReleaseNotes 0.7.0 - highlight title: settings button in the sidebar",

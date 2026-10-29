@@ -93,6 +93,17 @@ export function ShoppingListPanel({ list, draft, moveTargets, actions }: Shoppin
             </h2>
           )}
           <div className="text-muted flex flex-wrap items-center gap-2 text-[13px]">
+            {list.context && (
+              <Chip
+                size="sm"
+                variant="soft"
+                className={`ctx-${list.context.color} gap-1.5`}
+                data-testid="shopping__list-context"
+              >
+                <span className="size-1.5 rounded-full bg-(--ctx)" aria-hidden />
+                {list.context.name}
+              </Chip>
+            )}
             {list.date && (
               <Chip size="sm" variant="soft">
                 {formatShortDate(intl, list.date)}

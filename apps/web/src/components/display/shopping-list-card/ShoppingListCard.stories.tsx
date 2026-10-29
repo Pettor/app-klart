@@ -25,6 +25,7 @@ const defaultArgs = {
     total: 9,
     bought: 2,
     isCompleted: false,
+    context: null,
   },
   onPress: fn(),
 } satisfies Props;
@@ -75,5 +76,23 @@ export const Completed: Story = {
   args: { ...defaultArgs, list: { ...defaultArgs.list, name: "Fredagsmys", total: 4, bought: 3, isCompleted: true } },
   play: async ({ canvas }) => {
     await expect(canvas.getByText("3 of 4 bought")).toBeVisible();
+  },
+};
+
+/** Under "All contexts" the card shows which context the list belongs to. */
+export const WithContext: Story = {
+  args: { ...defaultArgs, list: { ...defaultArgs.list, context: { name: "Work", color: "orange" } } },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByTestId("shopping-list-card__context")).toHaveTextContent("Work");
+  },
+};
+
+export const CompletedWithContext: Story = {
+  args: {
+    ...defaultArgs,
+    list: { ...defaultArgs.list, total: 4, bought: 3, isCompleted: true, context: { name: "Personal", color: "blue" } },
+  },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByTestId("shopping-list-card__context")).toHaveTextContent("Personal");
   },
 };
