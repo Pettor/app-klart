@@ -6,7 +6,7 @@ import { buildSuggestions } from "./Suggestions";
 import type { Task } from "./Task";
 import type { ShoppingCategory } from "~/core/shopping/ShoppingCategory";
 import type { ShoppingListKind } from "~/core/shopping/ShoppingList";
-import { isListOpen, itemTotal } from "~/core/shopping/ShoppingList";
+import { getListContext, isListOpen, itemTotal } from "~/core/shopping/ShoppingList";
 
 /** `views/today.json`: today's day file with full tasks inlined. Read-only for agents. */
 export interface TodayView {
@@ -54,6 +54,8 @@ export interface ShoppingViewList {
   id: string;
   name: string;
   kind: ShoppingListKind;
+  /** The context id the list belongs to. */
+  context: string;
   date: string | null;
   /** Items not bought yet, starred first. Bought ones are left out. */
   items: ShoppingViewItem[];
@@ -128,6 +130,7 @@ export function buildShoppingView(data: KlartData, today: string, generatedAt: s
         id: list.id,
         name: list.name,
         kind: list.kind,
+        context: getListContext(list, data.contexts),
         date: list.date,
         items,
         bought: list.items.length - left.length,

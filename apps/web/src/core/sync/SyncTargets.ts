@@ -27,7 +27,7 @@ export interface SyncTarget {
  * With several, each context syncs with the one it's assigned to.
  */
 export interface SyncSetup {
-  /** The first one is the primary: it gets contexts nobody assigned, and shopping lists. */
+  /** The first one is the primary: it gets contexts nobody assigned. */
   targets: SyncTarget[];
   /** Context id to sync id, or {@link DEVICE_ONLY}. Contexts not listed sync with the primary. */
   contextTargets: Record<string, string>;

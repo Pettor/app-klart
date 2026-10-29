@@ -26,8 +26,8 @@ const T1 = new Date("2026-10-28T09:00:00Z");
 const T2 = new Date("2026-10-28T10:00:00Z");
 
 function seed(): KlartData {
-  let data = upsertList(createEmptyData(), createShoppingList("L1", "Week", "grocery", null, T0));
-  data = upsertList(data, createShoppingList("L2", "Next week", "grocery", null, T0));
+  let data = upsertList(createEmptyData(), createShoppingList("L1", "Week", "grocery", "personal", null, T0));
+  data = upsertList(data, createShoppingList("L2", "Next week", "grocery", "personal", null, T0));
   data = addShoppingItem(data, "L1", createShoppingItem("milk", parseShoppingItem("2x mjölk"), T0), T0);
   data = addShoppingItem(data, "L1", createShoppingItem("bread", parseShoppingItem("Bröd"), T0), T0);
   return data;

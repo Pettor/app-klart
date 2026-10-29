@@ -179,7 +179,10 @@ export function updateContext(data: KlartData, id: string, patch: Partial<Omit<K
   };
 }
 
-/** Removes a context and moves its tasks to the first remaining one. The last context can't be removed. */
+/**
+ * Removes a context and moves its tasks and shopping lists to the first remaining one.
+ * The last context can't be removed.
+ */
 export function removeContext(data: KlartData, id: string, now: Date): KlartData {
   const contexts = data.contexts.filter((context) => context.id !== id);
   if (contexts.length === 0 || contexts.length === data.contexts.length) {
@@ -190,6 +193,14 @@ export function removeContext(data: KlartData, id: string, now: Date): KlartData
   for (const task of Object.values(data.tasks)) {
     if (task.context === id) {
       next = updateTask(next, task.id, { context: target }, now);
+    }
+  }
+  // Lists without a context belong to the first one, so they move too when it's removed.
+  const isFirst = getDefaultContextId(data.contexts) === id;
+  for (const list of Object.values(data.lists)) {
+    if (list.context === id || (list.context === null && isFirst)) {
+      const moved = { ...list, context: target, updatedAt: toUtcTimestamp(now) };
+      next = { ...next, lists: { ...next.lists, [list.id]: moved } };
     }
   }
   return next;

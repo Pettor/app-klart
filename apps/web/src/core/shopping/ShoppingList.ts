@@ -1,7 +1,8 @@
 import { z } from "zod";
 import type { ShoppingCategory } from "./ShoppingCategory";
 import { SHOPPING_CATEGORIES } from "./ShoppingCategory";
-import type { ContextColor } from "~/core/contexts/KlartContext";
+import type { ContextColor, KlartContext } from "~/core/contexts/KlartContext";
+import { getDefaultContextId } from "~/core/contexts/KlartContext";
 import { toTaskLink } from "~/core/tasks/TaskLink";
 
 export const SHOPPING_LIST_SCHEMA = "klart.list/v1";
@@ -45,6 +46,8 @@ export interface ShoppingList {
   id: string;
   name: string;
   kind: ShoppingListKind;
+  /** The context the list belongs to. `null` on lists from before lists had one; see {@link getListContext}. */
+  context: string | null;
   /** Local date `YYYY-MM-DD` the list is for, e.g. a birthday. */
   date: string | null;
   /** Set when the list is completed; completed lists are kept and can be reopened. */
@@ -89,6 +92,7 @@ export const ShoppingListFileSchema = z.object({
   id: z.string().min(1),
   name: z.string(),
   kind: z.enum(SHOPPING_LIST_KINDS).catch("other"),
+  context: z.string().min(1).nullable().catch(null),
   date: nullableString,
   completedAt: nullableString,
   deletedAt: nullableString,
@@ -108,6 +112,11 @@ export const ShoppingListFileSchema = z.object({
 
 export function isListDeleted(list: ShoppingList): boolean {
   return !!list.deletedAt;
+}
+
+/** The context a list belongs to. Lists without one belong to the first context. */
+export function getListContext(list: ShoppingList, contexts: KlartContext[]): string {
+  return list.context ?? getDefaultContextId(contexts);
 }
 
 export function isListOpen(list: ShoppingList): boolean {

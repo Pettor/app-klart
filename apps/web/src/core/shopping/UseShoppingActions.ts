@@ -20,12 +20,14 @@ import {
 } from "./ShoppingData";
 import { parseShoppingItem } from "./ShoppingItemParse";
 import type { ShoppingList, ShoppingListKind } from "./ShoppingList";
+import { getListContext } from "./ShoppingList";
 import { ALL_CONTEXTS, getDefaultContextId } from "~/core/contexts/KlartContext";
 import { currentContextAtom, klartDataAtom, todayAtom } from "~/core/tasks/KlartAtoms";
 import type { KlartData } from "~/core/tasks/KlartData";
 import { createTaskId } from "~/core/tasks/TaskId";
 
 export interface ShoppingActions {
+  /** Creates a list in the selected context, or the first one under "All contexts". */
   createList: (name: string, kind: ShoppingListKind) => ShoppingList;
   /** Parses a quick-add line (`2x milk`, `199 kr`, a link) and adds the item. Returns `false` for an empty name. */
   addItem: (listId: string, text: string) => boolean;
@@ -33,7 +35,7 @@ export interface ShoppingActions {
   setBought: (listId: string, itemId: string, bought: boolean) => void;
   toggleImportant: (listId: string, itemId: string) => void;
   removeItem: (listId: string, itemId: string) => void;
-  /** Makes the item a task in today's My Day, titled `title`. */
+  /** Makes the item a task in today's My Day, titled `title`, in the list's context. */
   addItemToDay: (listId: string, itemId: string, title: string) => void;
   removeItemFromDay: (listId: string, itemId: string) => void;
   /** Completes the list; items not bought move to `moveTo`, or stay behind when it's `null`. */
@@ -59,8 +61,7 @@ export function useShoppingActions(): ShoppingActions {
     [setData]
   );
 
-  // Tasks made from a list land in the selected context, or the first one under "All contexts".
-  const taskContext =
+  const newListContext =
     currentContext !== ALL_CONTEXTS && data.contexts.some((context) => context.id === currentContext)
       ? currentContext
       : getDefaultContextId(data.contexts);
@@ -69,7 +70,7 @@ export function useShoppingActions(): ShoppingActions {
     () => ({
       createList: (name, kind) => {
         const now = new Date();
-        const list = createShoppingList(createTaskId(now.getTime()), name.trim(), kind, null, now);
+        const list = createShoppingList(createTaskId(now.getTime()), name.trim(), kind, newListContext, null, now);
         change((current) => upsertList(current, list));
         return list;
       },
@@ -90,16 +91,14 @@ export function useShoppingActions(): ShoppingActions {
       toggleImportant: (listId, itemId) => change((current, now) => toggleItemImportant(current, listId, itemId, now)),
       removeItem: (listId, itemId) => change((current, now) => removeShoppingItem(current, listId, itemId, today, now)),
       addItemToDay: (listId, itemId, title) =>
-        change((current, now) =>
-          addItemToDay(
-            current,
-            listId,
-            itemId,
-            { id: createTaskId(now.getTime()), title, context: taskContext },
-            today,
-            now
-          )
-        ),
+        change((current, now) => {
+          const list = current.lists[listId];
+          if (!list) {
+            return current;
+          }
+          const context = getListContext(list, current.contexts);
+          return addItemToDay(current, listId, itemId, { id: createTaskId(now.getTime()), title, context }, today, now);
+        }),
       removeItemFromDay: (listId, itemId) =>
         change((current, now) => removeItemFromDay(current, listId, itemId, today, now)),
       completeList: (listId, moveTo) =>
@@ -108,6 +107,6 @@ export function useShoppingActions(): ShoppingActions {
       renameList: (listId, name) => change((current, now) => renameShoppingList(current, listId, name, now)),
       deleteList: (listId) => change((current, now) => deleteShoppingList(current, listId, today, now)),
     }),
-    [change, taskContext, today]
+    [change, newListContext, today]
   );
 }
