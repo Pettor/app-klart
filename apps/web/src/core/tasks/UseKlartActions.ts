@@ -1,7 +1,7 @@
 import { useCallback, useMemo } from "react";
 import { useAtomValue, useSetAtom } from "jotai";
 import type { DayItemSource, SuggestionReason } from "./Day";
-import { currentContextAtom, klartDataAtom, todayAtom } from "./KlartAtoms";
+import { currentContextAtom, klartDataAtom, todayAtom, visibleKlartDataAtom } from "./KlartAtoms";
 import type { KlartData, TaskPatch } from "./KlartData";
 import {
   addContext,
@@ -46,6 +46,8 @@ export interface KlartActions {
 export function useKlartActions(): KlartActions {
   const setData = useSetAtom(klartDataAtom);
   const data = useAtomValue(klartDataAtom);
+  // Quick add routes among the contexts this device shows, so a task never lands in a hidden one.
+  const { contexts: visibleContexts } = useAtomValue(visibleKlartDataAtom);
   const currentContext = useAtomValue(currentContextAtom);
   const today = useAtomValue(todayAtom);
 
@@ -58,7 +60,7 @@ export function useKlartActions(): KlartActions {
 
   const quickAdd = useCallback(
     (text: string): Task | null => {
-      const parsed = parseQuickAdd(text, { today, contexts: data.contexts, currentContext });
+      const parsed = parseQuickAdd(text, { today, contexts: visibleContexts, currentContext });
       if (!parsed.title) {
         return null;
       }
@@ -69,7 +71,7 @@ export function useKlartActions(): KlartActions {
       });
       return task;
     },
-    [change, currentContext, data.contexts, today]
+    [change, currentContext, visibleContexts, today]
   );
 
   return useMemo(

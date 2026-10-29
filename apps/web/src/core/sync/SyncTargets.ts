@@ -74,14 +74,21 @@ export function getSyncScope(setup: SyncSetup, targetId: string): SyncScope {
 }
 
 /**
- * Contexts found in a sync's `klart.json` join that sync, unless this device
- * already chose where they go. That is how a new device learns the split.
+ * Contexts found in a sync's `klart.json` live in that sync, which is how a
+ * device learns where every context lives. One kept on this device (e.g. after
+ * its sync was removed) is picked up again; one that already lives in another
+ * sync stays there.
  */
 export function assignFoundContexts(setup: SyncSetup, targetId: string, contextIds: string[]): SyncSetup {
-  if (setup.targets[0]?.id === targetId) {
-    return setup;
-  }
-  const found = contextIds.filter((id) => !(id in setup.contextTargets));
+  const isPrimary = setup.targets[0]?.id === targetId;
+  const found = contextIds.filter((id) => {
+    const current = getContextTargetId(setup, id);
+    if (current === targetId) {
+      return false;
+    }
+    // Unassigned contexts (or ones assigned to a removed sync) fall back to the primary, so another sync can claim them.
+    return current === null || (!isPrimary && setup.contextTargets[id] !== current);
+  });
   if (found.length === 0) {
     return setup;
   }
@@ -90,6 +97,17 @@ export function assignFoundContexts(setup: SyncSetup, targetId: string, contextI
     contextTargets[id] = targetId;
   }
   return { ...setup, contextTargets };
+}
+
+/**
+ * Puts a new context in the sync it was created in. It lives there from then on;
+ * contexts can't be moved between syncs.
+ */
+export function placeNewContext(setup: SyncSetup, contextId: string, targetId: string): SyncSetup {
+  if (!setup.targets.some((target) => target.id === targetId)) {
+    return setup;
+  }
+  return { ...setup, contextTargets: { ...setup.contextTargets, [contextId]: targetId } };
 }
 
 /**

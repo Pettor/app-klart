@@ -4,7 +4,7 @@ import type { ShoppingList } from "./ShoppingList";
 import { getListContext, isListDeleted, isListOpen } from "./ShoppingList";
 import type { KlartContext } from "~/core/contexts/KlartContext";
 import { ALL_CONTEXTS } from "~/core/contexts/KlartContext";
-import { currentContextAtom, klartDataAtom, todayAtom } from "~/core/tasks/KlartAtoms";
+import { currentContextAtom, todayAtom, visibleKlartDataAtom } from "~/core/tasks/KlartAtoms";
 
 export interface ShoppingState {
   today: string;
@@ -23,7 +23,7 @@ export interface ShoppingState {
 
 /** Everything the Shopping page derives from the data. */
 export function useShopping(): ShoppingState {
-  const data = useAtomValue(klartDataAtom);
+  const data = useAtomValue(visibleKlartDataAtom);
   const today = useAtomValue(todayAtom);
   const currentContext = useAtomValue(currentContextAtom);
 

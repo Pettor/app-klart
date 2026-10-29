@@ -22,7 +22,7 @@ import { parseShoppingItem } from "./ShoppingItemParse";
 import type { ShoppingList, ShoppingListKind } from "./ShoppingList";
 import { getListContext } from "./ShoppingList";
 import { ALL_CONTEXTS, getDefaultContextId } from "~/core/contexts/KlartContext";
-import { currentContextAtom, klartDataAtom, todayAtom } from "~/core/tasks/KlartAtoms";
+import { currentContextAtom, klartDataAtom, todayAtom, visibleKlartDataAtom } from "~/core/tasks/KlartAtoms";
 import type { KlartData } from "~/core/tasks/KlartData";
 import { createTaskId } from "~/core/tasks/TaskId";
 
@@ -50,7 +50,7 @@ export interface ShoppingActions {
 /** All mutations of shopping lists. Linked My Day tasks follow along. */
 export function useShoppingActions(): ShoppingActions {
   const setData = useSetAtom(klartDataAtom);
-  const data = useAtomValue(klartDataAtom);
+  const { contexts } = useAtomValue(visibleKlartDataAtom);
   const currentContext = useAtomValue(currentContextAtom);
   const today = useAtomValue(todayAtom);
 
@@ -62,9 +62,9 @@ export function useShoppingActions(): ShoppingActions {
   );
 
   const newListContext =
-    currentContext !== ALL_CONTEXTS && data.contexts.some((context) => context.id === currentContext)
+    currentContext !== ALL_CONTEXTS && contexts.some((context) => context.id === currentContext)
       ? currentContext
-      : getDefaultContextId(data.contexts);
+      : getDefaultContextId(contexts);
 
   return useMemo(
     () => ({

@@ -10,7 +10,7 @@ import type { NotificationContent } from "./ShowNotification";
 import { showSystemNotification } from "./ShowNotification";
 import { toDeviceId } from "~/core/sync/FolderSync";
 import { syncDevicesAtom, syncSettingsAtom } from "~/core/sync/SyncAtoms";
-import { klartDataAtom } from "~/core/tasks/KlartAtoms";
+import { visibleKlartDataAtom } from "~/core/tasks/KlartAtoms";
 
 const CHECK_INTERVAL_MS = 20_000;
 const SENT_RETENTION_DAYS = 14;
@@ -124,7 +124,7 @@ export function describeNotification(intl: IntlShape, notification: PlannedNotif
 /** Checks every few seconds for reminders and daily summaries, and shows them. Mount once. */
 export function useNotificationScheduler(): void {
   const intl = useIntl();
-  const data = useAtomValue(klartDataAtom);
+  const data = useAtomValue(visibleKlartDataAtom);
   const settings = useAtomValue(notificationSettingsAtom);
   const permission = useAtomValue(notificationPermissionAtom);
   const devices = useAtomValue(syncDevicesAtom);

@@ -9,22 +9,23 @@ import {
 import { LLMS_TXT } from "~/core/sync/LlmsTxt";
 import { DEFAULT_SUGGESTION_SETTINGS } from "~/core/tasks/SuggestionSettings";
 import { DEMO_CONTEXTS } from "~/storybook/data/KlartDemoData";
-import { DEMO_MULTI_SYNC_OVERVIEW, DEMO_MULTI_SYNC_SETUP, demoSyncOverview } from "~/storybook/data/SyncDemoData";
+import { DEMO_MULTI_SYNC_OVERVIEW, demoSyncOverview } from "~/storybook/data/SyncDemoData";
 
 const NOW = Date.parse("2026-10-21T10:00:00Z");
 
 const defaultArgs = {
   onBack: fn(),
   contexts: {
-    contexts: DEMO_CONTEXTS.map((context, index) => ({ ...context, openTaskCount: 6 - index * 2 })),
+    contexts: DEMO_CONTEXTS.map((context, index) => ({ ...context, openTaskCount: 6 - index * 2, isHidden: false })),
+    syncs: [],
     onCreate: fn(),
     onUpdate: fn(),
     onRemove: fn(),
     onMove: fn(),
+    onHiddenChange: fn(),
   },
   sync: {
     now: NOW,
-    contexts: DEMO_CONTEXTS.map(({ id, name, color }) => ({ id, name, color, targetId: "main" })),
     overview: demoSyncOverview({
       state: "synced",
       method: "folder",
@@ -48,7 +49,6 @@ const defaultArgs = {
     onRemove: fn(),
     onRename: fn(),
     onMakePrimary: fn(),
-    onAssignContext: fn(),
     onSyncNow: fn(),
     onDeviceNameChange: fn(),
   },
@@ -332,21 +332,12 @@ export const SeveralSyncs: Story = {
     sync: {
       ...defaultArgs.sync,
       overview: DEMO_MULTI_SYNC_OVERVIEW,
-      contexts: DEMO_CONTEXTS.map(({ id, name, color }) => ({
-        id,
-        name,
-        color,
-        targetId: DEMO_MULTI_SYNC_SETUP.contextTargets[id] ?? "personal",
-      })),
     },
   },
   play: async ({ args, canvas, userEvent }) => {
     await expect(canvas.getAllByTestId("settings__sync-target")).toHaveLength(2);
-    await expect(canvas.getAllByTestId("settings__sync-context")).toHaveLength(DEMO_CONTEXTS.length);
-
-    await userEvent.click(within(canvas.getByTestId("settings__sync-context-club")).getByRole("button"));
-    await userEvent.click(await screen.findByRole("option", { name: "Work OneDrive" }));
-    await expect(args.sync.onAssignContext).toHaveBeenCalledWith("club", "work");
+    // Contexts live where they were created; Sync lists them per sync but can't move them.
+    await expect(canvas.getAllByTestId("settings__sync-target-contexts")).toHaveLength(2);
 
     await userEvent.click(canvas.getByTestId("settings__sync-make-primary"));
     await expect(args.sync.onMakePrimary).toHaveBeenCalledWith("work");
@@ -357,7 +348,6 @@ export const SeveralSyncs: Story = {
 export const AddAnotherSync: Story = {
   args: { ...defaultArgs, initialSection: "sync" },
   play: async ({ args, canvas, userEvent }) => {
-    await expect(canvas.queryByTestId("settings__sync-context")).toBeNull();
     await userEvent.click(canvas.getByTestId("settings__sync-add"));
     await expect(canvas.queryByRole("radio", { name: /This browser only/ })).toBeNull();
     await userEvent.click(canvas.getByRole("radio", { name: /GitHub/ }));
@@ -400,7 +390,49 @@ export const CreateContext: Story = {
   play: async ({ args, canvas, userEvent }) => {
     await userEvent.type(canvas.getByTestId("settings__new-context-name"), "Side project");
     await userEvent.click(canvas.getByTestId("settings__new-context"));
-    await expect(args.contexts.onCreate).toHaveBeenCalledWith("Side project", "teal");
+    await expect(args.contexts.onCreate).toHaveBeenCalledWith("Side project", "teal", null);
+  },
+};
+
+const MULTI_SYNC_CONTEXTS = {
+  ...defaultArgs.contexts,
+  contexts: defaultArgs.contexts.contexts.map((context) => ({
+    ...context,
+    syncName: context.id === "work" ? "Work OneDrive" : "Personal repo",
+  })),
+  syncs: DEMO_MULTI_SYNC_OVERVIEW.targets.map(({ id, name }) => ({ id, name })),
+};
+
+/** Contexts from two syncs: each card says where it lives, and a new context picks its sync. */
+export const ContextsFromSeveralSyncs: Story = {
+  args: { ...defaultArgs, initialSection: "contexts", contexts: MULTI_SYNC_CONTEXTS },
+  play: async ({ args, canvas, userEvent }) => {
+    const labels = canvas.getAllByTestId("settings-context-card__sync").map((label) => label.textContent);
+    await expect(labels).toEqual(["Personal repo", "Work OneDrive", "Personal repo"]);
+
+    await userEvent.type(canvas.getByTestId("settings__new-context-name"), "Office");
+    await userEvent.click(within(canvas.getByTestId("settings__new-context-sync")).getByRole("button"));
+    await userEvent.click(await screen.findByRole("option", { name: "Work OneDrive" }));
+    await userEvent.click(canvas.getByTestId("settings__new-context"));
+    await expect(args.contexts.onCreate).toHaveBeenCalledWith("Office", "teal", "work");
+  },
+};
+
+/** A context hidden on this device is dimmed and can be shown again; the last shown one can't be hidden. */
+export const HiddenContext: Story = {
+  args: {
+    ...defaultArgs,
+    initialSection: "contexts",
+    contexts: {
+      ...MULTI_SYNC_CONTEXTS,
+      contexts: MULTI_SYNC_CONTEXTS.contexts.map((context) => ({ ...context, isHidden: context.id !== "personal" })),
+    },
+  },
+  play: async ({ args, canvas, userEvent }) => {
+    const [personal, work] = canvas.getAllByTestId("settings-context-card");
+    await expect(within(personal!).getByTestId("settings-context-card__visibility")).toBeDisabled();
+    await userEvent.click(within(work!).getByTestId("settings-context-card__visibility"));
+    await expect(args.contexts.onHiddenChange).toHaveBeenCalledWith("work", false);
   },
 };
 
