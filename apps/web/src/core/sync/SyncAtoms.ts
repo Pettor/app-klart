@@ -14,8 +14,11 @@ export interface SyncSettings {
 
 export type SyncMethod = "local" | "folder" | "git" | "github";
 
-/** `missing`: the desktop app can't find the sync's folder any more. */
-export type SyncState = "local" | "syncing" | "synced" | "error" | "needs-permission" | "missing";
+/**
+ * `missing`: the desktop app can't find the sync's folder any more.
+ * `outdated`: a newer version of Klart wrote to the sync; this app must be updated before it syncs again.
+ */
+export type SyncState = "local" | "syncing" | "synced" | "error" | "needs-permission" | "missing" | "outdated";
 
 export interface GitSyncStatus {
   remoteUrl?: string;
@@ -36,6 +39,8 @@ export interface SyncStatus {
   location?: string;
   lastSyncedAt?: string;
   error?: string;
+  /** `outdated` only: the sync's data version, e.g. "0.8". */
+  folderVersion?: string;
   git?: GitSyncStatus;
 }
 

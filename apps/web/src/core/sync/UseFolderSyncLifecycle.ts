@@ -1,6 +1,7 @@
 import { useEffect, useEffectEvent, useMemo, useRef, useState } from "react";
 import { useAtomValue, useSetAtom, useStore } from "jotai";
 import { BrowserFolderBackend } from "./BrowserFolderBackend";
+import { NewerDataVersionError } from "./DataVersion";
 import { DesktopFolderBackend } from "./DesktopFolderBackend";
 import { queryFolderPermission } from "./FileSystemAccess";
 import type { FolderBackend } from "./FolderBackend";
@@ -254,7 +255,11 @@ export function useSyncTargetLifecycle(target: SyncTarget): void {
       try {
         await job(engine);
       } catch (error) {
-        updateStatus(() => ({ state: "error", error: describe(error) }));
+        updateStatus(() =>
+          error instanceof NewerDataVersionError
+            ? { state: "outdated", folderVersion: error.folderVersion, error: undefined }
+            : { state: "error", error: describe(error) }
+        );
       }
     });
   }
@@ -344,6 +349,11 @@ export function useSyncTargetLifecycle(target: SyncTarget): void {
             },
           }));
         } catch (error) {
+          if (error instanceof NewerDataVersionError) {
+            // Nothing was pushed; the sync waits for this app to be updated.
+            updateStatus(() => ({ state: "outdated", folderVersion: error.folderVersion, error: undefined }));
+            return;
+          }
           const errorKind = error instanceof GitHubError ? error.kind : undefined;
           updateStatus((current) => ({ git: { ...current.git, error: describe(error), errorKind } }));
         }
@@ -363,6 +373,10 @@ export function useSyncTargetLifecycle(target: SyncTarget): void {
           await pullNow(engine);
         }
       } catch (error) {
+        if (error instanceof NewerDataVersionError) {
+          updateStatus(() => ({ state: "outdated", folderVersion: error.folderVersion, error: undefined }));
+          return;
+        }
         updateStatus((current) => ({ git: { ...current.git, error: describe(error) } }));
       }
     });

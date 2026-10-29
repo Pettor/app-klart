@@ -81,4 +81,17 @@ describe("SyncTargets", () => {
     expect(failing.state).toBe("error");
     expect(failing.error).toBe("Work OneDrive: rejected");
   });
+
+  it("asks for an update before any other problem, naming the newest version needed", () => {
+    const overview = buildSyncOverview(
+      SETUP,
+      {
+        home: { state: "outdated", method: "github", folderVersion: "0.9" },
+        office: { state: "error", method: "folder", error: "The folder was moved" },
+      },
+      CONTEXTS
+    );
+    expect(overview.state).toBe("outdated");
+    expect(overview.folderVersion).toBe("0.9");
+  });
 });

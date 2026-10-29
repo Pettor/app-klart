@@ -2,6 +2,7 @@ import type { ReactElement } from "react";
 import { CheckIcon, ExclamationTriangleIcon as ExclamationTriangleSolidIcon } from "@heroicons/react/20/solid";
 import {
   ArrowPathIcon,
+  ArrowUpCircleIcon,
   ChevronRightIcon,
   CloudIcon,
   ComputerDesktopIcon,
@@ -32,7 +33,7 @@ function ContextDots({ contexts }: { contexts: SyncOverviewContext[] }): ReactEl
 }
 
 function TargetStateIcon({ target }: { target: SyncOverviewTarget }): ReactElement {
-  if (target.hasProblem || target.status.state === "needs-permission") {
+  if (target.hasProblem || target.status.state === "needs-permission" || target.status.state === "outdated") {
     return (
       <ExclamationTriangleSolidIcon
         className={clsx("size-3.5 shrink-0", target.hasProblem ? "text-danger" : "text-warning")}
@@ -100,7 +101,22 @@ export function SyncStatusCard({
   });
   const targetNames = targets.map((target) => target.name).join(", ");
 
-  if (overview.state === "needs-permission") {
+  if (overview.state === "outdated") {
+    icon = <ArrowUpCircleIcon className="text-warning size-[18px]" aria-hidden />;
+    title = intl.formatMessage({
+      description: "SyncStatusCard - title when a newer version of the app synced and this one paused syncing",
+      defaultMessage: "Update to keep syncing",
+      id: "gxtfYp",
+    });
+    subtitle = intl.formatMessage(
+      {
+        description: "SyncStatusCard - subtitle naming the version the sync needs",
+        defaultMessage: "Needs version {version} or newer",
+        id: "xv9HsF",
+      },
+      { version: overview.folderVersion ?? "" }
+    );
+  } else if (overview.state === "needs-permission") {
     icon = <ExclamationTriangleIcon className="text-warning size-[18px]" aria-hidden />;
     title = intl.formatMessage({
       description: "SyncStatusCard - title when folder access must be granted again",

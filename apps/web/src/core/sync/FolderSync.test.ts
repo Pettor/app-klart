@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { BrowserFolderBackend } from "./BrowserFolderBackend";
+import { NewerDataVersionError } from "./DataVersion";
 import type { SyncScope } from "./FolderSync";
 import { FolderSync, serialize } from "./FolderSync";
 import { LLMS_TXT } from "./LlmsTxt";
@@ -477,5 +478,53 @@ describe("FolderSync with contexts split across syncs", () => {
     await workRoot.write("inbox/agent.txt", "prepare the slides\n");
     const pulled = await work.pull(createEmptyData(), { today: TODAY, acceptInbox: true, scope: WORK });
     expect(Object.values(pulled.data.tasks).map((task) => task.context)).toEqual(["work"]);
+  });
+});
+
+describe("FolderSync data version", () => {
+  let root: FakeDir;
+
+  function engine(dataVersion: string): FolderSync {
+    return new FolderSync(new BrowserFolderBackend(root as unknown as FileSystemDirectoryHandle), "Phone", dataVersion);
+  }
+
+  beforeEach(() => {
+    root = new FakeDir("Klart");
+  });
+
+  it("records its data version in klart.json", async () => {
+    await engine("0.7").push(seed(), { today: TODAY, options: OPTIONS });
+    expect(JSON.parse(root.read("klart.json")!)).toMatchObject({ dataVersion: "0.7" });
+  });
+
+  it("stops pulling and pushing when a newer minor version wrote the folder", async () => {
+    await engine("0.8").push(seed(), { today: TODAY, options: OPTIONS });
+    const before = root.read("tasks/work/T1.json");
+
+    const old = engine("0.7");
+    const edited = updateTask(seed(), "T1", { title: "Old app edit" }, new Date("2030-01-01T00:00:00Z"));
+    await expect(old.pull(createEmptyData(), { today: TODAY, acceptInbox: false })).rejects.toMatchObject({
+      folderVersion: "0.8",
+    });
+    await expect(old.push(edited, { today: TODAY, options: OPTIONS })).rejects.toBeInstanceOf(NewerDataVersionError);
+    expect(root.read("tasks/work/T1.json")).toBe(before);
+  });
+
+  it("keeps syncing with a folder written by a newer patch or an older version", async () => {
+    await engine("0.7").push(seed(), { today: TODAY, options: OPTIONS });
+    const newer = engine("0.8");
+    const pulled = await newer.pull(createEmptyData(), { today: TODAY, acceptInbox: false });
+    expect(pulled.data.tasks.T1?.title).toBe("Review PR");
+    await newer.push(pulled.data, { today: TODAY, options: OPTIONS });
+    expect(JSON.parse(root.read("klart.json")!)).toMatchObject({ dataVersion: "0.8" });
+  });
+
+  it("syncs with a folder from before data versions", async () => {
+    await root.write(
+      "klart.json",
+      serialize({ schema: "klart.config/v1", contexts: [{ id: "work", name: "Acme", color: "orange", tag: "work" }] })
+    );
+    const pulled = await engine("0.7").pull(createEmptyData(), { today: TODAY, acceptInbox: false });
+    expect(pulled.data.contexts.map((context) => context.name)).toContain("Acme");
   });
 });
