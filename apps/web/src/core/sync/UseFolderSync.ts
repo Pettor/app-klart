@@ -1,22 +1,32 @@
-import { useCallback } from "react";
-import { useAtom, useAtomValue, useSetAtom } from "jotai";
+import { useAtom, useAtomValue, useSetAtom, useStore } from "jotai";
 import { isFolderAccessSupported, pickFolder, requestFolderPermission } from "./FileSystemAccess";
 import { clearFolderHandle, saveFolderHandle } from "./FolderHandleStore";
 import type { AgentFileOptions, DeviceInfo } from "./FolderSync";
 import { GitHubBackend, parseRepository } from "./GitHubBackend";
-import type { StoredDesktopConnection, SyncSettings, SyncStatus } from "./SyncAtoms";
+import type { SyncSettings } from "./SyncAtoms";
 import {
-  desktopConnectionAtom,
-  folderPermissionAtom,
+  folderHandlesAtom,
+  folderPermissionsAtom,
   gitAvailableAtom,
-  githubConnectionAtom,
-  syncConnectionAtom,
   syncDevicesAtom,
+  syncDevicesByTargetAtom,
   syncRequestAtom,
   syncSettingsAtom,
-  syncStatusAtom,
+  syncSetupAtom,
+  syncStatusesAtom,
 } from "./SyncAtoms";
+import type { StoredSyncConnection, SyncOverview } from "./SyncTargets";
+import {
+  buildSyncOverview,
+  createSyncTargetId,
+  DEVICE_ONLY,
+  getContextTargetId,
+  makePrimarySyncTarget,
+  removeSyncTarget,
+  withoutKey,
+} from "./SyncTargets";
 import { desktop, isDesktop } from "~/core/platform/Desktop";
+import { klartDataAtom } from "~/core/tasks/KlartAtoms";
 
 /** Outcome of connecting a Git clone; anything but `connected` leaves sync as it was. */
 export type GitConnectResult = "connected" | "cancelled" | "not-a-repo";
@@ -43,55 +53,79 @@ export interface UseFolderSyncResult {
   /** Git sync works here: the desktop app with git installed. `null` while checking. */
   isGitSupported: boolean | null;
   isDesktop: boolean;
-  status: SyncStatus;
+  /** Every sync, its state and its contexts. */
+  overview: SyncOverview;
+  /** Where each context syncs: a sync id, or {@link DEVICE_ONLY}. */
+  contextTargets: Record<string, string>;
   settings: SyncSettings;
   devices: DeviceInfo[];
-  /** Opens the folder picker and starts syncing with the chosen folder. Resolves `false` when cancelled. */
-  connect: () => Promise<boolean>;
+  /**
+   * The connect actions add a new sync, or with `targetId` point that sync somewhere else.
+   * Opens the folder picker and syncs with the chosen folder. Resolves `false` when cancelled.
+   */
+  connect: (targetId?: string) => Promise<boolean>;
   /** Picks an existing Git clone and syncs through it. */
-  connectGit: () => Promise<GitConnectResult>;
+  connectGit: (targetId?: string) => Promise<GitConnectResult>;
   /** Picks a parent folder, clones `url` into it and syncs through the clone. */
-  cloneGit: (url: string) => Promise<GitConnectResult>;
+  cloneGit: (url: string, targetId?: string) => Promise<GitConnectResult>;
   /** Checks the token and repository, then syncs through GitHub's API. Only private repositories are accepted. */
-  connectGitHub: (credentials: GitHubCredentials) => Promise<GitHubConnectResult>;
-  /** Re-grants access to the remembered folder after a browser restart. */
-  reconnect: () => Promise<void>;
+  connectGitHub: (credentials: GitHubCredentials, targetId?: string) => Promise<GitHubConnectResult>;
+  /** Re-grants access to a remembered folder after a browser restart; without `targetId`, the first that needs it. */
+  reconnect: (targetId?: string) => Promise<void>;
+  /** Stops syncing with one sync. Its contexts stay on this device. */
+  remove: (targetId: string) => Promise<void>;
+  /** Stops syncing altogether. */
   disconnect: () => Promise<void>;
+  rename: (targetId: string, name: string) => void;
+  makePrimary: (targetId: string) => void;
+  /** Moves a context's data to another sync, or keeps it on this device with {@link DEVICE_ONLY}. */
+  assignContext: (contextId: string, targetId: string) => void;
   syncNow: () => void;
   setDeviceName: (name: string) => void;
   setAgentOption: (key: keyof AgentFileOptions, value: boolean) => void;
 }
 
+function baseName(path: string): string {
+  return path.split(/[\\/]/).filter(Boolean).at(-1) ?? path;
+}
+
 export function useFolderSync(): UseFolderSyncResult {
-  const status = useAtomValue(syncStatusAtom);
+  const store = useStore();
+  const data = useAtomValue(klartDataAtom);
+  const statuses = useAtomValue(syncStatusesAtom);
   const devices = useAtomValue(syncDevicesAtom);
   const gitAvailable = useAtomValue(gitAvailableAtom);
   const [settings, setSettings] = useAtom(syncSettingsAtom);
-  const [connection, setConnection] = useAtom(syncConnectionAtom);
-  const setDesktopConnection = useSetAtom(desktopConnectionAtom);
-  const setGitHubConnection = useSetAtom(githubConnectionAtom);
-  const setPermission = useSetAtom(folderPermissionAtom);
+  const [setup, setSetup] = useAtom(syncSetupAtom);
+  const setHandles = useSetAtom(folderHandlesAtom);
+  const setPermissions = useSetAtom(folderPermissionsAtom);
   const setSyncRequest = useSetAtom(syncRequestAtom);
-  const setDevices = useSetAtom(syncDevicesAtom);
+  const setDevicesByTarget = useSetAtom(syncDevicesByTargetAtom);
   const onDesktop = isDesktop();
 
-  const useDesktopConnection = useCallback(
-    (next: StoredDesktopConnection) => {
-      setGitHubConnection(null);
-      setDesktopConnection(next);
-      setConnection(next);
-      setDevices([]);
-    },
-    [setConnection, setDesktopConnection, setDevices, setGitHubConnection]
-  );
+  /** Adds a sync, or points `targetId` at a new place. Returns the sync's id. */
+  function save(targetId: string | undefined, connection: StoredSyncConnection, name: string): string {
+    const id = targetId ?? createSyncTargetId();
+    setSetup((current) => {
+      if (current.targets.some((target) => target.id === id)) {
+        return {
+          ...current,
+          targets: current.targets.map((target) => (target.id === id ? { ...target, connection } : target)),
+        };
+      }
+      return { ...current, targets: [...current.targets, { id, name, connection }] };
+    });
+    setDevicesByTarget((all) => withoutKey(all, id));
+    return id;
+  }
 
-  const connect = useCallback(async (): Promise<boolean> => {
+  async function connect(targetId?: string): Promise<boolean> {
     if (onDesktop) {
       const path = await desktop.pickFolder();
       if (!path) {
         return false;
       }
-      useDesktopConnection({ kind: "desktop-folder", path });
+      save(targetId, { kind: "desktop-folder", path }, baseName(path));
       return true;
     }
     let picked: FileSystemDirectoryHandle;
@@ -103,14 +137,15 @@ export function useFolderSync(): UseFolderSyncResult {
       }
       throw error;
     }
-    await saveFolderHandle(picked);
-    setGitHubConnection(null);
-    setConnection({ kind: "browser-folder", handle: picked });
-    setPermission("granted");
+    const id = targetId ?? createSyncTargetId();
+    await saveFolderHandle(id, picked);
+    setHandles((all) => ({ ...all, [id]: picked }));
+    setPermissions((all) => ({ ...all, [id]: "granted" }));
+    save(id, { kind: "browser-folder" }, picked.name);
     return true;
-  }, [onDesktop, setConnection, setGitHubConnection, setPermission, useDesktopConnection]);
+  }
 
-  const connectGit = useCallback(async (): Promise<GitConnectResult> => {
+  async function connectGit(targetId?: string): Promise<GitConnectResult> {
     const path = await desktop.pickFolder();
     if (!path) {
       return "cancelled";
@@ -119,70 +154,81 @@ export function useFolderSync(): UseFolderSyncResult {
     if (!info.isRepo) {
       return "not-a-repo";
     }
-    useDesktopConnection({ kind: "desktop-git", path });
+    save(targetId, { kind: "desktop-git", path }, baseName(path));
     return "connected";
-  }, [useDesktopConnection]);
+  }
 
-  const cloneGit = useCallback(
-    async (url: string): Promise<GitConnectResult> => {
-      const parent = await desktop.pickFolder();
-      if (!parent) {
-        return "cancelled";
-      }
-      const path = await desktop.gitClone(url.trim(), parent);
-      useDesktopConnection({ kind: "desktop-git", path });
-      return "connected";
-    },
-    [useDesktopConnection]
-  );
-
-  const connectGitHub = useCallback(
-    async ({ owner, repository, token }: GitHubCredentials): Promise<GitHubConnectResult> => {
-      const next = { kind: "github" as const, ...parseRepository(owner, repository), token: token.trim() };
-      const info = await new GitHubBackend(next).info();
-      if (!info.isPrivate) {
-        return "public";
-      }
-      if (!info.canPush) {
-        return "read-only";
-      }
-      if (onDesktop) {
-        setDesktopConnection(null);
-      } else {
-        await clearFolderHandle();
-      }
-      setGitHubConnection(next);
-      setConnection(next);
-      setPermission(null);
-      setDevices([]);
-      return "connected";
-    },
-    [onDesktop, setConnection, setDesktopConnection, setDevices, setGitHubConnection, setPermission]
-  );
-
-  const reconnect = useCallback(async () => {
-    if (connection?.kind === "browser-folder") {
-      setPermission(await requestFolderPermission(connection.handle));
+  async function cloneGit(url: string, targetId?: string): Promise<GitConnectResult> {
+    const parent = await desktop.pickFolder();
+    if (!parent) {
+      return "cancelled";
     }
-  }, [connection, setPermission]);
+    const path = await desktop.gitClone(url.trim(), parent);
+    save(targetId, { kind: "desktop-git", path }, baseName(path));
+    return "connected";
+  }
 
-  const disconnect = useCallback(async () => {
-    setGitHubConnection(null);
-    if (onDesktop) {
-      setDesktopConnection(null);
-    } else {
-      await clearFolderHandle();
+  async function connectGitHub(
+    { owner, repository, token }: GitHubCredentials,
+    targetId?: string
+  ): Promise<GitHubConnectResult> {
+    const next = { kind: "github" as const, ...parseRepository(owner, repository), token: token.trim() };
+    const info = await new GitHubBackend(next).info();
+    if (!info.isPrivate) {
+      return "public";
     }
-    setConnection(null);
-    setPermission(null);
-    setDevices([]);
-  }, [onDesktop, setConnection, setDesktopConnection, setDevices, setGitHubConnection, setPermission]);
+    if (!info.canPush) {
+      return "read-only";
+    }
+    save(targetId, next, next.repo);
+    return "connected";
+  }
+
+  async function reconnect(targetId?: string): Promise<void> {
+    const permissions = store.get(folderPermissionsAtom);
+    const handles = store.get(folderHandlesAtom);
+    const id =
+      targetId ??
+      setup.targets.find(
+        (target) => target.connection.kind === "browser-folder" && permissions[target.id] !== "granted"
+      )?.id;
+    const handle = id ? handles[id] : undefined;
+    if (id && handle) {
+      const granted = await requestFolderPermission(handle);
+      setPermissions((all) => ({ ...all, [id]: granted }));
+    }
+  }
+
+  async function forgetFolder(targetId: string): Promise<void> {
+    if (!onDesktop) {
+      await clearFolderHandle(targetId);
+    }
+    setHandles((all) => withoutKey(all, targetId));
+    setPermissions((all) => withoutKey(all, targetId));
+  }
+
+  async function remove(targetId: string): Promise<void> {
+    setSetup((current) => removeSyncTarget(current, targetId, data.contexts));
+    await forgetFolder(targetId);
+  }
+
+  async function disconnect(): Promise<void> {
+    const ids = setup.targets.map((target) => target.id);
+    setSetup({ targets: [], contextTargets: {} });
+    await Promise.all(ids.map(forgetFolder));
+  }
+
+  const contextTargets: Record<string, string> = {};
+  for (const context of data.contexts) {
+    contextTargets[context.id] = getContextTargetId(setup, context.id) ?? DEVICE_ONLY;
+  }
 
   return {
     isSupported: onDesktop || isFolderAccessSupported(),
     isGitSupported: onDesktop ? gitAvailable : false,
     isDesktop: onDesktop,
-    status,
+    overview: buildSyncOverview(setup, statuses, data.contexts),
+    contextTargets,
     settings,
     devices,
     connect,
@@ -190,7 +236,16 @@ export function useFolderSync(): UseFolderSyncResult {
     cloneGit,
     connectGitHub,
     reconnect,
+    remove,
     disconnect,
+    rename: (targetId, name) =>
+      setSetup((current) => ({
+        ...current,
+        targets: current.targets.map((target) => (target.id === targetId ? { ...target, name } : target)),
+      })),
+    makePrimary: (targetId) => setSetup((current) => makePrimarySyncTarget(current, targetId, data.contexts)),
+    assignContext: (contextId, targetId) =>
+      setSetup((current) => ({ ...current, contextTargets: { ...current.contextTargets, [contextId]: targetId } })),
     syncNow: () => setSyncRequest((count) => count + 1),
     setDeviceName: (deviceName) => setSettings((current) => ({ ...current, deviceName })),
     setAgentOption: (key, value) =>

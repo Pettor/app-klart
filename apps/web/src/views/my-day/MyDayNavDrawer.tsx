@@ -81,7 +81,7 @@ export function MyDayNavDrawer({
             </Drawer.Body>
             <Drawer.Footer className="pb-[max(1rem,env(safe-area-inset-bottom))]">
               <div className="w-full">
-                <SyncStatusCard status={sync.status} onPress={closeAfter(sync.onPress)} />
+                <SyncStatusCard overview={sync.overview} onPress={closeAfter(sync.onPress)} />
               </div>
             </Drawer.Footer>
           </Drawer.Dialog>

@@ -13,6 +13,7 @@ import { addDays } from "~/core/tasks/LocalDate";
 import { buildSuggestions, selectDueSuggestions } from "~/core/tasks/Suggestions";
 import type { Task } from "~/core/tasks/Task";
 import { DEMO_DATA, DEMO_TODAY } from "~/storybook/data/KlartDemoData";
+import { demoSyncOverview } from "~/storybook/data/SyncDemoData";
 import { ShoppingView } from "~/views/shopping/ShoppingView";
 
 const inToday = new Set(DEMO_DATA.days[DEMO_TODAY]!.items.map((item) => item.taskId));
@@ -92,7 +93,12 @@ function buildArgs(contextId: string): Props {
       onSelect: fn(),
     },
     sync: {
-      status: { state: "synced", method: "folder", folderName: "OneDrive/Klart", lastSyncedAt: "2026-10-21T09:58:00Z" },
+      overview: demoSyncOverview({
+        state: "synced",
+        method: "folder",
+        folderName: "OneDrive/Klart",
+        lastSyncedAt: "2026-10-21T09:58:00Z",
+      }),
       onPress: fn(),
     },
     shopping: { count: 11, isActive: false, onOpen: fn() },

@@ -1,17 +1,21 @@
 import { useState, type ChangeEvent, type ReactElement } from "react";
-import { CheckIcon, ExclamationTriangleIcon } from "@heroicons/react/20/solid";
-import { Alert, Button, Description, Input, Label, Radio, RadioGroup, TextField } from "@heroui/react";
-import clsx from "clsx";
+import { PlusIcon } from "@heroicons/react/20/solid";
+import { Alert, Button, Description, Input, Label, TextField } from "@heroui/react";
 import { FormattedRelativeTime, useIntl } from "react-intl";
-import { SettingsGitHubPanel } from "./SettingsGitHubPanel";
-import { SettingsGitPanel } from "./SettingsGitPanel";
 import { SettingsPanel, SettingsSectionShell } from "./SettingsSectionShell";
+import type { SettingsSyncContextItem } from "./SettingsSyncContexts";
+import { SettingsSyncContexts } from "./SettingsSyncContexts";
+import { SettingsSyncPicker } from "./SettingsSyncPicker";
+import { SettingsSyncTargetCard } from "./SettingsSyncTargetCard";
 import type { DeviceInfo } from "~/core/sync/FolderSync";
-import type { SyncMethod, SyncStatus } from "~/core/sync/SyncAtoms";
+import type { SyncOverview } from "~/core/sync/SyncTargets";
 import type { GitHubCredentials } from "~/core/sync/UseFolderSync";
 
 export interface SettingsSyncSectionProps {
-  status: SyncStatus;
+  /** Every sync with its state and contexts. */
+  overview: SyncOverview;
+  /** Every context and the sync it uses. */
+  contexts: SettingsSyncContextItem[];
   isSupported: boolean;
   /** Running in the desktop app. */
   isDesktop: boolean;
@@ -20,13 +24,19 @@ export interface SettingsSyncSectionProps {
   deviceName: string;
   thisDeviceId: string;
   devices: DeviceInfo[];
-  onConnect: () => void;
-  onConnectGit: () => void;
-  onCloneGit: (url: string) => void;
+  /** The connect callbacks add a sync, or with `targetId` point that sync somewhere else. */
+  onConnect: (targetId?: string) => void;
+  onConnectGit: (targetId?: string) => void;
+  onCloneGit: (url: string, targetId?: string) => void;
   /** Resolves `true` once connected. */
-  onConnectGitHub: (credentials: GitHubCredentials) => Promise<boolean>;
-  onReconnect: () => void;
-  onDisconnect: () => void;
+  onConnectGitHub: (credentials: GitHubCredentials, targetId?: string) => Promise<boolean>;
+  onReconnect: (targetId: string) => void;
+  /** Stops syncing with one sync; its contexts stay on this device. */
+  onRemove: (targetId: string) => void;
+  onRename: (targetId: string, name: string) => void;
+  onMakePrimary: (targetId: string) => void;
+  /** Moves a context to a sync, or keeps it on this device with `DEVICE_ONLY`. */
+  onAssignContext: (contextId: string, targetId: string) => void;
   onSyncNow: () => void;
   onDeviceNameChange: (name: string) => void;
   /** Rendered at this time; injected so stories are stable. */
@@ -48,7 +58,8 @@ function RelativeTime({ iso, now }: { iso: string; now: number }): ReactElement 
 }
 
 export function SettingsSyncSection({
-  status,
+  overview,
+  contexts,
   isSupported,
   isDesktop,
   isGitSupported,
@@ -60,102 +71,20 @@ export function SettingsSyncSection({
   onCloneGit,
   onConnectGitHub,
   onReconnect,
-  onDisconnect,
+  onRemove,
+  onRename,
+  onMakePrimary,
+  onAssignContext,
   onSyncNow,
   onDeviceNameChange,
   now = Date.now(),
 }: SettingsSyncSectionProps): ReactElement {
   const intl = useIntl();
-  // Choosing Git or GitHub only reveals its setup; the method changes once a repository is connected.
-  const [pending, setPending] = useState<SyncMethod | null>(null);
-  const method: SyncMethod = pending ?? status.method;
-
-  function handleMethod(value: string): void {
-    setPending(value === "git" || value === "github" ? value : null);
-    if (value === "folder" && status.method !== "folder") {
-      onConnect();
-    } else if (value === "local" && status.method !== "local") {
-      onDisconnect();
-    }
-  }
-
-  let gitBody = intl.formatMessage({
-    description: "SettingsSync - git method description in the browser",
-    defaultMessage: "A private Git repo with full history. Available in the Klart desktop app.",
-    id: "hDuZqH",
-  });
-  if (isDesktop && isGitSupported) {
-    gitBody = intl.formatMessage({
-      description: "SettingsSync - git method description in the desktop app",
-      defaultMessage: "A private repo, e.g. on GitHub. Pull on launch, commit and push after changes. Full history.",
-      id: "a23IZL",
-    });
-  } else if (isDesktop && isGitSupported === false) {
-    gitBody = intl.formatMessage({
-      description: "SettingsSync - git method description when git isn't installed",
-      defaultMessage: "Install Git on this computer to sync through a repository.",
-      id: "0rJ4k4",
-    });
-  }
-
-  const options: { value: SyncMethod; title: string; body: string; isDisabled?: boolean }[] = [
-    {
-      value: "folder",
-      title: intl.formatMessage({
-        description: "SettingsSync - method title",
-        defaultMessage: "Cloud folder",
-        id: "AlZg4B",
-      }),
-      body: intl.formatMessage({
-        description: "SettingsSync - method description",
-        defaultMessage: "OneDrive, iCloud Drive, Dropbox or any synced folder. Zero setup.",
-        id: "K5Rjqy",
-      }),
-      isDisabled: !isSupported,
-    },
-    {
-      value: "git",
-      title: intl.formatMessage({
-        description: "SettingsSync - method title",
-        defaultMessage: "Git repository",
-        id: "k6EKVk",
-      }),
-      body: gitBody,
-      isDisabled: !isGitSupported,
-    },
-    {
-      value: "github",
-      title: intl.formatMessage({
-        description: "SettingsSync - method title",
-        defaultMessage: "GitHub",
-        id: "GZ3jvy",
-      }),
-      body: intl.formatMessage({
-        description: "SettingsSync - GitHub method description",
-        defaultMessage: "A private GitHub repo, straight from the app. Works on phones and in any browser.",
-        id: "cylmo2",
-      }),
-    },
-    {
-      value: "local",
-      title: isDesktop
-        ? intl.formatMessage({
-            description: "SettingsSync - method title in the desktop app",
-            defaultMessage: "This computer only",
-            id: "CGNvp6",
-          })
-        : intl.formatMessage({
-            description: "SettingsSync - method title",
-            defaultMessage: "This browser only",
-            id: "BWvpym",
-          }),
-      body: intl.formatMessage({
-        description: "SettingsSync - method description",
-        defaultMessage: "Stored on this device, no sync. Switch any time.",
-        id: "xqjw42",
-      }),
-    },
-  ];
+  const { targets } = overview;
+  // "Add another sync" stays open until a sync is added: the count it was opened at stops matching.
+  const [addingAt, setAddingAt] = useState<number | null>(null);
+  const isAdding = addingAt === targets.length;
+  const isSplit = targets.length > 1 || overview.localContexts.length > 0;
 
   return (
     <SettingsSectionShell
@@ -172,7 +101,7 @@ export function SettingsSyncSection({
         id: "zSCLup",
       })}
     >
-      {!isSupported && status.method !== "github" && (
+      {!isSupported && !targets.some((target) => target.method === "github") && (
         <Alert status="warning">
           <Alert.Indicator />
           <Alert.Content>
@@ -195,137 +124,85 @@ export function SettingsSyncSection({
         </Alert>
       )}
 
-      <RadioGroup
-        value={method}
-        onChange={handleMethod}
-        aria-label={intl.formatMessage({
-          description: "SettingsSync - aria-label of the method picker",
-          defaultMessage: "Sync method",
-          id: "Wx9au+",
-        })}
-        className="grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-3"
-      >
-        {options.map((option) => (
-          <Radio
-            key={option.value}
-            value={option.value}
-            isDisabled={option.isDisabled}
-            data-testid={`settings__sync-${option.value}`}
-            className={clsx(
-              "hero-card bg-surface items-start gap-3 rounded-xl border-2 border-transparent p-4",
-              "data-[selected=true]:border-accent data-[selected=true]:bg-accent/10"
-            )}
-          >
-            <Radio.Content className="flex items-start gap-3">
-              <Radio.Control className="mt-0.5">
-                <Radio.Indicator />
-              </Radio.Control>
-              <span className="flex flex-col gap-1">
-                <span className="font-semibold">{option.title}</span>
-                <span className="text-foreground/80 text-[13px] leading-snug font-normal">{option.body}</span>
-              </span>
-            </Radio.Content>
-          </Radio>
-        ))}
-      </RadioGroup>
-
-      {method === "folder" && status.method === "folder" && (
-        <div className="hero-card bg-surface flex flex-col gap-3 rounded-xl p-[18px]">
-          <span className="font-semibold">
-            {intl.formatMessage({
-              description: "SettingsSync - connected folder heading",
-              defaultMessage: "Data folder",
-              id: "zujlWi",
-            })}
-          </span>
-          <div className="flex flex-wrap items-center gap-2">
-            <code className="bg-background border-border min-w-0 flex-1 truncate rounded-lg border px-3 py-2.5 font-mono text-[13px]">
-              {status.location ?? status.folderName ?? "…"}
-            </code>
-            {status.state === "needs-permission" ? (
-              <Button onPress={onReconnect} data-testid="settings__sync-reconnect">
-                {intl.formatMessage({
-                  description: "SettingsSync - re-grant folder access",
-                  defaultMessage: "Reconnect",
-                  id: "WIF87D",
-                })}
-              </Button>
-            ) : (
-              <Button variant="secondary" onPress={onSyncNow}>
-                {intl.formatMessage({
-                  description: "SettingsSync - sync immediately",
-                  defaultMessage: "Sync now",
-                  id: "xQx8PW",
-                })}
-              </Button>
-            )}
-            <Button variant="secondary" onPress={onConnect}>
-              {intl.formatMessage({
-                description: "SettingsSync - pick a different folder",
-                defaultMessage: "Choose…",
-                id: "0cSmNI",
-              })}
-            </Button>
-          </div>
-          <p className="text-muted text-[13px] leading-relaxed">
-            {intl.formatMessage({
-              description: "SettingsSync - explains where the folder path is stored",
-              defaultMessage:
-                "Each computer keeps its own folder choice, so the folder can live in different places on each machine. The folder itself is the source of truth.",
-              id: "Dl2joH",
-            })}
-          </p>
-          {status.state === "synced" && (
-            <span className="text-success flex items-center gap-2 text-[13px]">
-              <CheckIcon className="size-4" aria-hidden />
-              {intl.formatMessage({
-                description: "SettingsSync - status line when the folder is being watched",
-                defaultMessage: "Found klart.json. Watching for changes.",
-                id: "yqKHf4",
-              })}
-            </span>
-          )}
-          {status.state === "needs-permission" && (
-            <span className="text-warning flex items-center gap-2 text-[13px]">
-              <ExclamationTriangleIcon className="size-4" aria-hidden />
-              {intl.formatMessage({
-                description: "SettingsSync - status line when the browser needs permission again",
-                defaultMessage: "The browser needs your permission again to open this folder.",
-                id: "iFbXEp",
-              })}
-            </span>
-          )}
-          {status.state === "error" && (
-            <span className="text-danger flex items-center gap-2 text-[13px]">
-              <ExclamationTriangleIcon className="size-4" aria-hidden />
-              {status.error}
-            </span>
-          )}
-        </div>
-      )}
-
-      {method === "git" && isGitSupported && (
-        <SettingsGitPanel
-          status={status}
-          onConnectGit={onConnectGit}
-          onCloneGit={onCloneGit}
-          onSyncNow={onSyncNow}
+      {targets.length === 0 ? (
+        <SettingsSyncPicker
+          isFirst
+          isSupported={isSupported}
+          isDesktop={isDesktop}
+          isGitSupported={isGitSupported}
+          onConnect={() => onConnect()}
+          onConnectGit={() => onConnectGit()}
+          onCloneGit={(url) => onCloneGit(url)}
+          onConnectGitHub={(credentials) => onConnectGitHub(credentials)}
           now={now}
         />
+      ) : (
+        targets.map((target) => (
+          <SettingsSyncTargetCard
+            key={target.id}
+            target={target}
+            showContexts={isSplit}
+            canMakePrimary={targets.length > 1}
+            onConnect={() => onConnect(target.id)}
+            onConnectGit={() => onConnectGit(target.id)}
+            onConnectGitHub={(credentials) => onConnectGitHub(credentials, target.id)}
+            onReconnect={() => onReconnect(target.id)}
+            onRemove={() => onRemove(target.id)}
+            onRename={(name) => onRename(target.id, name)}
+            onMakePrimary={() => onMakePrimary(target.id)}
+            onSyncNow={onSyncNow}
+            now={now}
+          />
+        ))
       )}
 
-      {method === "github" && (
-        <SettingsGitHubPanel
-          status={status}
-          onConnectGitHub={async (credentials) => {
-            const connected = await onConnectGitHub(credentials);
-            if (connected) {
-              setPending(null);
-            }
-            return connected;
-          }}
-          onSyncNow={onSyncNow}
-          now={now}
+      {targets.length > 0 &&
+        (isAdding ? (
+          <SettingsSyncPicker
+            isFirst={false}
+            isSupported={isSupported}
+            isDesktop={isDesktop}
+            isGitSupported={isGitSupported}
+            onConnect={() => onConnect()}
+            onConnectGit={() => onConnectGit()}
+            onCloneGit={(url) => onCloneGit(url)}
+            onConnectGitHub={(credentials) => onConnectGitHub(credentials)}
+            onCancel={() => setAddingAt(null)}
+            now={now}
+          />
+        ) : (
+          <div className="flex flex-col gap-1">
+            <Button
+              variant="secondary"
+              className="self-start"
+              onPress={() => setAddingAt(targets.length)}
+              data-testid="settings__sync-add"
+            >
+              <PlusIcon className="size-4" aria-hidden />
+              {intl.formatMessage({
+                description: "SettingsSync - button adding a second sync, e.g. a separate repo for work",
+                defaultMessage: "Add another sync",
+                id: "W8YHM6",
+              })}
+            </Button>
+            {targets.length === 1 && (
+              <span className="text-muted text-[13px] leading-relaxed">
+                {intl.formatMessage({
+                  description: "SettingsSync - explains why you'd add a second sync",
+                  defaultMessage:
+                    "Keep some contexts somewhere else, e.g. Work in your employer's OneDrive and the rest in your own repo.",
+                  id: "z+TGoi",
+                })}
+              </span>
+            )}
+          </div>
+        ))}
+
+      {targets.length > 0 && isSplit && (
+        <SettingsSyncContexts
+          contexts={contexts}
+          targets={targets.map(({ id, name }) => ({ id, name }))}
+          onAssign={onAssignContext}
         />
       )}
 
@@ -355,11 +232,14 @@ export function SettingsSyncSection({
       {devices.length > 0 && (
         <SettingsPanel>
           <div className="px-[18px] py-3.5 font-semibold">
-            {intl.formatMessage({
-              description: "SettingsSync - devices table heading",
-              defaultMessage: "Devices using this folder",
-              id: "MP5SmJ",
-            })}
+            {intl.formatMessage(
+              {
+                description: "SettingsSync - devices table heading",
+                defaultMessage: "{count, plural, one {Devices using this folder} other {Devices using these syncs}}",
+                id: "xmBicT",
+              },
+              { count: targets.length }
+            )}
           </div>
           {devices.map((device) => (
             <div key={device.id} className="flex items-center gap-3 px-[18px] py-3 text-[13px]">

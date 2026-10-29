@@ -1,4 +1,4 @@
-import { useState, type ChangeEvent, type ReactElement } from "react";
+import { useState, type ChangeEvent, type ReactElement, type ReactNode } from "react";
 import { CheckIcon, ExclamationTriangleIcon } from "@heroicons/react/20/solid";
 import { Button, Description, Input, Label, TextField } from "@heroui/react";
 import { FormattedRelativeTime, useIntl } from "react-intl";
@@ -10,6 +10,10 @@ export interface SettingsGitPanelProps {
   onCloneGit: (url: string) => void;
   onSyncNow: () => void;
   now: number;
+  /** Replaces the connected repository's heading, e.g. with the sync's name. */
+  title?: ReactNode;
+  /** Shown under the connected repository's buttons. */
+  footer?: ReactNode;
 }
 
 /** Git sync: either the connected clone's state, or how to connect one. */
@@ -19,6 +23,8 @@ export function SettingsGitPanel({
   onCloneGit,
   onSyncNow,
   now,
+  title,
+  footer,
 }: SettingsGitPanelProps): ReactElement {
   const intl = useIntl();
   const [url, setUrl] = useState("");
@@ -91,13 +97,15 @@ export function SettingsGitPanel({
 
   return (
     <div className="hero-card bg-surface flex flex-col gap-3 rounded-xl p-[18px]" data-testid="settings__git-connected">
-      <span className="font-semibold">
-        {intl.formatMessage({
-          description: "SettingsGit - heading for the connected repository",
-          defaultMessage: "Repository",
-          id: "pvFe0e",
-        })}
-      </span>
+      {title ?? (
+        <span className="font-semibold">
+          {intl.formatMessage({
+            description: "SettingsGit - heading for the connected repository",
+            defaultMessage: "Repository",
+            id: "pvFe0e",
+          })}
+        </span>
+      )}
       <dl className="grid grid-cols-[max-content_minmax(0,1fr)] gap-x-4 gap-y-1.5 text-[13px]">
         <dt className="text-muted">
           {intl.formatMessage({
@@ -180,6 +188,7 @@ export function SettingsGitPanel({
           })}
         </Button>
       </div>
+      {footer}
     </div>
   );
 }

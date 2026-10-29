@@ -1,4 +1,4 @@
-import { useState, type ChangeEvent, type ReactElement } from "react";
+import { useState, type ChangeEvent, type ReactElement, type ReactNode } from "react";
 import { CheckIcon, ExclamationTriangleIcon } from "@heroicons/react/20/solid";
 import { Button, Description, Input, Label, Link, Spinner, TextField } from "@heroui/react";
 import { FormattedRelativeTime, useIntl } from "react-intl";
@@ -14,6 +14,10 @@ export interface SettingsGitHubPanelProps {
   onConnectGitHub: (credentials: GitHubCredentials) => Promise<boolean>;
   onSyncNow: () => void;
   now: number;
+  /** Replaces the connected repository's heading, e.g. with the sync's name. */
+  title?: ReactNode;
+  /** Shown under the connected repository's buttons. */
+  footer?: ReactNode;
 }
 
 /** GitHub sync: either the connected repository's state, or the sign-in form. */
@@ -22,6 +26,8 @@ export function SettingsGitHubPanel({
   onConnectGitHub,
   onSyncNow,
   now,
+  title,
+  footer,
 }: SettingsGitHubPanelProps): ReactElement {
   const intl = useIntl();
   const connected = status.method === "github";
@@ -49,13 +55,15 @@ export function SettingsGitHubPanel({
       className="hero-card bg-surface flex flex-col gap-3 rounded-xl p-[18px]"
       data-testid="settings__github-connected"
     >
-      <span className="font-semibold">
-        {intl.formatMessage({
-          description: "SettingsGitHub - heading for the connected repository",
-          defaultMessage: "GitHub repository",
-          id: "WC41ET",
-        })}
-      </span>
+      {title ?? (
+        <span className="font-semibold">
+          {intl.formatMessage({
+            description: "SettingsGitHub - heading for the connected repository",
+            defaultMessage: "GitHub repository",
+            id: "WC41ET",
+          })}
+        </span>
+      )}
       <dl className="grid grid-cols-[max-content_minmax(0,1fr)] gap-x-4 gap-y-1.5 text-[13px]">
         <dt className="text-muted">
           {intl.formatMessage({
@@ -114,6 +122,7 @@ export function SettingsGitHubPanel({
           })}
         </Button>
       </div>
+      {footer}
     </div>
   );
 }

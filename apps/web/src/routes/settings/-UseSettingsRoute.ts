@@ -10,6 +10,7 @@ import type { SettingsSectionId } from "~/core/settings/SettingsSection";
 import { toDeviceId } from "~/core/sync/FolderSync";
 import { GitHubError } from "~/core/sync/GitHubBackend";
 import { LLMS_TXT } from "~/core/sync/LlmsTxt";
+import { DEVICE_ONLY } from "~/core/sync/SyncTargets";
 import type { GitConnectResult, GitHubConnectResult, GitHubCredentials } from "~/core/sync/UseFolderSync";
 import { useFolderSync } from "~/core/sync/UseFolderSync";
 import { klartDataAtom, startContextAtom, suggestionSettingsAtom } from "~/core/tasks/KlartAtoms";
@@ -124,8 +125,8 @@ export function useSettingsRoute(section?: SettingsSectionId): SettingsViewProps
     return false;
   }
 
-  function connectGitHub(credentials: GitHubCredentials): Promise<boolean> {
-    return sync.connectGitHub(credentials).then(reportGitHub, reportGitHubError);
+  function connectGitHub(credentials: GitHubCredentials, targetId?: string): Promise<boolean> {
+    return sync.connectGitHub(credentials, targetId).then(reportGitHub, reportGitHubError);
   }
 
   const openCounts = new Map<string, number>();
@@ -151,19 +152,28 @@ export function useSettingsRoute(section?: SettingsSectionId): SettingsViewProps
       onMove: actions.moveContext,
     },
     sync: {
-      status: sync.status,
+      overview: sync.overview,
+      contexts: data.contexts.map(({ id, name, color }) => ({
+        id,
+        name,
+        color,
+        targetId: sync.contextTargets[id] ?? DEVICE_ONLY,
+      })),
       isSupported: sync.isSupported,
       isDesktop: sync.isDesktop,
       isGitSupported: sync.isGitSupported,
       deviceName: sync.settings.deviceName,
       thisDeviceId: toDeviceId(sync.settings.deviceName),
       devices: sync.devices,
-      onConnect: () => void sync.connect().catch(reportError),
-      onConnectGit: () => void sync.connectGit().then(reportGit).catch(reportGitError),
-      onCloneGit: (url) => void sync.cloneGit(url).then(reportGit).catch(reportGitError),
+      onConnect: (targetId) => void sync.connect(targetId).catch(reportError),
+      onConnectGit: (targetId) => void sync.connectGit(targetId).then(reportGit).catch(reportGitError),
+      onCloneGit: (url, targetId) => void sync.cloneGit(url, targetId).then(reportGit).catch(reportGitError),
       onConnectGitHub: connectGitHub,
-      onReconnect: () => void sync.reconnect().catch(reportError),
-      onDisconnect: () => void sync.disconnect(),
+      onReconnect: (targetId) => void sync.reconnect(targetId).catch(reportError),
+      onRemove: (targetId) => void sync.remove(targetId),
+      onRename: sync.rename,
+      onMakePrimary: sync.makePrimary,
+      onAssignContext: sync.assignContext,
       onSyncNow: sync.syncNow,
       onDeviceNameChange: sync.setDeviceName,
     },

@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { BrowserFolderBackend } from "./BrowserFolderBackend";
+import type { SyncScope } from "./FolderSync";
 import { FolderSync, serialize } from "./FolderSync";
 import { LLMS_TXT } from "./LlmsTxt";
 import {
@@ -345,5 +346,111 @@ describe("FolderSync", () => {
     await root.write("lists/L9.json", JSON.stringify(list));
     const pulled = await sync.pull(seed(), { today: TODAY, acceptInbox: false });
     expect(pulled.data.lists.L9).toEqual(list);
+  });
+});
+
+describe("FolderSync with contexts split across syncs", () => {
+  /** Personal (and shopping lists) in the primary folder, Work in its own. */
+  const PERSONAL: SyncScope = { ownsContext: (id) => id !== "work", isPrimary: true };
+  const WORK: SyncScope = { ownsContext: (id) => id === "work", isPrimary: false };
+
+  let personalRoot: FakeDir;
+  let workRoot: FakeDir;
+  let personal: FolderSync;
+  let work: FolderSync;
+
+  function folderSync(root: FakeDir): FolderSync {
+    return new FolderSync(new BrowserFolderBackend(root as unknown as FileSystemDirectoryHandle), "MacBook Air");
+  }
+
+  /** T1 in Work and P1 in Personal, both in today's My Day, plus a shopping list. */
+  function splitSeed(): KlartData {
+    const data = seed();
+    const task = createTask(
+      parseQuickAdd("water the plants", { today: TODAY, contexts: data.contexts, currentContext: "personal" }),
+      new Date("2026-10-21T08:30:00Z"),
+      "P1"
+    );
+    const withTask = addToDay(
+      { ...data, tasks: { ...data.tasks, P1: task } },
+      TODAY,
+      [{ taskId: "P1", addedBy: "user", reason: null }],
+      new Date()
+    );
+    return upsertList(withTask, createShoppingList("L1", "Groceries", "grocery", null, new Date()));
+  }
+
+  beforeEach(() => {
+    personalRoot = new FakeDir("Personal");
+    workRoot = new FakeDir("Work");
+    personal = folderSync(personalRoot);
+    work = folderSync(workRoot);
+  });
+
+  it("writes each context's tasks, config entry and My Day items only to its own folder", async () => {
+    const data = splitSeed();
+    await personal.push(data, { today: TODAY, options: OPTIONS, scope: PERSONAL });
+    await work.push(data, { today: TODAY, options: OPTIONS, scope: WORK });
+
+    expect(personalRoot.read("tasks/personal/P1.json")).toBeDefined();
+    expect(personalRoot.read("tasks/work/T1.json")).toBeUndefined();
+    expect(workRoot.read("tasks/work/T1.json")).toBeDefined();
+    expect(workRoot.read("tasks/personal/P1.json")).toBeUndefined();
+
+    function ids(root: FakeDir): string[] {
+      return (JSON.parse(root.read("klart.json")!) as { contexts: { id: string }[] }).contexts.map(
+        (context) => context.id
+      );
+    }
+    expect(ids(personalRoot)).toEqual(["personal"]);
+    expect(ids(workRoot)).toEqual(["work"]);
+
+    function dayItems(root: FakeDir): string[] {
+      return (JSON.parse(root.read(`days/${TODAY}.json`)!) as { items: { taskId: string }[] }).items.map(
+        (item) => item.taskId
+      );
+    }
+    expect(dayItems(personalRoot)).toEqual(["P1"]);
+    expect(dayItems(workRoot)).toEqual(["T1"]);
+
+    expect(personalRoot.read("lists/L1.json")).toBeDefined();
+    expect(workRoot.read("lists/L1.json")).toBeUndefined();
+  });
+
+  it("removes a context's tasks from a folder once the context moves to another sync", async () => {
+    const data = splitSeed();
+    await personal.push(data, { today: TODAY, options: OPTIONS, scope: { ...PERSONAL, ownsContext: () => true } });
+    expect(personalRoot.read("tasks/work/T1.json")).toBeDefined();
+
+    await personal.push(data, { today: TODAY, options: OPTIONS, scope: PERSONAL });
+    expect(personalRoot.read("tasks/work/T1.json")).toBeUndefined();
+    expect(personalRoot.read("tasks/personal/P1.json")).toBeDefined();
+  });
+
+  it("brings in one folder's changes without dropping the other folder's contexts and My Day items", async () => {
+    const data = splitSeed();
+    await personal.push(data, { today: TODAY, options: OPTIONS, scope: PERSONAL });
+    await work.push(data, { today: TODAY, options: OPTIONS, scope: WORK });
+    // First reads of each folder.
+    await personal.pull(data, { today: TODAY, acceptInbox: false, scope: PERSONAL });
+    await work.pull(data, { today: TODAY, acceptInbox: false, scope: WORK });
+
+    // Another device renames Work and empties its My Day in the work folder.
+    await workRoot.write(
+      "klart.json",
+      serialize({ schema: "klart.config/v1", contexts: [{ id: "work", name: "Acme", color: "orange", tag: "work" }] })
+    );
+    await workRoot.write(`days/${TODAY}.json`, serialize({ schema: "klart.day/v1", date: TODAY, items: [] }));
+
+    const pulled = await work.pull(data, { today: TODAY, acceptInbox: false, scope: WORK });
+    expect(pulled.contextIds).toEqual(["work"]);
+    expect(pulled.data.contexts.map((context) => context.name)).toEqual(["Personal", "Acme"]);
+    expect(pulled.data.days[TODAY]?.items.map((item) => item.taskId)).toEqual(["P1"]);
+  });
+
+  it("puts tasks from a folder's inbox in a context that folder holds", async () => {
+    await workRoot.write("inbox/agent.txt", "prepare the slides\n");
+    const pulled = await work.pull(createEmptyData(), { today: TODAY, acceptInbox: true, scope: WORK });
+    expect(Object.values(pulled.data.tasks).map((task) => task.context)).toEqual(["work"]);
   });
 });

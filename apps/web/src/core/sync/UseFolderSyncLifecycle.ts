@@ -1,25 +1,27 @@
-import { useEffect, useEffectEvent, useRef } from "react";
-import { useAtom, useAtomValue, useSetAtom } from "jotai";
+import { useEffect, useEffectEvent, useMemo, useRef, useState } from "react";
+import { useAtomValue, useSetAtom, useStore } from "jotai";
 import { BrowserFolderBackend } from "./BrowserFolderBackend";
 import { DesktopFolderBackend } from "./DesktopFolderBackend";
 import { queryFolderPermission } from "./FileSystemAccess";
 import type { FolderBackend } from "./FolderBackend";
-import { loadFolderHandle } from "./FolderHandleStore";
+import { LEGACY_FOLDER_KEY, loadFolderHandle } from "./FolderHandleStore";
 import { FolderSync } from "./FolderSync";
 import { GitHubBackend, GitHubError } from "./GitHubBackend";
 import type { SyncConnection, SyncStatus } from "./SyncAtoms";
 import {
-  desktopConnectionAtom,
-  folderPermissionAtom,
+  folderHandlesAtom,
+  folderPermissionsAtom,
   gitAvailableAtom,
-  githubConnectionAtom,
   PLATFORM_DEVICE_NAMES,
-  syncConnectionAtom,
-  syncDevicesAtom,
+  SYNC_SETUP_KEY,
+  syncDevicesByTargetAtom,
   syncRequestAtom,
   syncSettingsAtom,
-  syncStatusAtom,
+  syncSetupAtom,
+  syncStatusesAtom,
 } from "./SyncAtoms";
+import type { StoredSyncConnection, SyncTarget } from "./SyncTargets";
+import { assignFoundContexts, getSyncScope, methodOfConnection, withoutKey } from "./SyncTargets";
 import { desktop, isDesktop } from "~/core/platform/Desktop";
 import { klartDataAtom, todayAtom } from "~/core/tasks/KlartAtoms";
 import type { KlartData } from "~/core/tasks/KlartData";
@@ -91,74 +93,40 @@ function createBackend(connection: SyncConnection): FolderBackend {
   }
 }
 
-function methodOf(connection: SyncConnection): SyncStatus["method"] {
-  if (connection.kind === "desktop-git") {
-    return "git";
-  }
-  return connection.kind === "github" ? "github" : "folder";
-}
+/** Whether the sync's folder is there: a browser folder's handle is restored, a desktop folder exists. */
+type FolderState = "checking" | "ok" | "missing";
 
-/** Keeps the connected data folder (and its Git remote) and the app in sync. Mount once, near the app root. */
+/** One queue for every sync, so two syncs never pull over the same data at once. */
+let syncQueue: Promise<void> = Promise.resolve();
+
+/**
+ * Moves a browser folder connected before several syncs (kept only in
+ * IndexedDB) into the sync setup, checks for git and names this device. Mount once.
+ */
 export function useFolderSyncLifecycle(): void {
-  const [data, setData] = useAtom(klartDataAtom);
-  const today = useAtomValue(todayAtom);
-  const [settings, setSettings] = useAtom(syncSettingsAtom);
-  const { deviceName } = settings;
-  const [connection, setConnection] = useAtom(syncConnectionAtom);
-  const storedDesktopConnection = useAtomValue(desktopConnectionAtom);
-  const storedGitHubConnection = useAtomValue(githubConnectionAtom);
-  const [permission, setPermission] = useAtom(folderPermissionAtom);
-  const setStatus = useSetAtom(syncStatusAtom);
-  const setDevices = useSetAtom(syncDevicesAtom);
+  const store = useStore();
+  const setSettings = useSetAtom(syncSettingsAtom);
   const setGitAvailable = useSetAtom(gitAvailableAtom);
-  const syncRequest = useAtomValue(syncRequestAtom);
-
-  const engineRef = useRef<FolderSync | null>(null);
-  const remoteRef = useRef<Remote | null>(null);
-  const gitTimerRef = useRef<number | undefined>(undefined);
-  const lastRemoteSyncRef = useRef(0);
-  const queueRef = useRef<Promise<void>>(Promise.resolve());
-  const lastTouchRef = useRef(0);
-  // Queued jobs run later; they read the latest values from here rather than what was current when queued.
-  const latestRef = useRef({ data, today, settings });
 
   useEffect(() => {
-    latestRef.current = { data, today, settings };
-  }, [data, today, settings]);
-
-  // Restore the folder chosen in an earlier session.
-  const restore = useEffectEvent((isCancelled: () => boolean): void => {
-    if (storedGitHubConnection) {
-      setConnection(storedGitHubConnection);
+    if (isDesktop() || localStorage.getItem(SYNC_SETUP_KEY) !== null || store.get(syncSetupAtom).targets.length) {
       return;
     }
-    if (isDesktop()) {
-      if (storedDesktopConnection) {
-        desktop
-          .folderExists(storedDesktopConnection.path)
-          .then((exists) => !isCancelled() && setConnection(exists ? storedDesktopConnection : null))
-          .catch(() => undefined);
-      }
-      return;
-    }
-    loadFolderHandle()
-      .then(async (stored) => {
-        if (!stored || isCancelled()) {
-          return;
+    loadFolderHandle(LEGACY_FOLDER_KEY)
+      .then((handle) => {
+        if (handle) {
+          store.set(syncSetupAtom, (current) =>
+            current.targets.length
+              ? current
+              : {
+                  targets: [{ id: LEGACY_FOLDER_KEY, name: handle.name, connection: { kind: "browser-folder" } }],
+                  contextTargets: {},
+                }
+          );
         }
-        setConnection({ kind: "browser-folder", handle: stored });
-        setPermission(await queryFolderPermission(stored));
       })
       .catch(() => undefined);
-  });
-
-  useEffect(() => {
-    let cancelled = false;
-    restore(() => cancelled);
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  }, [store]);
 
   // Desktop: check for git, and name this device after the computer unless the user renamed it.
   useEffect(() => {
@@ -180,13 +148,105 @@ export function useFolderSyncLifecycle(): void {
       })
       .catch(() => undefined);
   }, [setGitAvailable, setSettings]);
+}
 
-  function updateStatus(change: (current: SyncStatus) => Partial<SyncStatus>): void {
-    setStatus((current) => ({ ...current, ...change(current) }));
+/** Keeps one sync's folder (and its Git remote) and its contexts in the app in sync. */
+export function useSyncTargetLifecycle(target: SyncTarget): void {
+  const store = useStore();
+  const data = useAtomValue(klartDataAtom);
+  const today = useAtomValue(todayAtom);
+  const settings = useAtomValue(syncSettingsAtom);
+  const setup = useAtomValue(syncSetupAtom);
+  const { deviceName } = settings;
+  const handles = useAtomValue(folderHandlesAtom);
+  const permissions = useAtomValue(folderPermissionsAtom);
+  const setStatuses = useSetAtom(syncStatusesAtom);
+  const setDevicesByTarget = useSetAtom(syncDevicesByTargetAtom);
+  const syncRequest = useAtomValue(syncRequestAtom);
+
+  const targetId = target.id;
+  // The connection is compared by value, so renaming the sync or reassigning contexts doesn't restart it.
+  const connectionKey = JSON.stringify(target.connection);
+  const handle = handles[targetId];
+  const permission = permissions[targetId] ?? null;
+  const [checked, setChecked] = useState<{ key: string; state: FolderState }>({ key: "", state: "checking" });
+  const folderState: FolderState =
+    target.connection.kind === "github" ? "ok" : checked.key === connectionKey ? checked.state : "checking";
+
+  const connection = useMemo((): SyncConnection | null => {
+    const stored = JSON.parse(connectionKey) as StoredSyncConnection;
+    if (stored.kind === "browser-folder") {
+      return handle ? { kind: "browser-folder", handle } : null;
+    }
+    return stored;
+  }, [connectionKey, handle]);
+
+  const engineRef = useRef<FolderSync | null>(null);
+  const remoteRef = useRef<Remote | null>(null);
+  const gitTimerRef = useRef<number | undefined>(undefined);
+  const lastRemoteSyncRef = useRef(0);
+  const lastTouchRef = useRef(0);
+
+  function setStatus(status: SyncStatus): void {
+    setStatuses((all) => ({ ...all, [targetId]: status }));
   }
 
+  function updateStatus(change: (current: SyncStatus) => Partial<SyncStatus>): void {
+    setStatuses((all) => {
+      const current = all[targetId] ?? { state: "syncing", method: methodOfConnection(target.connection) };
+      return { ...all, [targetId]: { ...current, ...change(current) } };
+    });
+  }
+
+  // Find the folder chosen in an earlier session: a browser folder's handle, or a desktop folder on disk.
+  useEffect(() => {
+    let cancelled = false;
+    const stored = JSON.parse(connectionKey) as StoredSyncConnection;
+    function settle(state: FolderState): void {
+      if (!cancelled) {
+        setChecked({ key: connectionKey, state });
+      }
+    }
+    if (stored.kind === "browser-folder") {
+      const picked = store.get(folderHandlesAtom)[targetId];
+      if (picked) {
+        settle("ok");
+        return;
+      }
+      loadFolderHandle(targetId)
+        .then(async (loaded) => {
+          if (!loaded || cancelled) {
+            settle("missing");
+            return;
+          }
+          store.set(folderHandlesAtom, (all) => ({ ...all, [targetId]: loaded }));
+          const granted = await queryFolderPermission(loaded);
+          store.set(folderPermissionsAtom, (all) => ({ ...all, [targetId]: granted }));
+          settle("ok");
+        })
+        .catch(() => settle("missing"));
+    } else if (stored.kind !== "github") {
+      desktop
+        .folderExists(stored.path)
+        .then((exists) => settle(exists ? "ok" : "missing"))
+        .catch(() => settle("missing"));
+    }
+    return () => {
+      cancelled = true;
+    };
+  }, [connectionKey, targetId, store]);
+
+  // Forget this sync's state when it's removed.
+  useEffect(
+    () => () => {
+      setStatuses((all) => withoutKey(all, targetId));
+      setDevicesByTarget((all) => withoutKey(all, targetId));
+    },
+    [targetId, setStatuses, setDevicesByTarget]
+  );
+
   function enqueue(job: (engine: FolderSync) => Promise<void>): void {
-    queueRef.current = queueRef.current.then(async () => {
+    syncQueue = syncQueue.then(async () => {
       const engine = engineRef.current;
       if (!engine) {
         return;
@@ -200,11 +260,23 @@ export function useFolderSyncLifecycle(): void {
   }
 
   async function pullNow(engine: FolderSync): Promise<void> {
-    const { data: base, today: date, settings: current } = latestRef.current;
-    const result = await engine.pull(base, { today: date, acceptInbox: current.agentFiles.acceptInbox });
+    // Read everything when the job runs, not when it was queued: another sync may have pulled in between.
+    const base = store.get(klartDataAtom);
+    const scope = getSyncScope(store.get(syncSetupAtom), targetId);
+    const result = await engine.pull(base, {
+      today: store.get(todayAtom),
+      acceptInbox: store.get(syncSettingsAtom).agentFiles.acceptInbox,
+      scope,
+    });
     if (result.changed) {
-      setData((latest) => rebase(base, result.data, latest));
-      latestRef.current = { ...latestRef.current, data: rebase(base, result.data, latestRef.current.data) };
+      store.set(klartDataAtom, (latest) => rebase(base, result.data, latest));
+    }
+    if (result.contextIds) {
+      const current = store.get(syncSetupAtom);
+      const next = assignFoundContexts(current, targetId, result.contextIds);
+      if (next !== current) {
+        store.set(syncSetupAtom, next);
+      }
     }
     const touchInterval =
       remoteRef.current?.kind === "github" ? GITHUB_DEVICE_TOUCH_INTERVAL_MS : DEVICE_TOUCH_INTERVAL_MS;
@@ -214,14 +286,18 @@ export function useFolderSyncLifecycle(): void {
       if (!remoteRef.current) {
         await engine.touchDevice(toUtcTimestamp(new Date()));
       }
-      setDevices(await engine.listDevices());
+      const devices = await engine.listDevices();
+      setDevicesByTarget((all) => ({ ...all, [targetId]: devices }));
     }
     updateStatus(() => ({ state: "synced", error: undefined, lastSyncedAt: toUtcTimestamp(new Date()) }));
   }
 
   async function pushNow(engine: FolderSync): Promise<number> {
-    const { data: current, today: date, settings: options } = latestRef.current;
-    const written = await engine.push(current, { today: date, options: options.agentFiles });
+    const written = await engine.push(store.get(klartDataAtom), {
+      today: store.get(todayAtom),
+      options: store.get(syncSettingsAtom).agentFiles,
+      scope: getSyncScope(store.get(syncSetupAtom), targetId),
+    });
     updateStatus(() => ({ state: "synced", error: undefined, lastSyncedAt: toUtcTimestamp(new Date()) }));
     return written;
   }
@@ -233,7 +309,7 @@ export function useFolderSyncLifecycle(): void {
       await pullNow(engine);
       await pushNow(engine);
       try {
-        await backend.commit(`klart: update from ${latestRef.current.settings.deviceName}`);
+        await backend.commit(`klart: update from ${store.get(syncSettingsAtom).deviceName}`);
         return;
       } catch (error) {
         if (!(error instanceof GitHubError && error.kind === "conflict") || attempt >= GITHUB_SYNC_ATTEMPTS) {
@@ -306,39 +382,46 @@ export function useFolderSyncLifecycle(): void {
   });
 
   // Start or stop the engine when the folder, its permission or the device name changes.
-  useEffect(() => {
+  const start = useEffectEvent((): (() => void) | undefined => {
     remoteRef.current = null;
-    if (!connection) {
+    const method = methodOfConnection(JSON.parse(connectionKey) as StoredSyncConnection);
+    if (folderState === "missing") {
       engineRef.current = null;
-      setStatus({ state: "local", method: "local" });
-      return;
+      setStatus({ state: "missing", method });
+      return undefined;
     }
-    const method = methodOf(connection);
+    if (!connection || folderState === "checking") {
+      engineRef.current = null;
+      setStatus({ state: "syncing", method });
+      return undefined;
+    }
     const backend = createBackend(connection);
     const location = connection.kind === "browser-folder" || connection.kind === "github" ? undefined : connection.path;
     if (connection.kind === "browser-folder" && permission !== "granted") {
       engineRef.current = null;
       setStatus({ state: "needs-permission", method, folderName: backend.name });
-      return;
+      return undefined;
     }
 
     // Dev sample data stays on this device: drop it before the first sync so it never reaches a real folder.
-    if (hasSampleData(latestRef.current.data)) {
-      latestRef.current = { ...latestRef.current, data: withoutSampleData(latestRef.current.data) };
-      setData(withoutSampleData);
+    if (hasSampleData(store.get(klartDataAtom))) {
+      store.set(klartDataAtom, withoutSampleData);
     }
 
     engineRef.current = new FolderSync(backend, deviceName);
     lastTouchRef.current = 0;
-    setStatus({ state: "syncing", method, folderName: backend.name, location });
+    setStatus({
+      state: "syncing",
+      method,
+      folderName: backend.name,
+      location,
+      git:
+        connection.kind === "github" ? { remoteUrl: `github.com/${connection.owner}/${connection.repo}` } : undefined,
+    });
 
     let gitTimer: number | undefined;
     if (connection.kind === "github" && backend instanceof GitHubBackend) {
       remoteRef.current = { kind: "github", backend };
-      setStatus((current) => ({
-        ...current,
-        git: { remoteUrl: `github.com/${connection.owner}/${connection.repo}` },
-      }));
       // Pull GitHub's newest commit before reading the snapshot.
       gitSync();
       gitTimer = window.setInterval(() => {
@@ -351,8 +434,7 @@ export function useFolderSyncLifecycle(): void {
       desktop
         .gitInfo(connection.path)
         .then((info) =>
-          setStatus((current) => ({
-            ...current,
+          updateStatus((current) => ({
             git: { ...current.git, remoteUrl: info.remoteUrl ?? undefined, branch: info.branch ?? undefined },
           }))
         )
@@ -396,13 +478,15 @@ export function useFolderSyncLifecycle(): void {
       engineRef.current = null;
       remoteRef.current = null;
     };
-  }, [connection, permission, deviceName, setStatus, setData]);
+  });
 
-  // Write local changes shortly after they happen.
+  useEffect(() => start(), [connection, folderState, permission, deviceName]);
+
+  // Write local changes shortly after they happen, and when contexts move between syncs.
   useEffect(() => {
     const timer = window.setTimeout(push, PUSH_DEBOUNCE_MS);
     return () => window.clearTimeout(timer);
-  }, [data, today, settings.agentFiles]);
+  }, [data, today, settings.agentFiles, setup]);
 
   // "Sync now" from settings.
   useEffect(() => {
