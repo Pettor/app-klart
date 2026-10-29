@@ -15,6 +15,41 @@ export interface ReleaseNote {
   fixes: ReleaseNoteItem[];
 }
 
+const v070 = defineMessages({
+  syncsTitle: {
+    description: "ReleaseNotes 0.7.0 - highlight title: several syncs",
+    defaultMessage: "Work stays at work",
+    id: "DXIV6S",
+  },
+  syncsDescription: {
+    description: "ReleaseNotes 0.7.0 - highlight text: several syncs",
+    defaultMessage:
+      "Add another sync in Settings → Sync and pick where each context goes: Personal in your own repo, Work in the work folder. Or keep a context on this device only.",
+    id: "XhNIfJ",
+  },
+  shoppingTitle: {
+    description: "ReleaseNotes 0.7.0 - highlight title: shopping lists per context",
+    defaultMessage: "Lists know their place",
+    id: "jp9TlC",
+  },
+  shoppingDescription: {
+    description: "ReleaseNotes 0.7.0 - highlight text: shopping lists per context",
+    defaultMessage:
+      "Each shopping list belongs to a context, so Work shows the office snacks and Personal shows the groceries. Pick All contexts to see every list at once.",
+    id: "fNzyUa",
+  },
+  settingsTitle: {
+    description: "ReleaseNotes 0.7.0 - highlight title: settings button in the sidebar",
+    defaultMessage: "Settings, one click away",
+    id: "mPGsch",
+  },
+  settingsDescription: {
+    description: "ReleaseNotes 0.7.0 - highlight text: settings button in the sidebar",
+    defaultMessage: "There's a Settings button right above the sync status at the bottom of the sidebar.",
+    id: "/W7cb0",
+  },
+});
+
 const v061 = defineMessages({
   headerFixTitle: {
     description: "ReleaseNotes 0.6.1 - fix title: shopping list header on small screens",
@@ -497,6 +532,15 @@ const v010 = defineMessages({
  * entry here; people who update see every entry newer than the last one they saw.
  */
 export const RELEASE_NOTES: ReleaseNote[] = [
+  {
+    version: "0.7.0",
+    highlights: [
+      { emoji: "🗂️", title: v070.syncsTitle, description: v070.syncsDescription },
+      { emoji: "🛒", title: v070.shoppingTitle, description: v070.shoppingDescription },
+      { emoji: "⚙️", title: v070.settingsTitle, description: v070.settingsDescription },
+    ],
+    fixes: [],
+  },
   {
     version: "0.6.1",
     highlights: [],

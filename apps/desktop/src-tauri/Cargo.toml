@@ -1,6 +1,6 @@
 [package]
 name = "klart-desktop"
-version = "0.6.1"
+version = "0.7.0"
 description = "Klart desktop app"
 license = "MIT"
 edition = "2021"
