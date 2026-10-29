@@ -255,9 +255,9 @@ export function useMyDayRoute(editingId: string | null, page: "day" | "shop" = "
       },
     },
     sync: {
-      status: sync.status,
+      overview: sync.overview,
       onPress: () => {
-        if (sync.status.state === "needs-permission") {
+        if (sync.overview.state === "needs-permission") {
           void sync.reconnect();
         } else {
           openSettings("sync");

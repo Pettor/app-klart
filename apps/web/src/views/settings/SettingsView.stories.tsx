@@ -9,6 +9,7 @@ import {
 import { LLMS_TXT } from "~/core/sync/LlmsTxt";
 import { DEFAULT_SUGGESTION_SETTINGS } from "~/core/tasks/SuggestionSettings";
 import { DEMO_CONTEXTS } from "~/storybook/data/KlartDemoData";
+import { DEMO_MULTI_SYNC_OVERVIEW, DEMO_MULTI_SYNC_SETUP, demoSyncOverview } from "~/storybook/data/SyncDemoData";
 
 const NOW = Date.parse("2026-10-21T10:00:00Z");
 
@@ -23,7 +24,13 @@ const defaultArgs = {
   },
   sync: {
     now: NOW,
-    status: { state: "synced", method: "folder", folderName: "Klart", lastSyncedAt: "2026-10-21T09:59:00Z" },
+    contexts: DEMO_CONTEXTS.map(({ id, name, color }) => ({ id, name, color, targetId: "main" })),
+    overview: demoSyncOverview({
+      state: "synced",
+      method: "folder",
+      folderName: "Klart",
+      lastSyncedAt: "2026-10-21T09:59:00Z",
+    }),
     isSupported: true,
     isDesktop: false,
     isGitSupported: false,
@@ -38,7 +45,10 @@ const defaultArgs = {
     onCloneGit: fn(),
     onConnectGitHub: fn(async () => true),
     onReconnect: fn(),
-    onDisconnect: fn(),
+    onRemove: fn(),
+    onRename: fn(),
+    onMakePrimary: fn(),
+    onAssignContext: fn(),
     onSyncNow: fn(),
     onDeviceNameChange: fn(),
   },
@@ -125,7 +135,7 @@ export const LocalOnly: Story = {
   args: {
     ...defaultArgs,
     initialSection: "sync",
-    sync: { ...defaultArgs.sync, status: { state: "local", method: "local" }, devices: [] },
+    sync: { ...defaultArgs.sync, overview: demoSyncOverview({ state: "local", method: "local" }), devices: [] },
     notifications: { ...defaultArgs.notifications, permission: "default" },
   },
 };
@@ -134,7 +144,10 @@ export const NeedsPermission: Story = {
   args: {
     ...defaultArgs,
     initialSection: "sync",
-    sync: { ...defaultArgs.sync, status: { state: "needs-permission", method: "folder", folderName: "Klart" } },
+    sync: {
+      ...defaultArgs.sync,
+      overview: demoSyncOverview({ state: "needs-permission", method: "folder", folderName: "Klart" }),
+    },
   },
   play: async ({ args, canvas, userEvent }) => {
     await userEvent.click(canvas.getByTestId("settings__sync-reconnect"));
@@ -146,7 +159,12 @@ export const UnsupportedBrowser: Story = {
   args: {
     ...defaultArgs,
     initialSection: "sync",
-    sync: { ...defaultArgs.sync, status: { state: "local", method: "local" }, isSupported: false, devices: [] },
+    sync: {
+      ...defaultArgs.sync,
+      overview: demoSyncOverview({ state: "local", method: "local" }),
+      isSupported: false,
+      devices: [],
+    },
   },
 };
 
@@ -158,7 +176,7 @@ export const DesktopGitConnected: Story = {
       ...defaultArgs.sync,
       isDesktop: true,
       isGitSupported: true,
-      status: {
+      overview: demoSyncOverview({
         state: "synced",
         method: "git",
         folderName: "klart-data",
@@ -170,7 +188,7 @@ export const DesktopGitConnected: Story = {
           lastSyncedAt: "2026-10-21T09:57:00Z",
           conflicts: 1,
         },
-      },
+      }),
     },
   },
 };
@@ -183,7 +201,7 @@ export const DesktopGitError: Story = {
       ...defaultArgs.sync,
       isDesktop: true,
       isGitSupported: true,
-      status: {
+      overview: demoSyncOverview({
         state: "synced",
         method: "git",
         folderName: "klart-data",
@@ -193,7 +211,7 @@ export const DesktopGitError: Story = {
           branch: "main",
           error: "git@github.com: Permission denied (publickey).",
         },
-      },
+      }),
     },
   },
 };
@@ -202,7 +220,12 @@ export const DesktopGitClone: Story = {
   args: {
     ...defaultArgs,
     initialSection: "sync",
-    sync: { ...defaultArgs.sync, isDesktop: true, isGitSupported: true, status: { state: "local", method: "local" } },
+    sync: {
+      ...defaultArgs.sync,
+      isDesktop: true,
+      isGitSupported: true,
+      overview: demoSyncOverview({ state: "local", method: "local" }),
+    },
   },
   play: async ({ args, canvas, userEvent }) => {
     await userEvent.click(canvas.getByRole("radio", { name: /Git repository/ }));
@@ -217,7 +240,12 @@ export const DesktopWithoutGit: Story = {
   args: {
     ...defaultArgs,
     initialSection: "sync",
-    sync: { ...defaultArgs.sync, isDesktop: true, isGitSupported: false, status: { state: "local", method: "local" } },
+    sync: {
+      ...defaultArgs.sync,
+      isDesktop: true,
+      isGitSupported: false,
+      overview: demoSyncOverview({ state: "local", method: "local" }),
+    },
   },
 };
 
@@ -225,7 +253,12 @@ export const GitHubSetup: Story = {
   args: {
     ...defaultArgs,
     initialSection: "sync",
-    sync: { ...defaultArgs.sync, isSupported: false, status: { state: "local", method: "local" }, devices: [] },
+    sync: {
+      ...defaultArgs.sync,
+      isSupported: false,
+      overview: demoSyncOverview({ state: "local", method: "local" }),
+      devices: [],
+    },
   },
   play: async ({ args, canvas, userEvent }) => {
     await userEvent.click(canvas.getByRole("radio", { name: /GitHub/ }));
@@ -239,7 +272,7 @@ export const GitHubSetup: Story = {
       repository: "klart-data",
       token: "github_pat_123",
     });
-    await expect(args.sync.onDisconnect).not.toHaveBeenCalled();
+    await expect(args.sync.onRemove).not.toHaveBeenCalled();
   },
 };
 
@@ -250,13 +283,13 @@ export const GitHubConnected: Story = {
     sync: {
       ...defaultArgs.sync,
       isSupported: false,
-      status: {
+      overview: demoSyncOverview({
         state: "synced",
         method: "github",
         folderName: "you/klart-data",
         lastSyncedAt: "2026-10-21T09:59:00Z",
         git: { remoteUrl: "github.com/you/klart-data", branch: "main", lastSyncedAt: "2026-10-21T09:58:00Z" },
-      },
+      }),
     },
   },
   play: async ({ args, canvas, userEvent }) => {
@@ -273,7 +306,7 @@ export const GitHubTokenRejected: Story = {
     initialSection: "sync",
     sync: {
       ...defaultArgs.sync,
-      status: {
+      overview: demoSyncOverview({
         state: "synced",
         method: "github",
         folderName: "you/klart-data",
@@ -283,11 +316,72 @@ export const GitHubTokenRejected: Story = {
           error: "Bad credentials",
           errorKind: "unauthorized",
         },
-      },
+      }),
     },
   },
   play: async ({ canvas }) => {
     await expect(canvas.getByTestId("settings__github-error")).toHaveTextContent(/didn't accept the token/);
+  },
+};
+
+/** Personal and Football club sync with a GitHub repo, Work with a OneDrive folder. */
+export const SeveralSyncs: Story = {
+  args: {
+    ...defaultArgs,
+    initialSection: "sync",
+    sync: {
+      ...defaultArgs.sync,
+      overview: DEMO_MULTI_SYNC_OVERVIEW,
+      contexts: DEMO_CONTEXTS.map(({ id, name, color }) => ({
+        id,
+        name,
+        color,
+        targetId: DEMO_MULTI_SYNC_SETUP.contextTargets[id] ?? "personal",
+      })),
+    },
+  },
+  play: async ({ args, canvas, userEvent }) => {
+    await expect(canvas.getAllByTestId("settings__sync-target")).toHaveLength(2);
+    await expect(canvas.getAllByTestId("settings__sync-context")).toHaveLength(DEMO_CONTEXTS.length);
+
+    await userEvent.click(within(canvas.getByTestId("settings__sync-context-club")).getByRole("button"));
+    await userEvent.click(await screen.findByRole("option", { name: "Work OneDrive" }));
+    await expect(args.sync.onAssignContext).toHaveBeenCalledWith("club", "work");
+
+    await userEvent.click(canvas.getByTestId("settings__sync-make-primary"));
+    await expect(args.sync.onMakePrimary).toHaveBeenCalledWith("work");
+  },
+};
+
+/** With one sync, "Add another sync" opens the picker without "this browser only". */
+export const AddAnotherSync: Story = {
+  args: { ...defaultArgs, initialSection: "sync" },
+  play: async ({ args, canvas, userEvent }) => {
+    await expect(canvas.queryByTestId("settings__sync-context")).toBeNull();
+    await userEvent.click(canvas.getByTestId("settings__sync-add"));
+    await expect(canvas.queryByRole("radio", { name: /This browser only/ })).toBeNull();
+    await userEvent.click(canvas.getByRole("radio", { name: /GitHub/ }));
+    await userEvent.type(canvas.getByTestId("settings__github-owner"), "you");
+    await userEvent.type(canvas.getByTestId("settings__github-repository"), "work-data");
+    await userEvent.type(canvas.getByTestId("settings__github-token"), "github_pat_123");
+    await userEvent.click(canvas.getByTestId("settings__github-connect"));
+    await expect(args.sync.onConnectGitHub).toHaveBeenCalledWith({
+      owner: "you",
+      repository: "work-data",
+      token: "github_pat_123",
+    });
+  },
+};
+
+export const RenameAndRemoveSync: Story = {
+  args: { ...defaultArgs, initialSection: "sync" },
+  play: async ({ args, canvas, userEvent }) => {
+    const name = canvas.getByTestId("settings__sync-target-name");
+    await userEvent.clear(name);
+    await userEvent.type(name, "Home OneDrive{Enter}");
+    await expect(args.sync.onRename).toHaveBeenCalledWith("main", "Home OneDrive");
+    await userEvent.click(canvas.getByTestId("settings__sync-remove"));
+    await expect(args.sync.onRemove).toHaveBeenCalledWith("main");
   },
 };
 

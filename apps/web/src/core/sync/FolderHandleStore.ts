@@ -1,10 +1,11 @@
 /**
  * Folder handles can't go in localStorage, but they survive in IndexedDB
- * (structured clone). One small object store holds the connected folder.
+ * (structured clone). One small object store holds each sync's folder, keyed by
+ * the sync's id. Before several syncs, the one folder was kept under `data-folder`.
  */
 const DB_NAME = "klart";
 const STORE = "handles";
-const KEY = "data-folder";
+export const LEGACY_FOLDER_KEY = "data-folder";
 
 function openDb(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
@@ -28,17 +29,17 @@ async function run<T>(mode: IDBTransactionMode, action: (store: IDBObjectStore) 
   }
 }
 
-export async function loadFolderHandle(): Promise<FileSystemDirectoryHandle | undefined> {
+export async function loadFolderHandle(key: string): Promise<FileSystemDirectoryHandle | undefined> {
   if (typeof indexedDB === "undefined") {
     return undefined;
   }
-  return run<FileSystemDirectoryHandle | undefined>("readonly", (store) => store.get(KEY));
+  return run<FileSystemDirectoryHandle | undefined>("readonly", (store) => store.get(key));
 }
 
-export async function saveFolderHandle(handle: FileSystemDirectoryHandle): Promise<void> {
-  await run("readwrite", (store) => store.put(handle, KEY));
+export async function saveFolderHandle(key: string, handle: FileSystemDirectoryHandle): Promise<void> {
+  await run("readwrite", (store) => store.put(handle, key));
 }
 
-export async function clearFolderHandle(): Promise<void> {
-  await run("readwrite", (store) => store.delete(KEY));
+export async function clearFolderHandle(key: string): Promise<void> {
+  await run("readwrite", (store) => store.delete(key));
 }

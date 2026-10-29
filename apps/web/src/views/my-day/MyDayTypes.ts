@@ -9,7 +9,7 @@ import type {
   TaskEditorTask,
 } from "~/components/input/task-editor/TaskEditor";
 import type { ContextColor } from "~/core/contexts/KlartContext";
-import type { SyncStatus } from "~/core/sync/SyncAtoms";
+import type { SyncOverview } from "~/core/sync/SyncTargets";
 import type { SuggestionReason } from "~/core/tasks/Day";
 import type { DisplayOptions } from "~/core/tasks/DisplayOptions";
 import type { SmartView } from "~/core/tasks/KlartAtoms";
@@ -85,7 +85,7 @@ export interface MyDaySidebarProps {
   search: { value: string; onChange: (value: string) => void; focusRequest?: number; tags?: string[] };
   smartViews: { items: MyDaySmartViewItem[]; active: SmartView; onSelect: (view: SmartView) => void };
   tags: { items: MyDayTagItem[]; active: string | null; onSelect: (tag: string | null) => void };
-  sync: { status: SyncStatus; onPress: () => void };
+  sync: { overview: SyncOverview; onPress: () => void };
   /** The Shopping row under the smart views; `count` is how many items are left to buy. */
   shopping: MyDayShoppingNavProps;
 }

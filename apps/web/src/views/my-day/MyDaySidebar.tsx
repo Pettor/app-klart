@@ -136,7 +136,7 @@ export function MyDaySidebar({
       )}
 
       <div className="mt-auto">
-        <SyncStatusCard status={sync.status} onPress={sync.onPress} />
+        <SyncStatusCard overview={sync.overview} onPress={sync.onPress} />
       </div>
     </aside>
   );

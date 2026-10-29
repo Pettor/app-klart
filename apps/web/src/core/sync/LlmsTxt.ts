@@ -7,7 +7,9 @@ export const LLMS_TXT = `# Klart
 
 ## Files
 - klart.json: the user's contexts (e.g. personal, work, club) with color and
-  routing tag. "all" is a view, never a context on a task.
+  routing tag. "all" is a view, never a context on a task. A folder may hold
+  only some of the user's contexts (the rest sync elsewhere): only use the
+  contexts listed here.
 - tasks/<context>/<id>.json: one task per file, schema klart.task/v1.
 - days/YYYY-MM-DD.json: tasks in My Day for that date, schema klart.day/v1.
 - lists/<id>.json: one shopping list per file, items inline, schema klart.list/v1.

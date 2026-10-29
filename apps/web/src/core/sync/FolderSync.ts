@@ -2,7 +2,7 @@ import { z } from "zod";
 import type { FolderBackend, FolderFileInfo } from "./FolderBackend";
 import { LLMS_TXT } from "./LlmsTxt";
 import type { KlartContext } from "~/core/contexts/KlartContext";
-import { CONTEXT_COLORS, findContext } from "~/core/contexts/KlartContext";
+import { ALL_CONTEXTS, CONTEXT_COLORS, findContext } from "~/core/contexts/KlartContext";
 import { reconcileShoppingTasks } from "~/core/shopping/ShoppingData";
 import type { ShoppingList } from "~/core/shopping/ShoppingList";
 import { ShoppingListFileSchema } from "~/core/shopping/ShoppingList";
@@ -54,10 +54,26 @@ export interface AgentFileOptions {
   keepLlmsTxt: boolean;
 }
 
+/**
+ * Which part of the data a folder holds. With one sync it holds everything;
+ * with several, each holds the contexts assigned to it.
+ */
+export interface SyncScope {
+  /** The folder holds this context: its `klart.json` entry and its tasks. */
+  ownsContext: (contextId: string) => boolean;
+  /** The primary folder also holds shopping lists, and My Day entries whose task isn't known yet. */
+  isPrimary: boolean;
+}
+
+/** Everything in one folder: the setup most people have. */
+export const FULL_SCOPE: SyncScope = { ownsContext: () => true, isPrimary: true };
+
 export interface PullResult {
   data: KlartData;
   changed: boolean;
   inboxCount: number;
+  /** The context ids in the folder's `klart.json`, when it was read in this pull. */
+  contextIds: string[] | null;
 }
 
 interface KnownFile {
@@ -103,6 +119,56 @@ function mergeContexts(local: KlartContext[], remote: KlartContext[]): KlartCont
 }
 
 /**
+ * Replaces the entries a folder owns with the folder's, keeping the others where
+ * they are: owned slots take the remote entries in order, leftovers go at the end.
+ * When the folder owns everything this is just `remote`.
+ */
+function mergeOwned<T>(local: T[], remote: T[], keyOf: (item: T) => string, owns: (item: T) => boolean): T[] {
+  const remoteKeys = new Set(remote.map(keyOf));
+  const queue = [...remote];
+  const merged: T[] = [];
+  for (const item of local) {
+    if (owns(item) || remoteKeys.has(keyOf(item))) {
+      const next = queue.shift();
+      if (next) {
+        merged.push(next);
+      }
+    } else {
+      merged.push(item);
+    }
+  }
+  return [...merged, ...queue];
+}
+
+function ownsTaskId(data: KlartData, scope: SyncScope, taskId: string): boolean {
+  const task = data.tasks[taskId];
+  return task ? scope.ownsContext(task.context) : scope.isPrimary;
+}
+
+/** The part of `data` that belongs in a folder with this scope. */
+export function scopeData(data: KlartData, scope: SyncScope): KlartData {
+  if (scope === FULL_SCOPE) {
+    return data;
+  }
+  const tasks: Record<string, Task> = {};
+  for (const task of Object.values(data.tasks)) {
+    if (scope.ownsContext(task.context)) {
+      tasks[task.id] = task;
+    }
+  }
+  const days: Record<string, DayFile> = {};
+  for (const day of Object.values(data.days)) {
+    days[day.date] = { ...day, items: day.items.filter((item) => ownsTaskId(data, scope, item.taskId)) };
+  }
+  return {
+    contexts: data.contexts.filter((context) => scope.ownsContext(context.id)),
+    tasks,
+    days,
+    lists: scope.isPrimary ? data.lists : {},
+  };
+}
+
+/**
  * Two-way sync between {@link KlartData} and a folder of plain files.
  *
  * The folder is the source of truth. Each file's last seen content and
@@ -143,17 +209,30 @@ export class FolderSync {
     this.known.set(path, { content, lastModified });
   }
 
-  async pull(local: KlartData, { today, acceptInbox }: { today: string; acceptInbox: boolean }): Promise<PullResult> {
+  async pull(
+    local: KlartData,
+    { today, acceptInbox, scope = FULL_SCOPE }: { today: string; acceptInbox: boolean; scope?: SyncScope }
+  ): Promise<PullResult> {
     let data = local;
     let changed = false;
+    let contextIds: string[] | null = null;
 
     const configModified = await this.folder.stat(CONFIG_FILE);
     if (configModified !== null) {
       const read = await this.readChangedSafely({ path: CONFIG_FILE, lastModified: configModified });
       const parsed = read && KlartConfigSchema.safeParse(read.json);
       if (read && parsed?.success) {
-        const contexts = read.isNew ? mergeContexts(data.contexts, parsed.data.contexts) : parsed.data.contexts;
+        const remote = parsed.data.contexts;
+        const contexts = read.isNew
+          ? mergeContexts(data.contexts, remote)
+          : mergeOwned(
+              data.contexts,
+              remote,
+              (context) => context.id,
+              (context) => scope.ownsContext(context.id)
+            );
         data = { ...data, contexts };
+        contextIds = remote.map((context) => context.id);
         changed = true;
       }
     }
@@ -190,7 +269,19 @@ export class FolderSync {
       const parsed = read && DayFileSchema.safeParse(read.json);
       if (read && parsed?.success) {
         const remote = parsed.data as DayFile;
-        const day = read.isNew ? mergeDays(data.days[remote.date], remote) : remote;
+        const local = data.days[remote.date];
+        const day =
+          read.isNew || !local
+            ? mergeDays(local, remote)
+            : {
+                ...remote,
+                items: mergeOwned(
+                  local.items,
+                  remote.items,
+                  (item) => item.taskId,
+                  (item) => ownsTaskId(data, scope, item.taskId)
+                ),
+              };
         data = { ...data, days: { ...data.days, [remote.date]: day } };
         changed = true;
       }
@@ -220,13 +311,15 @@ export class FolderSync {
 
     let inboxCount = 0;
     if (acceptInbox) {
-      const result = await this.pullInbox(data, today);
+      // Tasks dropped into this folder's inbox land in a context the folder holds.
+      const home = data.contexts.find((context) => scope.ownsContext(context.id))?.id ?? ALL_CONTEXTS;
+      const result = await this.pullInbox(data, today, home);
       data = result.data;
       inboxCount = result.count;
       changed = changed || result.count > 0;
     }
 
-    return { data, changed, inboxCount };
+    return { data, changed, inboxCount, contextIds };
   }
 
   private async readChangedSafely(
@@ -243,7 +336,7 @@ export class FolderSync {
     }
   }
 
-  private async pullInbox(local: KlartData, today: string): Promise<{ data: KlartData; count: number }> {
+  private async pullInbox(local: KlartData, today: string, home: string): Promise<{ data: KlartData; count: number }> {
     let data = local;
     let count = 0;
     const now = new Date();
@@ -268,7 +361,7 @@ export class FolderSync {
         const routed = parseQuickAdd(tags.map((tag) => `#${tag}`).join(" "), {
           today,
           contexts: data.contexts,
-          currentContext: entry.context ?? "all",
+          currentContext: entry.context ?? home,
         });
         const task = createTask(
           {
@@ -286,7 +379,7 @@ export class FolderSync {
         tasks.push({ ...task, notes: entry.notes ?? "" });
       } else if (file.path.endsWith(".txt") || file.path.endsWith(".md")) {
         for (const line of text.split(/\r?\n/)) {
-          const parsed = parseQuickAdd(line, { today, contexts: data.contexts, currentContext: "all" });
+          const parsed = parseQuickAdd(line, { today, contexts: data.contexts, currentContext: home });
           if (parsed.title) {
             tasks.push(createTask(parsed, now));
           }
@@ -305,14 +398,21 @@ export class FolderSync {
     return { data, count };
   }
 
-  async push(data: KlartData, { today, options }: { today: string; options: AgentFileOptions }): Promise<number> {
+  async push(
+    all: KlartData,
+    { today, options, scope = FULL_SCOPE }: { today: string; options: AgentFileOptions; scope?: SyncScope }
+  ): Promise<number> {
+    const data = scopeData(all, scope);
     const desired = new Map<string, string>();
     desired.set(CONFIG_FILE, serialize({ schema: "klart.config/v1", contexts: data.contexts }));
     for (const task of Object.values(data.tasks)) {
       desired.set(taskPath(task), serialize(task));
     }
     for (const day of Object.values(data.days)) {
-      desired.set(dayPath(day.date), serialize(day));
+      // A folder that only holds some contexts gets a day file once it has something in it.
+      if (scope.isPrimary || day.items.length > 0 || this.known.has(dayPath(day.date))) {
+        desired.set(dayPath(day.date), serialize(day));
+      }
     }
     for (const list of Object.values(data.lists)) {
       desired.set(listPath(list), serialize(list));
@@ -329,7 +429,7 @@ export class FolderSync {
       }
     }
 
-    // A task that moved context leaves its old file behind; remove it.
+    // A task that moved context (or to another sync) leaves its old file behind; remove it.
     for (const path of [...this.known.keys()]) {
       if (path.startsWith("tasks/") && !desired.has(path)) {
         await this.folder.remove(path);

@@ -5,13 +5,16 @@ import { FakeGitHub, OWNER, REPO, TOKEN } from "../helpers/FakeGitHub";
 /**
  * Headless Chromium has no folder picker; hand the app a folder in the origin
  * private file system instead, which is the same handle type a picked folder is.
+ * The first pick gets `Klart`, the next `Work`.
  */
 async function stubFolderPicker(page: Page): Promise<void> {
   await page.addInitScript(() => {
+    let picks = 0;
     Object.assign(window, {
       showDirectoryPicker: async () => {
         const root = await navigator.storage.getDirectory();
-        return root.getDirectoryHandle("Klart", { create: true });
+        picks += 1;
+        return root.getDirectoryHandle(picks === 1 ? "Klart" : "Work", { create: true });
       },
     });
   });
@@ -33,28 +36,31 @@ function readFolderFile(page: Page, path: string): Promise<string | null> {
   }, path);
 }
 
-/** Every file under one folder of the synced folder, joined. */
-function readFolderDir(page: Page, path: string): Promise<string> {
-  return page.evaluate(async (dirPath) => {
-    type Iterable = { values(): AsyncIterable<FileSystemHandle> };
-    async function collect(dir: FileSystemDirectoryHandle): Promise<string[]> {
-      const texts: string[] = [];
-      for await (const handle of (dir as unknown as Iterable).values()) {
-        texts.push(
-          ...(handle.kind === "file"
-            ? [await (await (handle as FileSystemFileHandle).getFile()).text()]
-            : await collect(handle as FileSystemDirectoryHandle))
-        );
+/** Every file under one folder of a synced folder (`Klart` unless `root` says otherwise), joined. */
+function readFolderDir(page: Page, path: string, root = "Klart"): Promise<string> {
+  return page.evaluate(
+    async ({ dirPath, rootName }) => {
+      type Iterable = { values(): AsyncIterable<FileSystemHandle> };
+      async function collect(dir: FileSystemDirectoryHandle): Promise<string[]> {
+        const texts: string[] = [];
+        for await (const handle of (dir as unknown as Iterable).values()) {
+          texts.push(
+            ...(handle.kind === "file"
+              ? [await (await (handle as FileSystemFileHandle).getFile()).text()]
+              : await collect(handle as FileSystemDirectoryHandle))
+          );
+        }
+        return texts;
       }
-      return texts;
-    }
-    const root = await (await navigator.storage.getDirectory()).getDirectoryHandle("Klart", { create: true });
-    try {
-      return (await collect(await root.getDirectoryHandle(dirPath))).join("\n");
-    } catch {
-      return "";
-    }
-  }, path);
+      const base = await (await navigator.storage.getDirectory()).getDirectoryHandle(rootName, { create: true });
+      try {
+        return (await collect(await base.getDirectoryHandle(dirPath))).join("\n");
+      } catch {
+        return "";
+      }
+    },
+    { dirPath: path, rootName: root }
+  );
 }
 
 /** Writes a file into the synced folder, as another device or an agent would. */
@@ -108,11 +114,41 @@ test.describe("sync.folder", () => {
     await page.reload();
     await expect(page.getByText("Found klart.json. Watching for changes.")).toBeVisible();
 
-    const local = page.getByRole("radio", { name: /This browser only/ });
-    await local.click({ force: true });
-    await expect(local).toBeChecked();
+    await page.getByTestId("settings__sync-remove").click();
+    await expect(page.getByRole("radio", { name: /This browser only/ })).toBeChecked();
     await page.reload();
     await expect(page.getByText("Found klart.json. Watching for changes.")).toHaveCount(0);
+  });
+
+  test("syncs a context with a second folder of its own", async ({ page }) => {
+    await page.goto("/");
+    const input = page.getByTestId("quick-add__input");
+    await input.fill("#work write the report");
+    await input.press("Enter");
+    await input.fill("#personal water the plants");
+    await input.press("Enter");
+
+    await page.goto("/#/settings?section=sync");
+    await page.getByTestId("settings__sync-folder").click({ force: true });
+    await expect.poll(() => readFolderDir(page, "tasks")).toContain("Write the report");
+
+    await page.getByTestId("settings__sync-add").click();
+    await page.getByTestId("settings__sync-folder").click({ force: true });
+    await expect(page.getByTestId("settings__sync-target")).toHaveCount(2);
+
+    await page.getByTestId("settings__sync-context-work").getByRole("button").click();
+    await page.getByRole("option", { name: "Work" }).click();
+
+    // Work's tasks move to the second folder; Personal's stay in the first.
+    await expect.poll(() => readFolderDir(page, "tasks", "Work")).toContain("Write the report");
+    await expect.poll(() => readFolderDir(page, "tasks")).not.toContain("Write the report");
+    await expect.poll(() => readFolderDir(page, "tasks")).toContain("Water the plants");
+    await expect.poll(() => readFolderDir(page, "tasks", "Work")).not.toContain("Water the plants");
+
+    // The sidebar lists both syncs, each with its contexts.
+    await page.goto("/");
+    await expect(page.getByTestId("sync-status-card__target").first()).toBeVisible();
+    await expect(page.getByTestId("sync-status-card__target")).toHaveCount(2);
   });
 });
 

@@ -57,6 +57,15 @@ Klart/
 
 - **GitHub sync** (Settings → Sync → GitHub): works in every browser, including phones, and in the desktop app. See [GitHub sync](#github-sync).
 
+### Several syncs
+
+Most people have one sync, and every context syncs with it. A device can also have several named syncs ("Personal repo", "Work OneDrive"), each a folder, Git clone or GitHub repository, with each context assigned to one of them or kept on this device only. The model lives in `core/sync/SyncTargets.ts`. The setup (`SyncSetup`: the syncs and a context-to-sync map) is per device, in `localStorage` (`klart-sync-targets`). GitHub tokens are stored there too, and each browser folder's handle is kept in IndexedDB under its sync's id. The older single-connection keys (`klart-github-connection`, `klart-desktop-connection` and the `data-folder` handle) are moved into it on first start.
+
+- The first sync is the **primary**. Contexts nobody assigned sync with it, and so do shopping lists. Settings → Sync shows one card per sync (rename, make primary, stop syncing), "Add another sync", and a "Where each context syncs" table once contexts are split.
+- Each sync's folder only holds its part (`FolderSync` with a `SyncScope`, see `scopeData`): its contexts in `klart.json`, their task files, and the My Day items of their tasks. A pull replaces only that part (`mergeOwned`), so the other syncs' contexts and My Day items are kept. A task file that no longer belongs to a folder is removed, so moving a context moves its tasks.
+- Contexts found in a secondary sync's `klart.json` are assigned to it unless this device already chose (`assignFoundContexts`), which is how a new device learns the split. Stopping a sync keeps its contexts on this device instead of moving them into another sync. Making another sync primary keeps the old primary's contexts where they are.
+- `FolderSyncLifecycle` mounts one runner per sync (`useSyncTargetLifecycle`). All runners share one job queue and read the latest data when a job starts, so two syncs never pull over each other. Each sync has its own status (`syncStatusesAtom`). The sidebar card (`SyncStatusCard`, from `buildSyncOverview`) shows the worst state across syncs and, when contexts are split, one row per sync with its state and context dots.
+
 ## Notifications
 
 `NotificationPlanner.planNotifications()` is pure and decides what is due: task reminders (`remindAt`), "Plan your day", "Due today without a time", "Overdue nudge" and "End of day wrap-up", each within its time window and the context's hours. The scheduler runs every 20 s while the app is open, shows system notifications when permission is granted (via the service worker when registered) and in-app toasts otherwise. Sent keys are remembered per device. With several devices, the "last used" policy uses `devices/*/device.json`.
@@ -94,7 +103,7 @@ It runs when the app opens, every 5 minutes, 30 seconds after the last local cha
 
 ### GitHub sync
 
-For phones and browsers without folder access. The user enters a GitHub username, a repository and a fine-grained personal access token (GitHub's API doesn't accept passwords) limited to that repository with Contents: Read and write. Only private repositories are accepted, and the token can't be read-only. The connection, token included, is kept in `localStorage` (`klart-github-connection`) on that device only.
+For phones and browsers without folder access. The user enters a GitHub username, a repository and a fine-grained personal access token (GitHub's API doesn't accept passwords) limited to that repository with Contents: Read and write. Only private repositories are accepted, and the token can't be read-only. The connection, token included, is kept in `localStorage` (in the sync setup, `klart-sync-targets`) on that device only.
 
 `GitHubBackend` implements `FolderBackend` over an in-memory snapshot of the default branch, so `FolderSync` runs unchanged:
 
