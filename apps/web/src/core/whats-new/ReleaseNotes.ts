@@ -15,6 +15,42 @@ export interface ReleaseNote {
   fixes: ReleaseNoteItem[];
 }
 
+const v090 = defineMessages({
+  homeTitle: {
+    description: "ReleaseNotes 0.9.0 - highlight title: contexts live in the sync they were created in",
+    defaultMessage: "Every context has a home",
+    id: "W36wMV",
+  },
+  homeDescription: {
+    description: "ReleaseNotes 0.9.0 - highlight text: contexts live in the sync they were created in",
+    defaultMessage:
+      "With several syncs, pick where a new context lives when you create it, and it stays there. Settings → Contexts shows every context from every sync and where each one lives.",
+    id: "xbHYOJ",
+  },
+  pickUpTitle: {
+    description: "ReleaseNotes 0.9.0 - highlight title: contexts already in a sync are picked up",
+    defaultMessage: "Nothing left behind",
+    id: "Gs5kUY",
+  },
+  pickUpDescription: {
+    description: "ReleaseNotes 0.9.0 - highlight text: contexts already in a sync are picked up",
+    defaultMessage:
+      "Connect a sync and Klart brings in every context it already holds, even ones this device kept to itself after you stopped syncing with it.",
+    id: "TFIhvl",
+  },
+  hideTitle: {
+    description: "ReleaseNotes 0.9.0 - highlight title: hide contexts on one device",
+    defaultMessage: "Out of sight, still in sync",
+    id: "SSvt/U",
+  },
+  hideDescription: {
+    description: "ReleaseNotes 0.9.0 - highlight text: hide contexts on one device",
+    defaultMessage:
+      "Hide a context in Settings → Contexts and this device stops showing it: no tasks, lists or reminders from it. It keeps syncing, so your other devices still have it.",
+    id: "O0wbRx",
+  },
+});
+
 const v080 = defineMessages({
   versionGuardTitle: {
     description: "ReleaseNotes 0.8.0 - highlight title: old apps pause syncing instead of overwriting newer data",
@@ -546,6 +582,15 @@ const v010 = defineMessages({
  * entry here; people who update see every entry newer than the last one they saw.
  */
 export const RELEASE_NOTES: ReleaseNote[] = [
+  {
+    version: "0.9.0",
+    highlights: [
+      { emoji: "🏠", title: v090.homeTitle, description: v090.homeDescription },
+      { emoji: "🧲", title: v090.pickUpTitle, description: v090.pickUpDescription },
+      { emoji: "🙈", title: v090.hideTitle, description: v090.hideDescription },
+    ],
+    fixes: [],
+  },
   {
     version: "0.8.0",
     highlights: [{ emoji: "🛡️", title: v080.versionGuardTitle, description: v080.versionGuardDescription }],
