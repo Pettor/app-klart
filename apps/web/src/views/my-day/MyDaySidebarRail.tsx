@@ -1,5 +1,5 @@
 import type { ReactElement, ReactNode } from "react";
-import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
+import { Cog6ToothIcon, MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 import { Button, Separator, Tooltip } from "@heroui/react";
 import clsx from "clsx";
 import { useIntl } from "react-intl";
@@ -15,6 +15,8 @@ export interface MyDaySidebarRailProps extends MyDaySidebarProps {
   collapse: MyDaySidebarCollapseProps;
   /** Shows the tags button, as the full sidebar shows its tag list. */
   showTags: boolean;
+  /** Opens settings on its General section. */
+  onOpenSettings: () => void;
   className?: string;
 }
 
@@ -52,7 +54,7 @@ function RailButton({ label, tooltip, onPress, isActive, testId, className, chil
   );
 }
 
-/** The sidebar collapsed to a 64px rail of icons: context, search, smart views, tags and sync. */
+/** The sidebar collapsed to a 64px rail of icons: context, search, smart views, tags, settings and sync. */
 export function MyDaySidebarRail({
   context,
   smartViews,
@@ -61,6 +63,7 @@ export function MyDaySidebarRail({
   shopping,
   collapse,
   showTags,
+  onOpenSettings,
   className,
 }: MyDaySidebarRailProps): ReactElement {
   const intl = useIntl();
@@ -188,7 +191,19 @@ export function MyDaySidebarRail({
         </>
       )}
 
-      <div className="mt-auto">
+      <div className="mt-auto flex flex-col items-center gap-2">
+        <RailButton
+          label={intl.formatMessage({
+            description: "MyDaySidebarRail - aria-label of the button opening settings",
+            defaultMessage: "Settings",
+            id: "qTrhtt",
+          })}
+          onPress={onOpenSettings}
+          testId="rail__settings"
+          className="text-muted"
+        >
+          <Cog6ToothIcon className="size-[18px]" />
+        </RailButton>
         <SyncStatusCard overview={sync.overview} onPress={sync.onPress} variant="icon" />
       </div>
     </aside>

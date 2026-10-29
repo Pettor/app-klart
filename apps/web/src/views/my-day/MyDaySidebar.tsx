@@ -1,4 +1,5 @@
 import type { ReactElement } from "react";
+import { Cog6ToothIcon } from "@heroicons/react/24/outline";
 import { Button, Separator, Tooltip } from "@heroui/react";
 import clsx from "clsx";
 import { useIntl } from "react-intl";
@@ -14,6 +15,8 @@ export interface MyDaySidebarComponentProps extends MyDaySidebarProps {
   collapse: MyDaySidebarCollapseProps;
   /** Shows the tag list, which filters My Day. */
   showTags: boolean;
+  /** Opens settings on its General section. */
+  onOpenSettings: () => void;
   className?: string;
 }
 
@@ -26,6 +29,7 @@ export function MyDaySidebar({
   shopping,
   collapse,
   showTags,
+  onOpenSettings,
   className,
 }: MyDaySidebarComponentProps): ReactElement {
   const intl = useIntl();
@@ -135,7 +139,20 @@ export function MyDaySidebar({
         </nav>
       )}
 
-      <div className="mt-auto">
+      <div className="mt-auto flex flex-col gap-2">
+        <Button
+          variant="ghost"
+          onPress={onOpenSettings}
+          data-testid="my-day__settings"
+          className="h-9 w-full justify-start gap-3 rounded-lg px-2.5 text-left font-normal"
+        >
+          <Cog6ToothIcon className="size-[18px]" aria-hidden />
+          {intl.formatMessage({
+            description: "MyDaySidebar - button opening settings",
+            defaultMessage: "Settings",
+            id: "vJgYBY",
+          })}
+        </Button>
         <SyncStatusCard overview={sync.overview} onPress={sync.onPress} />
       </div>
     </aside>

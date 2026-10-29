@@ -264,6 +264,21 @@ export const CompletedFolded: Story = {
 export const CollapsedSidebar: Story = {
   args: { ...buildArgs("personal"), sidebar: { isCollapsed: true, onToggle: fn(), onSearch: fn() } },
   parameters: { viewport: { value: "full" } },
+  play: async ({ args, canvas }) => {
+    // The rail only shows at desktop widths, so press it directly rather than through the pointer.
+    canvas.getByTestId("rail__settings").click();
+    await expect(args.onOpenSettings).toHaveBeenCalled();
+  },
+};
+
+/** Settings sits above the sync status at the bottom of the sidebar. Desktop widths only. */
+export const SidebarSettings: Story = {
+  args: buildArgs("personal"),
+  parameters: { viewport: { value: "full" } },
+  play: async ({ args, canvas }) => {
+    canvas.getByTestId("my-day__settings").click();
+    await expect(args.onOpenSettings).toHaveBeenCalled();
+  },
 };
 
 /** Alt with arrow up or down on a task's title moves it, as does pressing and dragging it. */

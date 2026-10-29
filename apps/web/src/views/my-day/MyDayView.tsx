@@ -92,6 +92,7 @@ export function MyDayView({
         shopping={shopping}
         collapse={sidebar}
         showTags={showTagFilter}
+        onOpenSettings={onOpenSettings}
         className={clsx("sticky top-0 hidden h-dvh", !sidebar.isCollapsed && "lg:flex")}
       />
       {sidebar.isCollapsed && (
@@ -104,6 +105,7 @@ export function MyDayView({
           shopping={shopping}
           collapse={sidebar}
           showTags={showTagFilter}
+          onOpenSettings={onOpenSettings}
           className="sticky top-0 hidden h-dvh lg:flex"
         />
       )}
