@@ -24,6 +24,7 @@ import type {
 } from "./MyDayTypes";
 import { useMyDayArrivals } from "./UseMyDayArrivals";
 import { useMyDayPaneWidth } from "./UseMyDayPaneWidth";
+import { useMyDaySidebarMotion } from "./UseMyDaySidebarMotion";
 import { QuickAddInput } from "~/components/input/quick-add/QuickAddInput";
 
 export interface MyDayViewProps extends MyDaySidebarProps {
@@ -72,6 +73,7 @@ export function MyDayView({
   const isPhone = !useBreakpoint("sm");
   const isWide = useBreakpoint("xl");
   const pane = useMyDayPaneWidth();
+  const slideSidebarIn = useMyDaySidebarMotion(sidebar.isCollapsed);
   const { arrivingIds, suggestions } = useMyDayArrivals(
     tasks.map((task) => task.id),
     suggestionsProp
@@ -93,7 +95,7 @@ export function MyDayView({
         collapse={sidebar}
         showTags={showTagFilter}
         onOpenSettings={onOpenSettings}
-        className={clsx("sticky top-0 hidden h-dvh", !sidebar.isCollapsed && "lg:flex")}
+        className={clsx("sticky top-0 hidden h-dvh", !sidebar.isCollapsed && "lg:flex", slideSidebarIn && "sidebar-in")}
       />
       {sidebar.isCollapsed && (
         <MyDaySidebarRail
@@ -106,7 +108,7 @@ export function MyDayView({
           collapse={sidebar}
           showTags={showTagFilter}
           onOpenSettings={onOpenSettings}
-          className="sticky top-0 hidden h-dvh lg:flex"
+          className={clsx("sticky top-0 hidden h-dvh lg:flex", slideSidebarIn && "sidebar-in")}
         />
       )}
 
