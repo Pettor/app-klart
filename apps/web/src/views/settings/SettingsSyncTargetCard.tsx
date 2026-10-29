@@ -86,6 +86,20 @@ export function SettingsSyncTargetCard({
 
   const footer = (
     <div className="border-separator flex flex-col gap-2 border-t pt-3">
+      {target.status.state === "outdated" && (
+        <span className="text-warning flex items-center gap-2 text-[13px]" data-testid="settings__sync-outdated">
+          <ExclamationTriangleIcon className="size-4 shrink-0" aria-hidden />
+          {intl.formatMessage(
+            {
+              description: "SettingsSyncTarget - a newer version of the app synced here, so this one paused syncing",
+              defaultMessage:
+                "A device with version {version} or newer has synced here. Update this app to keep syncing; your changes stay on this device until then.",
+              id: "rDWqMD",
+            },
+            { version: target.status.folderVersion ?? "" }
+          )}
+        </span>
+      )}
       {target.method === "git" && target.status.state === "missing" && (
         <span className="text-danger flex items-center gap-2 text-[13px]">
           <ExclamationTriangleIcon className="size-4" aria-hidden />

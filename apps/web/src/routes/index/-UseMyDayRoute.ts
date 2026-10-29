@@ -7,6 +7,7 @@ import type { SuggestionListGroup } from "~/components/display/suggestion-list/S
 import type { TaskEditorTask } from "~/components/input/task-editor/TaskEditor";
 import type { KlartContext } from "~/core/contexts/KlartContext";
 import { ALL_CONTEXTS, findContext } from "~/core/contexts/KlartContext";
+import { canUpdateApp, updateApp } from "~/core/pwa/UpdateApp";
 import { useHierarchyNavigation } from "~/core/routes/UseHierarchyNavigation";
 import type { SettingsSectionId } from "~/core/settings/SettingsSection";
 import type { ShoppingList } from "~/core/shopping/ShoppingList";
@@ -259,6 +260,8 @@ export function useMyDayRoute(editingId: string | null, page: "day" | "shop" = "
       onPress: () => {
         if (sync.overview.state === "needs-permission") {
           void sync.reconnect();
+        } else if (sync.overview.state === "outdated" && canUpdateApp()) {
+          void updateApp();
         } else {
           openSettings("sync");
         }

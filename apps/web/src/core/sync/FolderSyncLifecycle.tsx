@@ -3,6 +3,7 @@ import { useAtomValue } from "jotai";
 import { syncSetupAtom } from "./SyncAtoms";
 import type { SyncTarget } from "./SyncTargets";
 import { useFolderSyncLifecycle, useSyncTargetLifecycle } from "./UseFolderSyncLifecycle";
+import { useOutdatedSyncNotice } from "./UseOutdatedSyncNotice";
 import { useTodayTicker } from "~/core/tasks/UseToday";
 
 export interface FolderSyncLifecycleProps {
@@ -19,6 +20,7 @@ function SyncTargetLifecycle({ target }: { target: SyncTarget }): null {
 export function FolderSyncLifecycle({ children }: FolderSyncLifecycleProps): ReactElement {
   useTodayTicker();
   useFolderSyncLifecycle();
+  useOutdatedSyncNotice();
   const { targets } = useAtomValue(syncSetupAtom);
   return (
     <>

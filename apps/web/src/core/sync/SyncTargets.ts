@@ -1,3 +1,4 @@
+import { isNewerDataVersion } from "./DataVersion";
 import type { SyncScope } from "./FolderSync";
 import type { GitHubConnection, SyncMethod, SyncState, SyncStatus } from "./SyncAtoms";
 import type { ContextColor, KlartContext } from "~/core/contexts/KlartContext";
@@ -159,6 +160,8 @@ export interface SyncOverview {
   lastSyncedAt?: string;
   /** The first problem, prefixed by its sync's name when there are several. */
   error?: string;
+  /** `outdated` only: the newest data version among the syncs this app is too old for, e.g. "0.8". */
+  folderVersion?: string;
 }
 
 export const LOCAL_SYNC_OVERVIEW: SyncOverview = { state: "local", targets: [], localContexts: [] };
@@ -169,6 +172,16 @@ function toOverviewContext({ id, name, color }: KlartContext): SyncOverviewConte
 
 function hasProblem(status: SyncStatus): boolean {
   return status.state === "error" || status.state === "missing" || !!status.git?.error;
+}
+
+function newestFolderVersion(targets: SyncOverviewTarget[]): string | undefined {
+  let newest: string | undefined;
+  for (const { status } of targets) {
+    if (status.folderVersion && (!newest || isNewerDataVersion(status.folderVersion, newest))) {
+      newest = status.folderVersion;
+    }
+  }
+  return newest;
 }
 
 export function buildSyncOverview(
@@ -196,8 +209,12 @@ export function buildSyncOverview(
   });
 
   const states = targets.map((target) => target.status.state);
+  const outdated = targets.filter((target) => target.status.state === "outdated");
   let state: SyncState = "synced";
-  if (targets.some((target) => target.hasProblem)) {
+  // Updating the app is the one fix, so it goes before any other problem.
+  if (outdated.length > 0) {
+    state = "outdated";
+  } else if (targets.some((target) => target.hasProblem)) {
     state = "error";
   } else if (states.includes("needs-permission")) {
     state = "needs-permission";
@@ -215,5 +232,6 @@ export function buildSyncOverview(
     localContexts: contexts.filter((context) => getContextTargetId(setup, context.id) === null).map(toOverviewContext),
     lastSyncedAt: synced.length === targets.length ? synced.sort()[0] : undefined,
     error: troubled && problem && targets.length > 1 ? `${troubled.name}: ${problem}` : problem,
+    folderVersion: newestFolderVersion(outdated),
   };
 }

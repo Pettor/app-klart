@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { DATA_VERSION, isNewerDataVersion, NewerDataVersionError } from "./DataVersion";
 import type { FolderBackend, FolderFileInfo } from "./FolderBackend";
 import { LLMS_TXT } from "./LlmsTxt";
 import type { KlartContext } from "~/core/contexts/KlartContext";
@@ -22,6 +23,8 @@ export const LLMS_FILE = "LLMS.txt";
 
 const KlartConfigSchema = z.object({
   schema: z.string().optional(),
+  /** The newest data version that wrote to this folder; older apps don't sync with it. */
+  dataVersion: z.string().optional(),
   contexts: z
     .array(
       z.object({
@@ -33,6 +36,9 @@ const KlartConfigSchema = z.object({
     )
     .min(1),
 });
+
+/** Only the data version, so a folder whose config this version can't read still says what it needs. */
+const DataVersionSchema = z.object({ dataVersion: z.string().catch("") });
 
 const DeviceFileSchema = z.object({
   name: z.string(),
@@ -186,10 +192,14 @@ export function scopeData(data: KlartData, scope: SyncScope): KlartData {
 export class FolderSync {
   private readonly known = new Map<string, KnownFile>();
   private readonly viewSignatures = new Map<string, string>();
+  /** The data version last read from `klart.json`, by its `lastModified`. */
+  private folderVersion: { lastModified: number; version: string } | null = null;
 
   constructor(
     private readonly folder: FolderBackend,
-    private readonly deviceName: string
+    private readonly deviceName: string,
+    /** This app's data version; injected in tests. */
+    private readonly dataVersion = DATA_VERSION
   ) {}
 
   get folderName(): string {
@@ -210,9 +220,38 @@ export class FolderSync {
     return { text, isNew: !known };
   }
 
+  /**
+   * Throws {@link NewerDataVersionError} when a newer version of Klart wrote to
+   * the folder. Reads `klart.json` on its own (only when it changed), so the
+   * pull still sees the file as changed afterwards.
+   */
+  private async checkDataVersion(): Promise<void> {
+    const lastModified = await this.folder.stat(CONFIG_FILE);
+    if (lastModified === null) {
+      return;
+    }
+    if (this.folderVersion?.lastModified !== lastModified) {
+      let version = "";
+      try {
+        const parsed = DataVersionSchema.safeParse(JSON.parse(await this.folder.read(CONFIG_FILE)));
+        version = parsed.success ? parsed.data.dataVersion : "";
+      } catch {
+        // An unreadable config is the pull's problem, not a version mismatch.
+      }
+      this.folderVersion = { lastModified, version };
+    }
+    const { version } = this.folderVersion;
+    if (version && isNewerDataVersion(version, this.dataVersion)) {
+      throw new NewerDataVersionError(version);
+    }
+  }
+
   private async write(path: string, content: string): Promise<void> {
     const lastModified = await this.folder.write(path, content);
     this.known.set(path, { content, lastModified });
+    if (path === CONFIG_FILE) {
+      this.folderVersion = { lastModified, version: this.dataVersion };
+    }
   }
 
   async pull(
@@ -222,6 +261,8 @@ export class FolderSync {
     let data = local;
     let changed = false;
     let contextIds: string[] | null = null;
+
+    await this.checkDataVersion();
 
     const configModified = await this.folder.stat(CONFIG_FILE);
     if (configModified !== null) {
@@ -408,9 +449,14 @@ export class FolderSync {
     all: KlartData,
     { today, options, scope = FULL_SCOPE }: { today: string; options: AgentFileOptions; scope?: SyncScope }
   ): Promise<number> {
+    await this.checkDataVersion();
+
     const data = scopeData(all, scope);
     const desired = new Map<string, string>();
-    desired.set(CONFIG_FILE, serialize({ schema: "klart.config/v1", contexts: data.contexts }));
+    desired.set(
+      CONFIG_FILE,
+      serialize({ schema: "klart.config/v1", dataVersion: this.dataVersion, contexts: data.contexts })
+    );
     for (const task of Object.values(data.tasks)) {
       desired.set(taskPath(task), serialize(task));
     }

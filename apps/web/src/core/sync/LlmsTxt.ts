@@ -10,6 +10,8 @@ export const LLMS_TXT = `# Klart
   routing tag. "all" is a view, never a context on a task. A folder may hold
   only some of the user's contexts (the rest sync elsewhere): only use the
   contexts listed here.
+  "dataVersion" is the newest Klart version (major.minor) that wrote the
+  folder; older apps stop syncing until they're updated. Keep it as it is.
 - tasks/<context>/<id>.json: one task per file, schema klart.task/v1.
 - days/YYYY-MM-DD.json: tasks in My Day for that date, schema klart.day/v1.
 - lists/<id>.json: one shopping list per file, items inline, schema klart.list/v1.

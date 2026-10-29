@@ -72,6 +72,20 @@ export const FolderMissing: Story = {
   },
 };
 
+/** A newer version of the app synced first; this one paused syncing until it's updated. */
+export const Outdated: Story = {
+  args: {
+    ...defaultArgs,
+    overview: demoSyncOverview({ state: "outdated", method: "folder", folderName: "Klart", folderVersion: "0.8" }),
+  },
+  play: async ({ args, canvas, userEvent }) => {
+    await expect(canvas.getByText("Update to keep syncing")).toBeVisible();
+    await expect(canvas.getByText("Needs version 0.8 or newer")).toBeVisible();
+    await userEvent.click(canvas.getByTestId("sync-status-card"));
+    await expect(args.onPress).toHaveBeenCalled();
+  },
+};
+
 /** Contexts split across two syncs: each row names a sync and shows its contexts. */
 export const SeveralSyncs: Story = {
   args: { ...defaultArgs, overview: DEMO_MULTI_SYNC_OVERVIEW },
