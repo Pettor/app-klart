@@ -14,6 +14,7 @@ import {
   updateTask,
 } from "./KlartData";
 import { parseQuickAdd } from "./QuickAdd";
+import { createShoppingList, upsertList } from "~/core/shopping/ShoppingData";
 
 const TODAY = "2026-10-21";
 const CREATED = new Date("2026-10-21T08:12:04.123Z");
@@ -119,6 +120,17 @@ describe("context changes", () => {
     const next = removeContext(setup(), "work", LATER);
     expect(next.contexts.map((context) => context.id)).toEqual(["personal"]);
     expect(next.tasks.T1).toMatchObject({ context: "personal", updatedAt: "2026-10-21T09:00:00Z" });
+  });
+
+  it("moves shopping lists to the first remaining context when one is removed", () => {
+    let data = upsertList(setup(), createShoppingList("L1", "Office", "other", "work", null, CREATED));
+    data = upsertList(data, { ...createShoppingList("L2", "Old", "other", "personal", null, CREATED), context: null });
+    const next = removeContext(data, "work", LATER);
+    expect(next.lists.L1).toMatchObject({ context: "personal", updatedAt: "2026-10-21T09:00:00Z" });
+    expect(next.lists.L2).toBe(data.lists.L2);
+
+    // A list without a context belongs to the first one, so it moves when that one goes.
+    expect(removeContext(data, "personal", LATER).lists.L2).toMatchObject({ context: "work" });
   });
 
   it("never removes the last context", () => {

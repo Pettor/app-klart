@@ -21,7 +21,7 @@ const T1 = new Date("2026-10-28T09:00:00Z");
 const GENERATED = "2026-10-28T10:00:00Z";
 
 function seed(): KlartData {
-  let data = upsertList(createEmptyData(), createShoppingList("L1", "Week", "grocery", null, T0));
+  let data = upsertList(createEmptyData(), createShoppingList("L1", "Week", "grocery", "personal", null, T0));
   for (const [id, text] of [
     ["milk", "2x mjölk 25 kr"],
     ["bread", "Bröd"],
@@ -41,14 +41,21 @@ describe("buildShoppingView", () => {
     const view = buildShoppingView(data, TODAY, GENERATED);
 
     expect(view).toMatchObject({ schema: "klart.view.shopping/v1", date: TODAY, generatedAt: GENERATED, itemsLeft: 2 });
-    expect(view.lists[0]).toMatchObject({ id: "L1", name: "Week", kind: "grocery", bought: 1, totalLeft: 139 });
+    expect(view.lists[0]).toMatchObject({
+      id: "L1",
+      name: "Week",
+      kind: "grocery",
+      context: "personal",
+      bought: 1,
+      totalLeft: 139,
+    });
     expect(view.lists[0]!.items.map((item) => item.id)).toEqual(["coffee", "milk"]);
     expect(view.lists[0]!.items[1]).toMatchObject({ qty: 2, price: 25, total: 50, taskId: "T1", inMyDay: true });
   });
 
   it("leaves out completed and deleted lists", () => {
-    let data = upsertList(seed(), createShoppingList("L2", "Party", "other", null, T0));
-    data = upsertList(data, createShoppingList("L3", "Old", "other", null, T0));
+    let data = upsertList(seed(), createShoppingList("L2", "Party", "other", "personal", null, T0));
+    data = upsertList(data, createShoppingList("L3", "Old", "other", "personal", null, T0));
     data = completeShoppingList(data, "L2", null, TODAY, T1);
     data = deleteShoppingList(data, "L3", TODAY, T1);
 

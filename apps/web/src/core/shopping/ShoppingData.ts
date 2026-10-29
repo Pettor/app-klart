@@ -20,6 +20,7 @@ export function createShoppingList(
   id: string,
   name: string,
   kind: ShoppingListKind,
+  context: string,
   date: string | null,
   now: Date
 ): ShoppingList {
@@ -29,6 +30,7 @@ export function createShoppingList(
     id,
     name,
     kind,
+    context,
     date,
     completedAt: null,
     deletedAt: null,

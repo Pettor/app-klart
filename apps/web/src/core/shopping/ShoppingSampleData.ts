@@ -89,8 +89,8 @@ export interface SampleShopping {
 }
 
 /**
- * Sample shopping lists with ids starting with `prefix`. Items marked for My Day get a linked task in `context`,
- * titled with `taskTitle`.
+ * Sample shopping lists with ids starting with `prefix`, all in `context`. Items marked for My Day get a linked task
+ * there, titled with `taskTitle`.
  */
 export function createSampleShopping(
   prefix: string,
@@ -148,6 +148,7 @@ export function createSampleShopping(
       id: listId,
       name: sample.name,
       kind: sample.kind,
+      context,
       date: sample.date === undefined ? null : addDays(today, sample.date),
       completedAt:
         sample.completed === undefined ? null : toUtcTimestamp(new Date(now.getTime() + sample.completed * 86_400_000)),

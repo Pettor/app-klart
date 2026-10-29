@@ -313,7 +313,7 @@ describe("FolderSync", () => {
 
   it("writes shopping lists and carries a task completed elsewhere back to its item", async () => {
     const T0 = new Date("2026-10-21T08:00:00Z");
-    let data = upsertList(seed(), createShoppingList("L1", "Week", "grocery", null, T0));
+    let data = upsertList(seed(), createShoppingList("L1", "Week", "grocery", "personal", null, T0));
     data = addShoppingItem(data, "L1", createShoppingItem("milk", parseShoppingItem("2x mjölk"), T0), T0);
     data = addItemToDay(data, "L1", "milk", { id: "B1", title: "Buy: mjölk", context: "personal" }, TODAY, T0);
     await sync.push(data, { today: TODAY, options: OPTIONS });
@@ -342,15 +342,22 @@ describe("FolderSync", () => {
   });
 
   it("takes a newer list file from the folder", async () => {
-    const list = createShoppingList("L9", "Gifts", "gift", "2026-11-07", new Date("2026-10-21T08:00:00Z"));
+    const list = createShoppingList("L9", "Gifts", "gift", "personal", "2026-11-07", new Date("2026-10-21T08:00:00Z"));
     await root.write("lists/L9.json", JSON.stringify(list));
     const pulled = await sync.pull(seed(), { today: TODAY, acceptInbox: false });
     expect(pulled.data.lists.L9).toEqual(list);
   });
+
+  it("reads a list file without a context", async () => {
+    const { context: _, ...list } = createShoppingList("L9", "Gifts", "gift", "personal", null, new Date());
+    await root.write("lists/L9.json", JSON.stringify(list));
+    const pulled = await sync.pull(seed(), { today: TODAY, acceptInbox: false });
+    expect(pulled.data.lists.L9?.context).toBeNull();
+  });
 });
 
 describe("FolderSync with contexts split across syncs", () => {
-  /** Personal (and shopping lists) in the primary folder, Work in its own. */
+  /** Personal in the primary folder, Work in its own. */
   const PERSONAL: SyncScope = { ownsContext: (id) => id !== "work", isPrimary: true };
   const WORK: SyncScope = { ownsContext: (id) => id === "work", isPrimary: false };
 
@@ -363,7 +370,7 @@ describe("FolderSync with contexts split across syncs", () => {
     return new FolderSync(new BrowserFolderBackend(root as unknown as FileSystemDirectoryHandle), "MacBook Air");
   }
 
-  /** T1 in Work and P1 in Personal, both in today's My Day, plus a shopping list. */
+  /** T1 in Work and P1 in Personal, both in today's My Day, plus a shopping list in each. */
   function splitSeed(): KlartData {
     const data = seed();
     const task = createTask(
@@ -377,7 +384,11 @@ describe("FolderSync with contexts split across syncs", () => {
       [{ taskId: "P1", addedBy: "user", reason: null }],
       new Date()
     );
-    return upsertList(withTask, createShoppingList("L1", "Groceries", "grocery", null, new Date()));
+    const withList = upsertList(
+      withTask,
+      createShoppingList("L1", "Groceries", "grocery", "personal", null, new Date())
+    );
+    return upsertList(withList, createShoppingList("L2", "Office", "other", "work", null, new Date()));
   }
 
   beforeEach(() => {
@@ -414,7 +425,21 @@ describe("FolderSync with contexts split across syncs", () => {
     expect(dayItems(workRoot)).toEqual(["T1"]);
 
     expect(personalRoot.read("lists/L1.json")).toBeDefined();
+    expect(personalRoot.read("lists/L2.json")).toBeUndefined();
+    expect(workRoot.read("lists/L2.json")).toBeDefined();
     expect(workRoot.read("lists/L1.json")).toBeUndefined();
+  });
+
+  it("moves a list's file to the folder of its new context", async () => {
+    const data = splitSeed();
+    await personal.push(data, { today: TODAY, options: OPTIONS, scope: PERSONAL });
+    await work.push(data, { today: TODAY, options: OPTIONS, scope: WORK });
+
+    const moved = upsertList(data, { ...data.lists.L1!, context: "work" });
+    await personal.push(moved, { today: TODAY, options: OPTIONS, scope: PERSONAL });
+    await work.push(moved, { today: TODAY, options: OPTIONS, scope: WORK });
+    expect(personalRoot.read("lists/L1.json")).toBeUndefined();
+    expect(JSON.parse(workRoot.read("lists/L1.json")!).context).toBe("work");
   });
 
   it("removes a context's tasks from a folder once the context moves to another sync", async () => {

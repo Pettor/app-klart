@@ -5,7 +5,7 @@ import type { KlartContext } from "~/core/contexts/KlartContext";
 import { ALL_CONTEXTS, CONTEXT_COLORS, findContext } from "~/core/contexts/KlartContext";
 import { reconcileShoppingTasks } from "~/core/shopping/ShoppingData";
 import type { ShoppingList } from "~/core/shopping/ShoppingList";
-import { ShoppingListFileSchema } from "~/core/shopping/ShoppingList";
+import { getListContext, ShoppingListFileSchema } from "~/core/shopping/ShoppingList";
 import { buildShoppingView, buildSuggestionsView, buildTodayView } from "~/core/tasks/AgentViews";
 import type { DayFile } from "~/core/tasks/Day";
 import { DayFileSchema } from "~/core/tasks/Day";
@@ -59,9 +59,9 @@ export interface AgentFileOptions {
  * with several, each holds the contexts assigned to it.
  */
 export interface SyncScope {
-  /** The folder holds this context: its `klart.json` entry and its tasks. */
+  /** The folder holds this context: its `klart.json` entry, its tasks and its shopping lists. */
   ownsContext: (contextId: string) => boolean;
-  /** The primary folder also holds shopping lists, and My Day entries whose task isn't known yet. */
+  /** The primary folder also holds My Day entries whose task isn't known yet. */
   isPrimary: boolean;
 }
 
@@ -160,11 +160,17 @@ export function scopeData(data: KlartData, scope: SyncScope): KlartData {
   for (const day of Object.values(data.days)) {
     days[day.date] = { ...day, items: day.items.filter((item) => ownsTaskId(data, scope, item.taskId)) };
   }
+  const lists: Record<string, ShoppingList> = {};
+  for (const list of Object.values(data.lists)) {
+    if (scope.ownsContext(getListContext(list, data.contexts))) {
+      lists[list.id] = list;
+    }
+  }
   return {
     contexts: data.contexts.filter((context) => scope.ownsContext(context.id)),
     tasks,
     days,
-    lists: scope.isPrimary ? data.lists : {},
+    lists,
   };
 }
 
@@ -429,9 +435,9 @@ export class FolderSync {
       }
     }
 
-    // A task that moved context (or to another sync) leaves its old file behind; remove it.
+    // A task that moved context (or to another sync) leaves its old file behind; remove it. So does a list.
     for (const path of [...this.known.keys()]) {
-      if (path.startsWith("tasks/") && !desired.has(path)) {
+      if ((path.startsWith("tasks/") || path.startsWith("lists/")) && !desired.has(path)) {
         await this.folder.remove(path);
         this.known.delete(path);
       }

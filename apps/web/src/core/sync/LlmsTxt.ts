@@ -42,8 +42,9 @@ A list is one file, lists/<id>.json, with its items inline. Read
 views/shopping.json for what's left to buy; write the list files.
 
 { "schema": "klart.list/v1", "id": "<ULID>", "name": "Week",
-  "kind": "grocery", "date": null, "completedAt": null, "deletedAt": null,
-  "taskId": null, "items": [<item>, ...], "createdAt", "updatedAt" }
+  "kind": "grocery", "context": "personal", "date": null,
+  "completedAt": null, "deletedAt": null, "taskId": null,
+  "items": [<item>, ...], "createdAt", "updatedAt" }
 
 <item>: { "id": "<ULID>", "name": "mjölk", "qty": 2, "price": 25,
   "link": null, "note": "", "category": "dairy", "bought": false,
@@ -53,19 +54,23 @@ views/shopping.json for what's left to buy; write the list files.
   "category" in store order: produce, dairy, bread, meat, pantry, pets,
   household, other. Other kinds keep the order the items were added; give
   their items a category anyway, in case the list's kind changes.
+- "context": the id of the context in klart.json the list belongs to. The
+  app shows a list only in its context (and under "All contexts"). A list
+  with "context" null belongs to the first context.
 - "qty": how many, null means one. "price": per piece, in kronor, or null.
   "link": an http(s) URL to the product. "date": local YYYY-MM-DD the list
   is for (a birthday, a party), or null.
 - Open lists have "completedAt" and "deletedAt" null. Skip the others
   unless asked about them.
-- New list: write lists/<ULID>.json as above with "items": [].
+- New list: write lists/<ULID>.json as above with "items": [] and the
+  context it's for (the first context in klart.json if unsure).
 - Add an item: append it to "items". Never add the same thing twice; raise
   "qty" instead.
 - Mark bought: set "bought": true, and if it has a "taskId" complete that
   task too. Star: set "important": true, and on its task too.
 - Remove an item: take it out of "items". If it has a "taskId", archive
   that task and take it out of today's days/ file.
-- Put an item in My Day: create a task in the first context in klart.json
+- Put an item in My Day: create a task in the list's context
   (title "Buy: <name>", or "Buy: <name> × <qty>", "important" and "notes"
   from the item, its link in "links", "due" set to the list's "date",
   "shopping": { "listId", "itemId" }), set the item's "taskId" to the
@@ -78,7 +83,7 @@ views/shopping.json for what's left to buy; write the list files.
   on it; archive their tasks. Or first move them to another open list
   (keep their "taskId", and set the task's "shopping.listId" to that list).
   Reopen it by setting "completedAt" back to null.
-- Rename a list: change "name".
+- Rename a list: change "name". Move it to another context: change "context".
 - Delete a list: set "deletedAt" (ISO 8601 UTC) and archive the tasks made
   from it and its items. Keep the file, so the deletion reaches other
   devices. Never remove a list file.
