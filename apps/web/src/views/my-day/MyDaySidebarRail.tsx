@@ -87,7 +87,7 @@ export function MyDaySidebarRail({
       })}
       className={clsx(
         `ctx-${context.selectedColor}`,
-        "sidebar-in border-separator z-10 w-16 shrink-0 flex-col items-center gap-2 border-r pt-10 pb-4",
+        "border-separator z-10 w-16 shrink-0 flex-col items-center gap-2 border-r pt-10 pb-4",
         className
       )}
       data-testid="my-day__sidebar-rail"
