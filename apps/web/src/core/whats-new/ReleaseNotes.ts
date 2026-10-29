@@ -15,6 +15,20 @@ export interface ReleaseNote {
   fixes: ReleaseNoteItem[];
 }
 
+const v080 = defineMessages({
+  versionGuardTitle: {
+    description: "ReleaseNotes 0.8.0 - highlight title: old apps pause syncing instead of overwriting newer data",
+    defaultMessage: "No more time-travelling devices",
+    id: "LVxZ6p",
+  },
+  versionGuardDescription: {
+    description: "ReleaseNotes 0.8.0 - highlight text: old apps pause syncing instead of overwriting newer data",
+    defaultMessage:
+      "When another device has synced with a newer Klart, an older one pauses syncing instead of writing over your data in an older format. Press Update to get the newest version; anything you changed in the meantime syncs right after.",
+    id: "UGFUvI",
+  },
+});
+
 const v070 = defineMessages({
   syncsTitle: {
     description: "ReleaseNotes 0.7.0 - highlight title: several syncs",
@@ -532,6 +546,11 @@ const v010 = defineMessages({
  * entry here; people who update see every entry newer than the last one they saw.
  */
 export const RELEASE_NOTES: ReleaseNote[] = [
+  {
+    version: "0.8.0",
+    highlights: [{ emoji: "🛡️", title: v080.versionGuardTitle, description: v080.versionGuardDescription }],
+    fixes: [],
+  },
   {
     version: "0.7.0",
     highlights: [
