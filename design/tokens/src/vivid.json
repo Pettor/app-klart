@@ -1,0 +1,163 @@
+{
+  "color": {
+    "theme": {
+      "vivid": {
+        "background": {
+          "$type": "color",
+          "$value": "#000000",
+          "$description": "Background color for vivid theme"
+        },
+        "foreground": {
+          "$type": "color",
+          "$value": "#ffffff",
+          "$description": "Foreground color for vivid theme"
+        },
+        "surface": {
+          "DEFAULT": {
+            "$type": "color",
+            "$value": "#0d0d0f",
+            "$description": "Surface background for vivid theme"
+          },
+          "foreground": {
+            "$type": "color",
+            "$value": "#ffffff",
+            "$description": "Surface foreground for vivid theme"
+          }
+        },
+        "surface-secondary": {
+          "DEFAULT": {
+            "$type": "color",
+            "$value": "#151518",
+            "$description": "Secondary surface background for vivid theme"
+          },
+          "foreground": {
+            "$type": "color",
+            "$value": "#ffffff",
+            "$description": "Secondary surface foreground for vivid theme"
+          }
+        },
+        "surface-tertiary": {
+          "DEFAULT": {
+            "$type": "color",
+            "$value": "#1d1d21",
+            "$description": "Tertiary surface background for vivid theme"
+          },
+          "foreground": {
+            "$type": "color",
+            "$value": "#ffffff",
+            "$description": "Tertiary surface foreground for vivid theme"
+          }
+        },
+        "overlay": {
+          "DEFAULT": {
+            "$type": "color",
+            "$value": "#121214",
+            "$description": "Overlay background for vivid theme"
+          },
+          "foreground": {
+            "$type": "color",
+            "$value": "#ffffff",
+            "$description": "Overlay foreground for vivid theme"
+          }
+        },
+        "muted": {
+          "$type": "color",
+          "$value": "#9a9aa3",
+          "$description": "Muted text color for vivid theme"
+        },
+        "default": {
+          "DEFAULT": {
+            "$type": "color",
+            "$value": "#18181b",
+            "$description": "Default color for vivid theme"
+          },
+          "foreground": {
+            "$type": "color",
+            "$value": "#ffffff",
+            "$description": "Default foreground color for vivid theme"
+          }
+        },
+        "accent": {
+          "DEFAULT": {
+            "$type": "color",
+            "$value": "#0a84ff",
+            "$description": "Accent color for vivid theme"
+          },
+          "foreground": {
+            "$type": "color",
+            "$value": "#ffffff",
+            "$description": "Accent foreground color for vivid theme"
+          }
+        },
+        "success": {
+          "DEFAULT": {
+            "$type": "color",
+            "$value": "#30d158",
+            "$description": "Success color for vivid theme"
+          },
+          "foreground": {
+            "$type": "color",
+            "$value": "#000000",
+            "$description": "Success foreground color for vivid theme"
+          }
+        },
+        "warning": {
+          "DEFAULT": {
+            "$type": "color",
+            "$value": "#ffd60a",
+            "$description": "Warning color for vivid theme"
+          },
+          "foreground": {
+            "$type": "color",
+            "$value": "#000000",
+            "$description": "Warning foreground color for vivid theme"
+          }
+        },
+        "danger": {
+          "DEFAULT": {
+            "$type": "color",
+            "$value": "#ff453a",
+            "$description": "Danger color for vivid theme"
+          },
+          "foreground": {
+            "$type": "color",
+            "$value": "#ffffff",
+            "$description": "Danger foreground color for vivid theme"
+          }
+        },
+        "focus": {
+          "$type": "color",
+          "$value": "#0a84ff",
+          "$description": "Focus ring color for vivid theme"
+        },
+        "border": {
+          "$type": "color",
+          "$value": "#26262b",
+          "$description": "Border color for vivid theme"
+        },
+        "separator": {
+          "$type": "color",
+          "$value": "#161619",
+          "$description": "Separator color for vivid theme"
+        },
+        "field": {
+          "background": {
+            "$type": "color",
+            "$value": "#0d0d0f",
+            "$description": "Form field background for vivid theme"
+          },
+          "foreground": {
+            "$type": "color",
+            "$value": "#ffffff",
+            "$description": "Form field foreground for vivid theme"
+          },
+          "placeholder": {
+            "$type": "color",
+            "$value": "#6b6b74",
+            "$description": "Form field placeholder for vivid theme"
+          }
+        }
+      }
+    }
+  }
+}

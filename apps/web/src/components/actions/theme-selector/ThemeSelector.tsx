@@ -26,7 +26,7 @@ const SWATCHES: Record<ThemeMode, ThemeSwatch> = {
   dark: { side: "#0c0c0f", main: "#111114", card: "#18181c", edge: "#27272c", accent: "#2d7ff9" },
   midnight: { side: "#0e1220", main: "#111d3b", card: "#1d2640", edge: "#0a0e19", accent: "#5b8cff" },
   graphite: { side: "#1c1d1f", main: "#1d2024", card: "#242527", edge: "#303135", accent: "#e6e6e6" },
-  ember: { side: "#17120f", main: "#22150c", card: "#2a201b", edge: "#0f0b09", accent: "#ff8a3d" },
+  vivid: { side: "#000000", main: "#000000", card: "#0d0d0f", edge: "#26262b", accent: "#0a84ff" },
 };
 
 interface ThemeOptionProps {
@@ -183,16 +183,16 @@ export function ThemeSelector({ mode, onSelect }: ThemeSelectorProps): ReactElem
         })}
       />
       <ThemeOption
-        value="ember"
+        value="vivid"
         label={intl.formatMessage({
-          description: "ThemeSelector: label - ember option, a warm brown and amber dark theme",
-          defaultMessage: "Ember",
-          id: "uVt6Ab",
+          description: "ThemeSelector: label - vivid option, a pure black dark theme with strong colors",
+          defaultMessage: "Vivid",
+          id: "LuAlnn",
         })}
         hint={intl.formatMessage({
-          description: "ThemeSelector: hint - ember option",
-          defaultMessage: "Warm browns, amber glow",
-          id: "Oyx5Vp",
+          description: "ThemeSelector: hint - vivid option",
+          defaultMessage: "Pure black",
+          id: "CLKdJ3",
         })}
       />
     </RadioGroup>

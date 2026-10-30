@@ -70,8 +70,8 @@ export const Graphite: Story = {
   args: { ...defaultArgs, mode: "graphite" },
 };
 
-export const Ember: Story = {
-  args: { ...defaultArgs, mode: "ember" },
+export const Vivid: Story = {
+  args: { ...defaultArgs, mode: "vivid" },
 };
 
 export const SelectNewThemes: Story = {
@@ -81,7 +81,7 @@ export const SelectNewThemes: Story = {
       ["Paper", "paper"],
       ["Bloom", "bloom"],
       ["Graphite", "graphite"],
-      ["Ember", "ember"],
+      ["Vivid", "vivid"],
     ] as const) {
       await userEvent.click(canvas.getByRole("radio", { name }));
       await expect(args.onSelect).toHaveBeenCalledWith(mode);

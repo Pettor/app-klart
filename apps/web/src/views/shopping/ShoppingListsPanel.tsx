@@ -44,7 +44,7 @@ export function ShoppingListsPanel({
       className={clsx("flex-col gap-3.5 px-3.5 pt-4 pb-4 lg:pt-10", className)}
     >
       <div className="flex items-center gap-2 pl-1.5">
-        <h1 className="hero:bg-[linear-gradient(90deg,#2d7ff9,#f0523f)] hero:bg-clip-text hero:text-transparent flex-1 text-[30px] font-bold tracking-[-0.01em]">
+        <h1 className="hero-title flex-1 text-[30px] font-bold tracking-[-0.01em]">
           {intl.formatMessage({
             description: "ShoppingListsPanel - heading of the shopping screen",
             defaultMessage: "Shopping",

@@ -176,7 +176,7 @@ export function SettingsView({
         </nav>
       </aside>
 
-      <main className="bg-surface-secondary/40 hero:bg-[#111114] hero-glow min-w-0 flex-1 bg-no-repeat px-4 pt-6 pb-12 sm:px-8 lg:pt-10">
+      <main className="bg-surface-secondary/40 hero:bg-(--hero-panel) hero-glow min-w-0 flex-1 bg-no-repeat px-4 pt-6 pb-12 sm:px-8 lg:pt-10">
         <div
           key={section}
           className={clsx(

@@ -1,9 +1,9 @@
 import { useMemo } from "react";
 import {
+  BoltIcon,
   Cog6ToothIcon,
   ComputerDesktopIcon,
   DocumentTextIcon,
-  FireIcon,
   LightBulbIcon,
   MagnifyingGlassIcon,
   MoonIcon,
@@ -290,16 +290,17 @@ export function useCommandPaletteController(): CommandPaletteProps {
         perform: () => setTheme("graphite"),
       },
       {
-        id: "theme-ember",
+        id: "theme-vivid",
         label: intl.formatMessage({
-          description: "CommandPaletteController: label - theme ember command, a warm brown and amber dark theme",
-          defaultMessage: "Theme: Ember",
-          id: "P4xkTt",
+          description:
+            "CommandPaletteController: label - theme vivid command, a pure black dark theme with strong colors",
+          defaultMessage: "Theme: Vivid",
+          id: "GAQV1J",
         }),
         group: appearanceGroup,
-        keywords: ["ember", "warm", "amber", "brown", "dark", "theme"],
-        icon: <FireIcon className="h-4 w-4" />,
-        perform: () => setTheme("ember"),
+        keywords: ["vivid", "oled", "black", "bright", "dark", "theme"],
+        icon: <BoltIcon className="h-4 w-4" />,
+        perform: () => setTheme("vivid"),
       },
     ];
   }, [
