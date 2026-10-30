@@ -80,6 +80,7 @@ const defaultArgs = {
     onStartContextChange: fn(),
   },
   appearance: {
+    today: "2026-10-21",
     themeSelector: { mode: "auto", onSelect: fn() },
     density: "comfortable",
     onDensityChange: fn(),

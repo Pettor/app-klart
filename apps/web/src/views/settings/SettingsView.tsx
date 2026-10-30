@@ -177,7 +177,14 @@ export function SettingsView({
       </aside>
 
       <main className="bg-surface-secondary/40 hero:bg-[#111114] hero-glow min-w-0 flex-1 bg-no-repeat px-4 pt-6 pb-12 sm:px-8 lg:pt-10">
-        <div key={section} className="settings-pane-in flex max-w-[760px] flex-col gap-6">
+        <div
+          key={section}
+          className={clsx(
+            "settings-pane-in flex flex-col gap-6",
+            // Appearance is wider, to fit its preview beside the choices.
+            section === "appearance" ? "max-w-[1100px]" : "max-w-[760px]"
+          )}
+        >
           {panes[section]()}
         </div>
       </main>
