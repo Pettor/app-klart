@@ -18,6 +18,7 @@ import {
   klartDataAtom,
   startContextAtom,
   suggestionSettingsAtom,
+  todayAtom,
   visibleKlartDataAtom,
 } from "~/core/tasks/KlartAtoms";
 import { useKlartActions } from "~/core/tasks/UseKlartActions";
@@ -34,6 +35,7 @@ export function useSettingsRoute(section?: SettingsSectionId): SettingsViewProps
   const sync = useFolderSync();
   const notifications = useNotifications();
   const themeSelector = useThemeSelector();
+  const today = useAtomValue(todayAtom);
   const { appName, appVersion } = useAppInfo();
   const whatsNew = useWhatsNew();
   const visibleContexts = useAtomValue(visibleKlartDataAtom).contexts;
@@ -216,6 +218,7 @@ export function useSettingsRoute(section?: SettingsSectionId): SettingsViewProps
       onContextChange: notifications.updateContext,
     },
     appearance: {
+      today,
       themeSelector,
       density,
       onDensityChange: setDensity,
