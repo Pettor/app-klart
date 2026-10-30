@@ -15,6 +15,42 @@ export interface ReleaseNote {
   fixes: ReleaseNoteItem[];
 }
 
+const v0100 = defineMessages({
+  themesTitle: {
+    description: "ReleaseNotes 0.10.0 - highlight title: four new themes",
+    defaultMessage: "Four fresh looks",
+    id: "sltajm",
+  },
+  themesDescription: {
+    description: "ReleaseNotes 0.10.0 - highlight text: four new themes",
+    defaultMessage:
+      "Settings → Appearance has four new themes: warm, flat Paper; bright and playful Bloom; quiet gray Graphite; and Vivid, pure black with strong colors.",
+    id: "ydraxJ",
+  },
+  vividTitle: {
+    description: "ReleaseNotes 0.10.0 - highlight title: the vivid theme colors tasks by context",
+    defaultMessage: "Colors that pop",
+    id: "xUDmql",
+  },
+  vividDescription: {
+    description: "ReleaseNotes 0.10.0 - highlight text: the vivid theme colors tasks by context",
+    defaultMessage:
+      "In Vivid, every task is edged in its context's color and its checkbox fills with it, all on a pure black background that looks great on OLED screens.",
+    id: "q6cgmp",
+  },
+  previewTitle: {
+    description: "ReleaseNotes 0.10.0 - highlight title: live preview in appearance settings",
+    defaultMessage: "Try before you pick",
+    id: "b5u4Np",
+  },
+  previewDescription: {
+    description: "ReleaseNotes 0.10.0 - highlight text: live preview in appearance settings",
+    defaultMessage:
+      "Settings → Appearance now shows a little My Day that changes as you pick a theme, density or motion. Check off or star its tasks to see how it feels.",
+    id: "wNJumA",
+  },
+});
+
 const v091 = defineMessages({
   sidebarFixTitle: {
     description: "ReleaseNotes 0.9.1 - fix title: sidebar wobble when switching pages",
@@ -595,6 +631,15 @@ const v010 = defineMessages({
  * entry here; people who update see every entry newer than the last one they saw.
  */
 export const RELEASE_NOTES: ReleaseNote[] = [
+  {
+    version: "0.10.0",
+    highlights: [
+      { emoji: "🎨", title: v0100.themesTitle, description: v0100.themesDescription },
+      { emoji: "🌈", title: v0100.vividTitle, description: v0100.vividDescription },
+      { emoji: "👀", title: v0100.previewTitle, description: v0100.previewDescription },
+    ],
+    fixes: [],
+  },
   {
     version: "0.9.1",
     highlights: [],
