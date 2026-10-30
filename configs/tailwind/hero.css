@@ -283,48 +283,48 @@
     --disabled-opacity: var(--layout-disabled-opacity);
   }
 
-  /* Ember: a warm espresso dark theme with an amber accent. Applied together with `.dark`. */
-  .ember,
-  [data-theme="ember"] {
-    --background: var(--color-theme-ember-background);
-    --foreground: var(--color-theme-ember-foreground);
+  /* Vivid: pure black for OLED screens, with strong colors. Applied together with `.dark`. */
+  .vivid,
+  [data-theme="vivid"] {
+    --background: var(--color-theme-vivid-background);
+    --foreground: var(--color-theme-vivid-foreground);
 
-    --surface: var(--color-theme-ember-surface-default);
-    --surface-foreground: var(--color-theme-ember-surface-foreground);
+    --surface: var(--color-theme-vivid-surface-default);
+    --surface-foreground: var(--color-theme-vivid-surface-foreground);
 
-    --surface-secondary: var(--color-theme-ember-surface-secondary-default);
-    --surface-secondary-foreground: var(--color-theme-ember-surface-secondary-foreground);
+    --surface-secondary: var(--color-theme-vivid-surface-secondary-default);
+    --surface-secondary-foreground: var(--color-theme-vivid-surface-secondary-foreground);
 
-    --surface-tertiary: var(--color-theme-ember-surface-tertiary-default);
-    --surface-tertiary-foreground: var(--color-theme-ember-surface-tertiary-foreground);
+    --surface-tertiary: var(--color-theme-vivid-surface-tertiary-default);
+    --surface-tertiary-foreground: var(--color-theme-vivid-surface-tertiary-foreground);
 
-    --overlay: var(--color-theme-ember-overlay-default);
-    --overlay-foreground: var(--color-theme-ember-overlay-foreground);
+    --overlay: var(--color-theme-vivid-overlay-default);
+    --overlay-foreground: var(--color-theme-vivid-overlay-foreground);
 
-    --muted: var(--color-theme-ember-muted);
+    --muted: var(--color-theme-vivid-muted);
 
-    --default: var(--color-theme-ember-default-default);
-    --default-foreground: var(--color-theme-ember-default-foreground);
+    --default: var(--color-theme-vivid-default-default);
+    --default-foreground: var(--color-theme-vivid-default-foreground);
 
-    --accent: var(--color-theme-ember-accent-default);
-    --accent-foreground: var(--color-theme-ember-accent-foreground);
+    --accent: var(--color-theme-vivid-accent-default);
+    --accent-foreground: var(--color-theme-vivid-accent-foreground);
 
-    --success: var(--color-theme-ember-success-default);
-    --success-foreground: var(--color-theme-ember-success-foreground);
+    --success: var(--color-theme-vivid-success-default);
+    --success-foreground: var(--color-theme-vivid-success-foreground);
 
-    --warning: var(--color-theme-ember-warning-default);
-    --warning-foreground: var(--color-theme-ember-warning-foreground);
+    --warning: var(--color-theme-vivid-warning-default);
+    --warning-foreground: var(--color-theme-vivid-warning-foreground);
 
-    --danger: var(--color-theme-ember-danger-default);
-    --danger-foreground: var(--color-theme-ember-danger-foreground);
+    --danger: var(--color-theme-vivid-danger-default);
+    --danger-foreground: var(--color-theme-vivid-danger-foreground);
 
-    --focus: var(--color-theme-ember-focus);
-    --border: var(--color-theme-ember-border);
-    --separator: var(--color-theme-ember-separator);
+    --focus: var(--color-theme-vivid-focus);
+    --border: var(--color-theme-vivid-border);
+    --separator: var(--color-theme-vivid-separator);
 
-    --field-background: var(--color-theme-ember-field-background);
-    --field-foreground: var(--color-theme-ember-field-foreground);
-    --field-placeholder: var(--color-theme-ember-field-placeholder);
+    --field-background: var(--color-theme-vivid-field-background);
+    --field-foreground: var(--color-theme-vivid-field-foreground);
+    --field-placeholder: var(--color-theme-vivid-field-placeholder);
 
     --disabled-opacity: var(--layout-disabled-opacity);
   }

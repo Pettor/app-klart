@@ -19,7 +19,7 @@ const preview: Preview = {
         dark: "dark",
         midnight: "dark midnight",
         graphite: "dark graphite",
-        ember: "dark ember",
+        vivid: "dark vivid",
       },
       defaultTheme: "light",
     }),
