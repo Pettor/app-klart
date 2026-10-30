@@ -1,0 +1,163 @@
+{
+  "color": {
+    "theme": {
+      "paper": {
+        "background": {
+          "$type": "color",
+          "$value": "#f6f3ec",
+          "$description": "Background color for paper theme"
+        },
+        "foreground": {
+          "$type": "color",
+          "$value": "#23211c",
+          "$description": "Foreground color for paper theme"
+        },
+        "surface": {
+          "DEFAULT": {
+            "$type": "color",
+            "$value": "#fffdf8",
+            "$description": "Surface background for paper theme"
+          },
+          "foreground": {
+            "$type": "color",
+            "$value": "#23211c",
+            "$description": "Surface foreground for paper theme"
+          }
+        },
+        "surface-secondary": {
+          "DEFAULT": {
+            "$type": "color",
+            "$value": "#f0ebe1",
+            "$description": "Secondary surface background for paper theme"
+          },
+          "foreground": {
+            "$type": "color",
+            "$value": "#23211c",
+            "$description": "Secondary surface foreground for paper theme"
+          }
+        },
+        "surface-tertiary": {
+          "DEFAULT": {
+            "$type": "color",
+            "$value": "#e7e0d3",
+            "$description": "Tertiary surface background for paper theme"
+          },
+          "foreground": {
+            "$type": "color",
+            "$value": "#23211c",
+            "$description": "Tertiary surface foreground for paper theme"
+          }
+        },
+        "overlay": {
+          "DEFAULT": {
+            "$type": "color",
+            "$value": "#fffdf8",
+            "$description": "Overlay background for paper theme"
+          },
+          "foreground": {
+            "$type": "color",
+            "$value": "#23211c",
+            "$description": "Overlay foreground for paper theme"
+          }
+        },
+        "muted": {
+          "$type": "color",
+          "$value": "#7a7366",
+          "$description": "Muted text color for paper theme"
+        },
+        "default": {
+          "DEFAULT": {
+            "$type": "color",
+            "$value": "#ece6da",
+            "$description": "Default color for paper theme"
+          },
+          "foreground": {
+            "$type": "color",
+            "$value": "#23211c",
+            "$description": "Default foreground color for paper theme"
+          }
+        },
+        "accent": {
+          "DEFAULT": {
+            "$type": "color",
+            "$value": "#c2562c",
+            "$description": "Accent color for paper theme"
+          },
+          "foreground": {
+            "$type": "color",
+            "$value": "#ffffff",
+            "$description": "Accent foreground color for paper theme"
+          }
+        },
+        "success": {
+          "DEFAULT": {
+            "$type": "color",
+            "$value": "#3f7d4e",
+            "$description": "Success color for paper theme"
+          },
+          "foreground": {
+            "$type": "color",
+            "$value": "#ffffff",
+            "$description": "Success foreground color for paper theme"
+          }
+        },
+        "warning": {
+          "DEFAULT": {
+            "$type": "color",
+            "$value": "#b7791f",
+            "$description": "Warning color for paper theme"
+          },
+          "foreground": {
+            "$type": "color",
+            "$value": "#ffffff",
+            "$description": "Warning foreground color for paper theme"
+          }
+        },
+        "danger": {
+          "DEFAULT": {
+            "$type": "color",
+            "$value": "#b83a3a",
+            "$description": "Danger color for paper theme"
+          },
+          "foreground": {
+            "$type": "color",
+            "$value": "#ffffff",
+            "$description": "Danger foreground color for paper theme"
+          }
+        },
+        "focus": {
+          "$type": "color",
+          "$value": "#c2562c",
+          "$description": "Focus ring color for paper theme"
+        },
+        "border": {
+          "$type": "color",
+          "$value": "#e2dbcd",
+          "$description": "Border color for paper theme"
+        },
+        "separator": {
+          "$type": "color",
+          "$value": "#ebe5d9",
+          "$description": "Separator color for paper theme"
+        },
+        "field": {
+          "background": {
+            "$type": "color",
+            "$value": "#fffdf8",
+            "$description": "Form field background for paper theme"
+          },
+          "foreground": {
+            "$type": "color",
+            "$value": "#23211c",
+            "$description": "Form field foreground for paper theme"
+          },
+          "placeholder": {
+            "$type": "color",
+            "$value": "#a39b8c",
+            "$description": "Form field placeholder for paper theme"
+          }
+        }
+      }
+    }
+  }
+}
