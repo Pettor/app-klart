@@ -57,3 +57,34 @@ export const SelectMidnight: Story = {
     await expect(args.onSelect).toHaveBeenCalledWith("midnight");
   },
 };
+
+export const Paper: Story = {
+  args: { ...defaultArgs, mode: "paper" },
+};
+
+export const Bloom: Story = {
+  args: { ...defaultArgs, mode: "bloom" },
+};
+
+export const Graphite: Story = {
+  args: { ...defaultArgs, mode: "graphite" },
+};
+
+export const Ember: Story = {
+  args: { ...defaultArgs, mode: "ember" },
+};
+
+export const SelectNewThemes: Story = {
+  args: { ...defaultArgs, mode: "light", onSelect: fn() },
+  play: async ({ args, canvas, userEvent }) => {
+    for (const [name, mode] of [
+      ["Paper", "paper"],
+      ["Bloom", "bloom"],
+      ["Graphite", "graphite"],
+      ["Ember", "ember"],
+    ] as const) {
+      await userEvent.click(canvas.getByRole("radio", { name }));
+      await expect(args.onSelect).toHaveBeenCalledWith(mode);
+    }
+  },
+};

@@ -22,8 +22,8 @@
 /* Fonts */
 /* `midnight:` styles apply under the Midnight theme, which also has `.dark`. */
 @custom-variant midnight (&:is(.midnight *));
-/* `hero:` styles apply under the Dark theme, styled after HeroUI. Midnight also has `.dark` but not these. */
-@custom-variant hero (&:is(.dark:not(.midnight) *));
+/* `hero:` styles apply under the Dark theme, styled after HeroUI. Midnight, Graphite and Ember have `.dark` too. */
+@custom-variant hero (&:is(.dark:not(.midnight, .graphite, .ember) *));
 /* `compact:` styles apply with Settings › Appearance › Density set to Compact. */
 @custom-variant compact (&:where([data-density="compact"] *));
 
@@ -228,6 +228,277 @@
   box-shadow:
     var(--slab-check-inset),
     0 0 16px -2px var(--ctx);
+}
+
+/*
+ * Paper, a warm light theme: off-white paper, ink text, earthy context colors and flat cards with a hairline edge.
+ * `<html>` has both `.light` and `.paper`.
+ */
+.paper .ctx-all,
+.paper.ctx-all {
+  --ctx: #6f685c;
+  --ctx-backdrop: #f3efe7;
+}
+.paper .ctx-blue,
+.paper.ctx-blue {
+  --ctx: #2f5f9e;
+  --ctx-backdrop: #ecf0f3;
+}
+.paper .ctx-orange,
+.paper.ctx-orange {
+  --ctx: #b5551d;
+  --ctx-backdrop: #f7ece1;
+}
+.paper .ctx-green,
+.paper.ctx-green {
+  --ctx: #3d7a4a;
+  --ctx-backdrop: #ecf1e6;
+}
+.paper .ctx-teal,
+.paper.ctx-teal {
+  --ctx: #26746f;
+  --ctx-backdrop: #e8f0ec;
+}
+.paper .ctx-violet,
+.paper.ctx-violet {
+  --ctx: #6a4c9c;
+  --ctx-backdrop: #efebf0;
+}
+.paper .ctx-pink,
+.paper.ctx-pink {
+  --ctx: #a8396a;
+  --ctx-backdrop: #f6e9ea;
+}
+.paper .ctx-red,
+.paper.ctx-red {
+  --ctx: #b23a32;
+  --ctx-backdrop: #f7e8e2;
+}
+.paper {
+  --tag: #2f5f9e;
+  --due-today: #c2562c;
+  --star: #c98a12;
+  --slab: #fffdf8;
+  --slab-hover: #ffffff;
+  --slab-done: rgb(255 253 248 / 0.5);
+  --slab-done-shadow: inset 0 0 0 1px #ebe5d9;
+  --slab-radius: 8px;
+  --slab-press-y: 0px;
+  --slab-shadow: inset 0 0 0 1px #e2dbcd;
+  --slab-shadow-hover: inset 0 0 0 1px #d3cab8, 0 6px 16px -10px rgb(60 45 20 / 0.25);
+  --slab-shadow-press: inset 0 0 0 1px #d3cab8;
+  --slab-check-inset: none;
+}
+
+/*
+ * Bloom, the colorful light theme: saturated context colors on bright pastel backdrops, a pink-to-orange title and
+ * round white cards whose edge and shadow take the context's color. `<html>` has both `.light` and `.bloom`.
+ */
+.bloom .ctx-all,
+.bloom.ctx-all {
+  --ctx: #7c3aed;
+  --ctx-backdrop: #f3ecff;
+}
+.bloom .ctx-blue,
+.bloom.ctx-blue {
+  --ctx: #2563eb;
+  --ctx-backdrop: #dfeaff;
+}
+.bloom .ctx-orange,
+.bloom.ctx-orange {
+  --ctx: #ea580c;
+  --ctx-backdrop: #ffead6;
+}
+.bloom .ctx-green,
+.bloom.ctx-green {
+  --ctx: #16a34a;
+  --ctx-backdrop: #dcf8e5;
+}
+.bloom .ctx-teal,
+.bloom.ctx-teal {
+  --ctx: #0d9488;
+  --ctx-backdrop: #d5f7f2;
+}
+.bloom .ctx-violet,
+.bloom.ctx-violet {
+  --ctx: #8b5cf6;
+  --ctx-backdrop: #ece3ff;
+}
+.bloom .ctx-pink,
+.bloom.ctx-pink {
+  --ctx: #ec4899;
+  --ctx-backdrop: #ffe1f0;
+}
+.bloom .ctx-red,
+.bloom.ctx-red {
+  --ctx: #ef4444;
+  --ctx-backdrop: #ffe2e2;
+}
+.bloom {
+  --tag: #7c3aed;
+  --due-today: #db2777;
+  --star: #f59e0b;
+  --slab: #ffffff;
+  --slab-hover: #ffffff;
+  --slab-done: rgb(255 255 255 / 0.6);
+  --slab-radius: 18px;
+  --slab-check-inset: none;
+
+  .hero-glow {
+    background-image:
+      radial-gradient(ellipse 55% 40% at 10% -10%, rgb(236 72 153 / 0.16), transparent),
+      radial-gradient(ellipse 55% 40% at 90% -10%, rgb(139 92 246 / 0.16), transparent);
+  }
+  .hero-title {
+    background: linear-gradient(90deg, #db2777, #f97316);
+    background-clip: text;
+    color: transparent;
+  }
+  /* Set on the card itself, so `--ctx` resolves to the card's context rather than the page's. */
+  .slab {
+    --slab-shadow:
+      0 3px 0 color-mix(in srgb, var(--ctx) 40%, white),
+      0 10px 24px -12px color-mix(in srgb, var(--ctx) 50%, transparent);
+    --slab-shadow-hover:
+      0 5px 0 color-mix(in srgb, var(--ctx) 40%, white),
+      0 18px 32px -14px color-mix(in srgb, var(--ctx) 60%, transparent);
+    --slab-shadow-press:
+      0 1px 0 color-mix(in srgb, var(--ctx) 40%, white), 0 4px 10px -6px color-mix(in srgb, var(--ctx) 50%, transparent);
+  }
+}
+
+/*
+ * Graphite, a flat monochrome dark theme: soft grays, desaturated context colors, square-ish cards with a hairline
+ * edge and no shadow. `<html>` has both `.dark` and `.graphite`.
+ */
+.graphite .ctx-all,
+.graphite.ctx-all {
+  --ctx: #a0a2a7;
+  --ctx-backdrop: #1c1d1f;
+}
+.graphite .ctx-blue,
+.graphite.ctx-blue {
+  --ctx: #8fb0d9;
+  --ctx-backdrop: #1d2024;
+}
+.graphite .ctx-orange,
+.graphite.ctx-orange {
+  --ctx: #d9a679;
+  --ctx-backdrop: #221f1c;
+}
+.graphite .ctx-green,
+.graphite.ctx-green {
+  --ctx: #8fc4a0;
+  --ctx-backdrop: #1d211f;
+}
+.graphite .ctx-teal,
+.graphite.ctx-teal {
+  --ctx: #85c2bd;
+  --ctx-backdrop: #1c2122;
+}
+.graphite .ctx-violet,
+.graphite.ctx-violet {
+  --ctx: #b3a3d9;
+  --ctx-backdrop: #201f24;
+}
+.graphite .ctx-pink,
+.graphite.ctx-pink {
+  --ctx: #d79bbb;
+  --ctx-backdrop: #231e21;
+}
+.graphite .ctx-red,
+.graphite.ctx-red {
+  --ctx: #e09090;
+  --ctx-backdrop: #231e1e;
+}
+.graphite {
+  --tag: #b9bbc0;
+  --due-today: #e6e6e6;
+  --star: #d9c27a;
+  --slab: #242527;
+  --slab-hover: #2a2b2e;
+  --slab-done: rgb(36 37 39 / 0.5);
+  --slab-done-shadow: none;
+  --slab-radius: 6px;
+  --slab-press-y: 0px;
+  --slab-shadow: inset 0 0 0 1px #303135;
+  --slab-shadow-hover: inset 0 0 0 1px #3d3e43;
+  --slab-shadow-press: inset 0 0 0 1px #3d3e43;
+  --slab-check-inset: none;
+
+  .slab-check-ring,
+  .slab-check-done {
+    border-radius: 5px;
+  }
+}
+
+/*
+ * Ember, a warm dark theme: espresso browns, an amber accent, a sunrise glow over the top of My Day and Settings,
+ * and soft raised cards. `<html>` has both `.dark` and `.ember`.
+ */
+.ember .ctx-all,
+.ember.ctx-all {
+  --ctx: #c9b5a3;
+  --ctx-backdrop: #17120f;
+}
+.ember .ctx-blue,
+.ember.ctx-blue {
+  --ctx: #7fa8ff;
+  --ctx-backdrop: #15151c;
+}
+.ember .ctx-orange,
+.ember.ctx-orange {
+  --ctx: #ff8a3d;
+  --ctx-backdrop: #22150c;
+}
+.ember .ctx-green,
+.ember.ctx-green {
+  --ctx: #9bd46b;
+  --ctx-backdrop: #171a0f;
+}
+.ember .ctx-teal,
+.ember.ctx-teal {
+  --ctx: #5ed0b8;
+  --ctx-backdrop: #111a17;
+}
+.ember .ctx-violet,
+.ember.ctx-violet {
+  --ctx: #c09bff;
+  --ctx-backdrop: #1b1420;
+}
+.ember .ctx-pink,
+.ember.ctx-pink {
+  --ctx: #ff86b8;
+  --ctx-backdrop: #221218;
+}
+.ember .ctx-red,
+.ember.ctx-red {
+  --ctx: #ff6b5e;
+  --ctx-backdrop: #231210;
+}
+.ember {
+  --tag: #ffb380;
+  --due-today: #ffb380;
+  --star: #ffc14d;
+  --slab: #2a201b;
+  --slab-hover: #30251f;
+  --slab-done: rgb(20 15 12 / 0.55);
+  --slab-done-shadow: none;
+  --slab-radius: 16px;
+  --slab-press-y: 2px;
+  --slab-check-inset: inset 0 1px 2px rgb(0 0 0 / 0.5);
+  --slab-shadow:
+    inset 0 1px 0 rgb(255 220 190 / 0.06), 0 3px 0 #0f0b09, 0 4px 6px rgb(0 0 0 / 0.25),
+    0 14px 24px -10px rgb(0 0 0 / 0.55);
+  --slab-shadow-hover:
+    inset 0 1px 0 rgb(255 220 190 / 0.08), 0 5px 0 #0f0b09, 0 8px 12px rgb(0 0 0 / 0.3),
+    0 24px 36px -14px rgb(0 0 0 / 0.65);
+  --slab-shadow-press:
+    inset 0 1px 0 rgb(255 220 190 / 0.05), 0 1px 0 #0f0b09, 0 2px 3px rgb(0 0 0 / 0.3), 0 6px 10px -6px rgb(0 0 0 / 0.5);
+
+  .hero-glow {
+    background-image: radial-gradient(ellipse 80% 45% at 50% -12%, rgb(255 138 61 / 0.14), rgb(23 18 15 / 0));
+  }
 }
 
 .slab {
@@ -591,11 +862,11 @@
 }
 
 /*
- * Dark (HeroUI). Midnight also has `.dark`, so everything here skips it.
+ * Dark (HeroUI). Midnight, Graphite and Ember also have `.dark`, so everything here skips them.
  * Rubik type, a violet glow over the top of My Day and Settings, a blue-to-coral gradient on page titles,
  * and rounded-square checkboxes that fill blue.
  */
-:root.dark:not(.midnight) {
+:root.dark:not(.midnight, .graphite, .ember) {
   --font-sans: "Rubik", system-ui, -apple-system, sans-serif;
   --typography-font-family-primary: var(--font-sans);
 

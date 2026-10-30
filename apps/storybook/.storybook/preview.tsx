@@ -14,8 +14,12 @@ const preview: Preview = {
     withThemeByClassName({
       themes: {
         light: "light",
+        paper: "light paper",
+        bloom: "light bloom",
         dark: "dark",
         midnight: "dark midnight",
+        graphite: "dark graphite",
+        ember: "dark ember",
       },
       defaultTheme: "light",
     }),

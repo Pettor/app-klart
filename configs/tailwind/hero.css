@@ -145,6 +145,190 @@
     --disabled-opacity: var(--layout-disabled-opacity);
   }
 
+  /* Paper: warm off-white with ink text and a terracotta accent. Applied together with `.light`. */
+  .paper,
+  [data-theme="paper"] {
+    --background: var(--color-theme-paper-background);
+    --foreground: var(--color-theme-paper-foreground);
+
+    --surface: var(--color-theme-paper-surface-default);
+    --surface-foreground: var(--color-theme-paper-surface-foreground);
+
+    --surface-secondary: var(--color-theme-paper-surface-secondary-default);
+    --surface-secondary-foreground: var(--color-theme-paper-surface-secondary-foreground);
+
+    --surface-tertiary: var(--color-theme-paper-surface-tertiary-default);
+    --surface-tertiary-foreground: var(--color-theme-paper-surface-tertiary-foreground);
+
+    --overlay: var(--color-theme-paper-overlay-default);
+    --overlay-foreground: var(--color-theme-paper-overlay-foreground);
+
+    --muted: var(--color-theme-paper-muted);
+
+    --default: var(--color-theme-paper-default-default);
+    --default-foreground: var(--color-theme-paper-default-foreground);
+
+    --accent: var(--color-theme-paper-accent-default);
+    --accent-foreground: var(--color-theme-paper-accent-foreground);
+
+    --success: var(--color-theme-paper-success-default);
+    --success-foreground: var(--color-theme-paper-success-foreground);
+
+    --warning: var(--color-theme-paper-warning-default);
+    --warning-foreground: var(--color-theme-paper-warning-foreground);
+
+    --danger: var(--color-theme-paper-danger-default);
+    --danger-foreground: var(--color-theme-paper-danger-foreground);
+
+    --focus: var(--color-theme-paper-focus);
+    --border: var(--color-theme-paper-border);
+    --separator: var(--color-theme-paper-separator);
+
+    --field-background: var(--color-theme-paper-field-background);
+    --field-foreground: var(--color-theme-paper-field-foreground);
+    --field-placeholder: var(--color-theme-paper-field-placeholder);
+
+    --disabled-opacity: var(--layout-disabled-opacity);
+  }
+
+  /* Bloom: bright and colorful, with a magenta accent. Applied together with `.light`. */
+  .bloom,
+  [data-theme="bloom"] {
+    --background: var(--color-theme-bloom-background);
+    --foreground: var(--color-theme-bloom-foreground);
+
+    --surface: var(--color-theme-bloom-surface-default);
+    --surface-foreground: var(--color-theme-bloom-surface-foreground);
+
+    --surface-secondary: var(--color-theme-bloom-surface-secondary-default);
+    --surface-secondary-foreground: var(--color-theme-bloom-surface-secondary-foreground);
+
+    --surface-tertiary: var(--color-theme-bloom-surface-tertiary-default);
+    --surface-tertiary-foreground: var(--color-theme-bloom-surface-tertiary-foreground);
+
+    --overlay: var(--color-theme-bloom-overlay-default);
+    --overlay-foreground: var(--color-theme-bloom-overlay-foreground);
+
+    --muted: var(--color-theme-bloom-muted);
+
+    --default: var(--color-theme-bloom-default-default);
+    --default-foreground: var(--color-theme-bloom-default-foreground);
+
+    --accent: var(--color-theme-bloom-accent-default);
+    --accent-foreground: var(--color-theme-bloom-accent-foreground);
+
+    --success: var(--color-theme-bloom-success-default);
+    --success-foreground: var(--color-theme-bloom-success-foreground);
+
+    --warning: var(--color-theme-bloom-warning-default);
+    --warning-foreground: var(--color-theme-bloom-warning-foreground);
+
+    --danger: var(--color-theme-bloom-danger-default);
+    --danger-foreground: var(--color-theme-bloom-danger-foreground);
+
+    --focus: var(--color-theme-bloom-focus);
+    --border: var(--color-theme-bloom-border);
+    --separator: var(--color-theme-bloom-separator);
+
+    --field-background: var(--color-theme-bloom-field-background);
+    --field-foreground: var(--color-theme-bloom-field-foreground);
+    --field-placeholder: var(--color-theme-bloom-field-placeholder);
+
+    --disabled-opacity: var(--layout-disabled-opacity);
+  }
+
+  /* Graphite: a flat, monochrome gray dark theme. Applied together with `.dark`. */
+  .graphite,
+  [data-theme="graphite"] {
+    --background: var(--color-theme-graphite-background);
+    --foreground: var(--color-theme-graphite-foreground);
+
+    --surface: var(--color-theme-graphite-surface-default);
+    --surface-foreground: var(--color-theme-graphite-surface-foreground);
+
+    --surface-secondary: var(--color-theme-graphite-surface-secondary-default);
+    --surface-secondary-foreground: var(--color-theme-graphite-surface-secondary-foreground);
+
+    --surface-tertiary: var(--color-theme-graphite-surface-tertiary-default);
+    --surface-tertiary-foreground: var(--color-theme-graphite-surface-tertiary-foreground);
+
+    --overlay: var(--color-theme-graphite-overlay-default);
+    --overlay-foreground: var(--color-theme-graphite-overlay-foreground);
+
+    --muted: var(--color-theme-graphite-muted);
+
+    --default: var(--color-theme-graphite-default-default);
+    --default-foreground: var(--color-theme-graphite-default-foreground);
+
+    --accent: var(--color-theme-graphite-accent-default);
+    --accent-foreground: var(--color-theme-graphite-accent-foreground);
+
+    --success: var(--color-theme-graphite-success-default);
+    --success-foreground: var(--color-theme-graphite-success-foreground);
+
+    --warning: var(--color-theme-graphite-warning-default);
+    --warning-foreground: var(--color-theme-graphite-warning-foreground);
+
+    --danger: var(--color-theme-graphite-danger-default);
+    --danger-foreground: var(--color-theme-graphite-danger-foreground);
+
+    --focus: var(--color-theme-graphite-focus);
+    --border: var(--color-theme-graphite-border);
+    --separator: var(--color-theme-graphite-separator);
+
+    --field-background: var(--color-theme-graphite-field-background);
+    --field-foreground: var(--color-theme-graphite-field-foreground);
+    --field-placeholder: var(--color-theme-graphite-field-placeholder);
+
+    --disabled-opacity: var(--layout-disabled-opacity);
+  }
+
+  /* Ember: a warm espresso dark theme with an amber accent. Applied together with `.dark`. */
+  .ember,
+  [data-theme="ember"] {
+    --background: var(--color-theme-ember-background);
+    --foreground: var(--color-theme-ember-foreground);
+
+    --surface: var(--color-theme-ember-surface-default);
+    --surface-foreground: var(--color-theme-ember-surface-foreground);
+
+    --surface-secondary: var(--color-theme-ember-surface-secondary-default);
+    --surface-secondary-foreground: var(--color-theme-ember-surface-secondary-foreground);
+
+    --surface-tertiary: var(--color-theme-ember-surface-tertiary-default);
+    --surface-tertiary-foreground: var(--color-theme-ember-surface-tertiary-foreground);
+
+    --overlay: var(--color-theme-ember-overlay-default);
+    --overlay-foreground: var(--color-theme-ember-overlay-foreground);
+
+    --muted: var(--color-theme-ember-muted);
+
+    --default: var(--color-theme-ember-default-default);
+    --default-foreground: var(--color-theme-ember-default-foreground);
+
+    --accent: var(--color-theme-ember-accent-default);
+    --accent-foreground: var(--color-theme-ember-accent-foreground);
+
+    --success: var(--color-theme-ember-success-default);
+    --success-foreground: var(--color-theme-ember-success-foreground);
+
+    --warning: var(--color-theme-ember-warning-default);
+    --warning-foreground: var(--color-theme-ember-warning-foreground);
+
+    --danger: var(--color-theme-ember-danger-default);
+    --danger-foreground: var(--color-theme-ember-danger-foreground);
+
+    --focus: var(--color-theme-ember-focus);
+    --border: var(--color-theme-ember-border);
+    --separator: var(--color-theme-ember-separator);
+
+    --field-background: var(--color-theme-ember-field-background);
+    --field-foreground: var(--color-theme-ember-field-foreground);
+    --field-placeholder: var(--color-theme-ember-field-placeholder);
+
+    --disabled-opacity: var(--layout-disabled-opacity);
+  }
+
   html {
     background-color: var(--background);
   }

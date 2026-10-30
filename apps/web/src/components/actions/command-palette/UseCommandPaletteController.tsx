@@ -2,12 +2,16 @@ import { useMemo } from "react";
 import {
   Cog6ToothIcon,
   ComputerDesktopIcon,
+  DocumentTextIcon,
+  FireIcon,
   LightBulbIcon,
   MagnifyingGlassIcon,
   MoonIcon,
   RectangleStackIcon,
   SparklesIcon,
+  Square2StackIcon,
   SunIcon,
+  SwatchIcon,
   ViewColumnsIcon,
 } from "@heroicons/react/20/solid";
 import { useRouter } from "@tanstack/react-router";
@@ -248,6 +252,54 @@ export function useCommandPaletteController(): CommandPaletteProps {
         keywords: ["midnight", "navy", "blue", "dark", "theme"],
         icon: <SparklesIcon className="h-4 w-4" />,
         perform: () => setTheme("midnight"),
+      },
+      {
+        id: "theme-paper",
+        label: intl.formatMessage({
+          description: "CommandPaletteController: label - theme paper command, a warm off-white light theme",
+          defaultMessage: "Theme: Paper",
+          id: "fc25JB",
+        }),
+        group: appearanceGroup,
+        keywords: ["paper", "warm", "cream", "light", "theme"],
+        icon: <DocumentTextIcon className="h-4 w-4" />,
+        perform: () => setTheme("paper"),
+      },
+      {
+        id: "theme-bloom",
+        label: intl.formatMessage({
+          description: "CommandPaletteController: label - theme bloom command, a colorful light theme",
+          defaultMessage: "Theme: Bloom",
+          id: "103Mal",
+        }),
+        group: appearanceGroup,
+        keywords: ["bloom", "colorful", "vibrant", "pink", "light", "theme"],
+        icon: <SwatchIcon className="h-4 w-4" />,
+        perform: () => setTheme("bloom"),
+      },
+      {
+        id: "theme-graphite",
+        label: intl.formatMessage({
+          description: "CommandPaletteController: label - theme graphite command, a gray monochrome dark theme",
+          defaultMessage: "Theme: Graphite",
+          id: "nPnboW",
+        }),
+        group: appearanceGroup,
+        keywords: ["graphite", "gray", "grey", "mono", "dark", "theme"],
+        icon: <Square2StackIcon className="h-4 w-4" />,
+        perform: () => setTheme("graphite"),
+      },
+      {
+        id: "theme-ember",
+        label: intl.formatMessage({
+          description: "CommandPaletteController: label - theme ember command, a warm brown and amber dark theme",
+          defaultMessage: "Theme: Ember",
+          id: "P4xkTt",
+        }),
+        group: appearanceGroup,
+        keywords: ["ember", "warm", "amber", "brown", "dark", "theme"],
+        icon: <FireIcon className="h-4 w-4" />,
+        perform: () => setTheme("ember"),
       },
     ];
   }, [

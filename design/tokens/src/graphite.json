@@ -1,0 +1,163 @@
+{
+  "color": {
+    "theme": {
+      "graphite": {
+        "background": {
+          "$type": "color",
+          "$value": "#1c1d1f",
+          "$description": "Background color for graphite theme"
+        },
+        "foreground": {
+          "$type": "color",
+          "$value": "#e6e6e6",
+          "$description": "Foreground color for graphite theme"
+        },
+        "surface": {
+          "DEFAULT": {
+            "$type": "color",
+            "$value": "#242527",
+            "$description": "Surface background for graphite theme"
+          },
+          "foreground": {
+            "$type": "color",
+            "$value": "#e6e6e6",
+            "$description": "Surface foreground for graphite theme"
+          }
+        },
+        "surface-secondary": {
+          "DEFAULT": {
+            "$type": "color",
+            "$value": "#2a2b2e",
+            "$description": "Secondary surface background for graphite theme"
+          },
+          "foreground": {
+            "$type": "color",
+            "$value": "#e6e6e6",
+            "$description": "Secondary surface foreground for graphite theme"
+          }
+        },
+        "surface-tertiary": {
+          "DEFAULT": {
+            "$type": "color",
+            "$value": "#323336",
+            "$description": "Tertiary surface background for graphite theme"
+          },
+          "foreground": {
+            "$type": "color",
+            "$value": "#e6e6e6",
+            "$description": "Tertiary surface foreground for graphite theme"
+          }
+        },
+        "overlay": {
+          "DEFAULT": {
+            "$type": "color",
+            "$value": "#26272a",
+            "$description": "Overlay background for graphite theme"
+          },
+          "foreground": {
+            "$type": "color",
+            "$value": "#e6e6e6",
+            "$description": "Overlay foreground for graphite theme"
+          }
+        },
+        "muted": {
+          "$type": "color",
+          "$value": "#8d8f94",
+          "$description": "Muted text color for graphite theme"
+        },
+        "default": {
+          "DEFAULT": {
+            "$type": "color",
+            "$value": "#2a2b2e",
+            "$description": "Default color for graphite theme"
+          },
+          "foreground": {
+            "$type": "color",
+            "$value": "#e6e6e6",
+            "$description": "Default foreground color for graphite theme"
+          }
+        },
+        "accent": {
+          "DEFAULT": {
+            "$type": "color",
+            "$value": "#e6e6e6",
+            "$description": "Accent color for graphite theme"
+          },
+          "foreground": {
+            "$type": "color",
+            "$value": "#1c1d1f",
+            "$description": "Accent foreground color for graphite theme"
+          }
+        },
+        "success": {
+          "DEFAULT": {
+            "$type": "color",
+            "$value": "#7bc59a",
+            "$description": "Success color for graphite theme"
+          },
+          "foreground": {
+            "$type": "color",
+            "$value": "#1c1d1f",
+            "$description": "Success foreground color for graphite theme"
+          }
+        },
+        "warning": {
+          "DEFAULT": {
+            "$type": "color",
+            "$value": "#e0b468",
+            "$description": "Warning color for graphite theme"
+          },
+          "foreground": {
+            "$type": "color",
+            "$value": "#1c1d1f",
+            "$description": "Warning foreground color for graphite theme"
+          }
+        },
+        "danger": {
+          "DEFAULT": {
+            "$type": "color",
+            "$value": "#ef8a8a",
+            "$description": "Danger color for graphite theme"
+          },
+          "foreground": {
+            "$type": "color",
+            "$value": "#1c1d1f",
+            "$description": "Danger foreground color for graphite theme"
+          }
+        },
+        "focus": {
+          "$type": "color",
+          "$value": "#bdbdbd",
+          "$description": "Focus ring color for graphite theme"
+        },
+        "border": {
+          "$type": "color",
+          "$value": "#333438",
+          "$description": "Border color for graphite theme"
+        },
+        "separator": {
+          "$type": "color",
+          "$value": "#2a2b2e",
+          "$description": "Separator color for graphite theme"
+        },
+        "field": {
+          "background": {
+            "$type": "color",
+            "$value": "#232426",
+            "$description": "Form field background for graphite theme"
+          },
+          "foreground": {
+            "$type": "color",
+            "$value": "#e6e6e6",
+            "$description": "Form field foreground for graphite theme"
+          },
+          "placeholder": {
+            "$type": "color",
+            "$value": "#6f7176",
+            "$description": "Form field placeholder for graphite theme"
+          }
+        }
+      }
+    }
+  }
+}

@@ -8,7 +8,7 @@ import { THEME_CLASSES } from "./ThemeMode";
 const themeLocalStorageAtom = atomWithStorage<ThemeMode>("theme", "auto");
 const themeMediaQueryAtom = atom(() => window.matchMedia("(prefers-color-scheme: dark)"));
 
-// Stores the user's preference: "auto", "light", "dark" or "midnight"
+// Stores the user's preference: "auto" or one of the themes in `THEME_CLASSES`
 export const themeModeAtom = atom(
   (get) => get(themeLocalStorageAtom) || "auto",
   (_get, set, newTheme: ThemeMode) => {

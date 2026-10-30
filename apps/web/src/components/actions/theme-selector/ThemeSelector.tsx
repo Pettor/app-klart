@@ -21,8 +21,12 @@ interface ThemeSwatch {
 const SWATCHES: Record<ThemeMode, ThemeSwatch> = {
   auto: { side: "#eceef1", main: "#111114", card: "#18181c", edge: "#27272c", accent: "#2d7ff9" },
   light: { side: "#f5f6f8", main: "#e8f0fb", card: "#ffffff", edge: "#d3d8e1", accent: "#2f74d9" },
+  paper: { side: "#f6f3ec", main: "#ecf0f3", card: "#fffdf8", edge: "#e2dbcd", accent: "#c2562c" },
+  bloom: { side: "#fdf7ff", main: "#ffe1f0", card: "#ffffff", edge: "#f7a8cf", accent: "#db2777" },
   dark: { side: "#0c0c0f", main: "#111114", card: "#18181c", edge: "#27272c", accent: "#2d7ff9" },
   midnight: { side: "#0e1220", main: "#111d3b", card: "#1d2640", edge: "#0a0e19", accent: "#5b8cff" },
+  graphite: { side: "#1c1d1f", main: "#1d2024", card: "#242527", edge: "#303135", accent: "#e6e6e6" },
+  ember: { side: "#17120f", main: "#22150c", card: "#2a201b", edge: "#0f0b09", accent: "#ff8a3d" },
 };
 
 interface ThemeOptionProps {
@@ -114,6 +118,32 @@ export function ThemeSelector({ mode, onSelect }: ThemeSelectorProps): ReactElem
         })}
       />
       <ThemeOption
+        value="paper"
+        label={intl.formatMessage({
+          description: "ThemeSelector: label - paper option, a warm off-white light theme",
+          defaultMessage: "Paper",
+          id: "qQq8WT",
+        })}
+        hint={intl.formatMessage({
+          description: "ThemeSelector: hint - paper option",
+          defaultMessage: "Warm and flat, like ink on paper",
+          id: "T2RPVf",
+        })}
+      />
+      <ThemeOption
+        value="bloom"
+        label={intl.formatMessage({
+          description: "ThemeSelector: label - bloom option, a colorful light theme",
+          defaultMessage: "Bloom",
+          id: "c3oBGW",
+        })}
+        hint={intl.formatMessage({
+          description: "ThemeSelector: hint - bloom option",
+          defaultMessage: "Bright, playful colors",
+          id: "OxLySX",
+        })}
+      />
+      <ThemeOption
         value="dark"
         label={intl.formatMessage({
           description: "ThemeSelector: label - dark option",
@@ -137,6 +167,32 @@ export function ThemeSelector({ mode, onSelect }: ThemeSelectorProps): ReactElem
           description: "ThemeSelector: hint - midnight option",
           defaultMessage: "Navy, with glowing accents",
           id: "+oSpv2",
+        })}
+      />
+      <ThemeOption
+        value="graphite"
+        label={intl.formatMessage({
+          description: "ThemeSelector: label - graphite option, a gray monochrome dark theme",
+          defaultMessage: "Graphite",
+          id: "By3CZD",
+        })}
+        hint={intl.formatMessage({
+          description: "ThemeSelector: hint - graphite option",
+          defaultMessage: "Soft gray, flat and quiet",
+          id: "i9I/rq",
+        })}
+      />
+      <ThemeOption
+        value="ember"
+        label={intl.formatMessage({
+          description: "ThemeSelector: label - ember option, a warm brown and amber dark theme",
+          defaultMessage: "Ember",
+          id: "uVt6Ab",
+        })}
+        hint={intl.formatMessage({
+          description: "ThemeSelector: hint - ember option",
+          defaultMessage: "Warm browns, amber glow",
+          id: "Oyx5Vp",
         })}
       />
     </RadioGroup>

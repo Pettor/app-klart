@@ -1,0 +1,163 @@
+{
+  "color": {
+    "theme": {
+      "bloom": {
+        "background": {
+          "$type": "color",
+          "$value": "#fdf7ff",
+          "$description": "Background color for bloom theme"
+        },
+        "foreground": {
+          "$type": "color",
+          "$value": "#1e1433",
+          "$description": "Foreground color for bloom theme"
+        },
+        "surface": {
+          "DEFAULT": {
+            "$type": "color",
+            "$value": "#ffffff",
+            "$description": "Surface background for bloom theme"
+          },
+          "foreground": {
+            "$type": "color",
+            "$value": "#1e1433",
+            "$description": "Surface foreground for bloom theme"
+          }
+        },
+        "surface-secondary": {
+          "DEFAULT": {
+            "$type": "color",
+            "$value": "#f6efff",
+            "$description": "Secondary surface background for bloom theme"
+          },
+          "foreground": {
+            "$type": "color",
+            "$value": "#1e1433",
+            "$description": "Secondary surface foreground for bloom theme"
+          }
+        },
+        "surface-tertiary": {
+          "DEFAULT": {
+            "$type": "color",
+            "$value": "#ece2fd",
+            "$description": "Tertiary surface background for bloom theme"
+          },
+          "foreground": {
+            "$type": "color",
+            "$value": "#1e1433",
+            "$description": "Tertiary surface foreground for bloom theme"
+          }
+        },
+        "overlay": {
+          "DEFAULT": {
+            "$type": "color",
+            "$value": "#ffffff",
+            "$description": "Overlay background for bloom theme"
+          },
+          "foreground": {
+            "$type": "color",
+            "$value": "#1e1433",
+            "$description": "Overlay foreground for bloom theme"
+          }
+        },
+        "muted": {
+          "$type": "color",
+          "$value": "#6f6390",
+          "$description": "Muted text color for bloom theme"
+        },
+        "default": {
+          "DEFAULT": {
+            "$type": "color",
+            "$value": "#f1e9ff",
+            "$description": "Default color for bloom theme"
+          },
+          "foreground": {
+            "$type": "color",
+            "$value": "#1e1433",
+            "$description": "Default foreground color for bloom theme"
+          }
+        },
+        "accent": {
+          "DEFAULT": {
+            "$type": "color",
+            "$value": "#db2777",
+            "$description": "Accent color for bloom theme"
+          },
+          "foreground": {
+            "$type": "color",
+            "$value": "#ffffff",
+            "$description": "Accent foreground color for bloom theme"
+          }
+        },
+        "success": {
+          "DEFAULT": {
+            "$type": "color",
+            "$value": "#12a150",
+            "$description": "Success color for bloom theme"
+          },
+          "foreground": {
+            "$type": "color",
+            "$value": "#ffffff",
+            "$description": "Success foreground color for bloom theme"
+          }
+        },
+        "warning": {
+          "DEFAULT": {
+            "$type": "color",
+            "$value": "#f08c00",
+            "$description": "Warning color for bloom theme"
+          },
+          "foreground": {
+            "$type": "color",
+            "$value": "#1e1433",
+            "$description": "Warning foreground color for bloom theme"
+          }
+        },
+        "danger": {
+          "DEFAULT": {
+            "$type": "color",
+            "$value": "#e5243b",
+            "$description": "Danger color for bloom theme"
+          },
+          "foreground": {
+            "$type": "color",
+            "$value": "#ffffff",
+            "$description": "Danger foreground color for bloom theme"
+          }
+        },
+        "focus": {
+          "$type": "color",
+          "$value": "#8b5cf6",
+          "$description": "Focus ring color for bloom theme"
+        },
+        "border": {
+          "$type": "color",
+          "$value": "#eadffc",
+          "$description": "Border color for bloom theme"
+        },
+        "separator": {
+          "$type": "color",
+          "$value": "#f1e9fd",
+          "$description": "Separator color for bloom theme"
+        },
+        "field": {
+          "background": {
+            "$type": "color",
+            "$value": "#ffffff",
+            "$description": "Form field background for bloom theme"
+          },
+          "foreground": {
+            "$type": "color",
+            "$value": "#1e1433",
+            "$description": "Form field foreground for bloom theme"
+          },
+          "placeholder": {
+            "$type": "color",
+            "$value": "#a497c4",
+            "$description": "Form field placeholder for bloom theme"
+          }
+        }
+      }
+    }
+  }
+}
