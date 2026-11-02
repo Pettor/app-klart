@@ -1,9 +1,10 @@
 //! Git sync for the data folder, using the `git` installed on the computer so
 //! the user's own SSH keys and credential helpers apply.
 //!
-//! One sync = commit local changes, fetch, merge (each task is its own file, so
-//! merges are usually clean; a conflicting file keeps the side with the newer
-//! `updatedAt` and stores the other in `.conflicts/`), then push.
+//! One sync = fetch, stop if a newer Klart wrote the remote's `klart.json`,
+//! commit local changes, merge (each task is its own file, so merges are usually
+//! clean; a conflicting file keeps the side with the newer `updatedAt` and stores
+//! the other in `.conflicts/`), then push.
 
 use serde::Serialize;
 use std::path::{Path, PathBuf};
@@ -24,7 +25,7 @@ pub struct GitInfo {
     branch: Option<String>,
 }
 
-#[derive(Serialize, Default)]
+#[derive(Serialize, Default, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct GitSyncResult {
     committed: bool,
@@ -122,6 +123,34 @@ impl Repo {
     }
 }
 
+/// Prefix of the error returned when the remote needs a newer Klart; the web app reads the version after it.
+const NEWER_DATA_VERSION: &str = "newer-data-version:";
+const CONFIG_FILE: &str = "klart.json";
+
+/// `major.minor` as numbers, so "0.10" sorts after "0.9".
+fn parse_data_version(version: &str) -> Option<(u32, u32)> {
+    let mut parts = version.split(['-', '+']).next()?.split('.');
+    let major = parts.next()?.parse().ok()?;
+    let minor = parts.next().unwrap_or("0").parse().ok()?;
+    Some((major, minor))
+}
+
+/// The `dataVersion` in a `klart.json`, if it has one.
+fn data_version(json: &str) -> Option<String> {
+    serde_json::from_str::<serde_json::Value>(json)
+        .ok()?
+        .get("dataVersion")?
+        .as_str()
+        .map(str::to_owned)
+}
+
+fn is_newer_data_version(a: &str, b: &str) -> bool {
+    match (parse_data_version(a), parse_data_version(b)) {
+        (Some(a), Some(b)) => a > b,
+        _ => false,
+    }
+}
+
 fn updated_at(json: &str) -> Option<String> {
     serde_json::from_str::<serde_json::Value>(json)
         .ok()?
@@ -136,7 +165,17 @@ fn resolve_conflict(repo: &Repo, path: &str) -> Result<(), String> {
     let theirs = repo.run(&["show", &format!(":3:{path}")]).ok();
     let (winner, loser) = match (ours, theirs) {
         (Some(ours), Some(theirs)) => {
-            if updated_at(&theirs) > updated_at(&ours) {
+            // klart.json has no updatedAt: keep the side a newer Klart wrote, so an older one can't lower its version.
+            let theirs_wins = if path == CONFIG_FILE {
+                match (data_version(&theirs), data_version(&ours)) {
+                    (Some(t), Some(o)) => is_newer_data_version(&t, &o),
+                    (Some(_), None) => true,
+                    _ => false,
+                }
+            } else {
+                updated_at(&theirs) > updated_at(&ours)
+            };
+            if theirs_wins {
                 (theirs, Some(ours))
             } else {
                 (ours, Some(theirs))
@@ -258,27 +297,34 @@ pub async fn git_clone(url: String, parent: String) -> Result<String, String> {
     Ok(target.to_string_lossy().into_owned())
 }
 
-/// Commits local changes, merges the remote and pushes.
+/// Commits local changes, merges the remote and pushes. With `data_version`
+/// (this app's), it first checks that no newer Klart wrote the remote, and
+/// fails with `newer-data-version:<version>` before committing anything if one did.
 #[tauri::command]
 pub async fn git_sync(
     root: String,
+    data_version: Option<String>,
     lock: tauri::State<'_, GitLock>,
 ) -> Result<GitSyncResult, String> {
     let _guard = lock.0.lock().map_err(|_| "Git sync is unavailable")?;
-    sync_repo(&root)
+    sync_repo(&root, data_version.as_deref())
 }
 
-fn sync_repo(root: &str) -> Result<GitSyncResult, String> {
-    let repo = Repo::open(root)?;
-    let mut result = GitSyncResult::default();
-
-    if let Some(message) = commit_message(&repo)? {
+fn commit_local_changes(repo: &Repo, result: &mut GitSyncResult) -> Result<(), String> {
+    if let Some(message) = commit_message(repo)? {
         repo.run(&["add", "-A"])?;
         repo.commit(&["-m", &message])?;
         result.committed = true;
     }
+    Ok(())
+}
+
+fn sync_repo(root: &str, app_data_version: Option<&str>) -> Result<GitSyncResult, String> {
+    let repo = Repo::open(root)?;
+    let mut result = GitSyncResult::default();
 
     if repo.try_run(&["remote", "get-url", "origin"]).is_none() {
+        commit_local_changes(&repo, &mut result)?;
         return Ok(result);
     }
     // symbolic-ref also works on a fresh clone of an empty repo, where HEAD has no commit yet.
@@ -288,6 +334,20 @@ fn sync_repo(root: &str) -> Result<GitSyncResult, String> {
     let has_upstream = repo
         .try_run(&["rev-parse", "--verify", "--quiet", &upstream])
         .is_some();
+
+    // Before anything is committed, merged or pushed: an older app must not write over a newer one's files.
+    if let (Some(app), true) = (app_data_version, has_upstream) {
+        if let Some(remote) = repo
+            .try_run(&["show", &format!("{upstream}:{CONFIG_FILE}")])
+            .and_then(|config| data_version(&config))
+        {
+            if is_newer_data_version(&remote, app) {
+                return Err(format!("{NEWER_DATA_VERSION}{remote}"));
+            }
+        }
+    }
+
+    commit_local_changes(&repo, &mut result)?;
 
     if has_upstream {
         let before = repo.head();
@@ -354,7 +414,80 @@ mod tests {
     }
 
     fn sync(dir: &Path) -> GitSyncResult {
-        sync_repo(dir.to_str().unwrap()).expect("sync")
+        sync_repo(dir.to_str().unwrap(), Some("0.12")).expect("sync")
+    }
+
+    fn config(version: &str) -> String {
+        format!("{{\n  \"schema\": \"klart.config/v1\",\n  \"dataVersion\": \"{version}\",\n  \"contexts\": []\n}}\n")
+    }
+
+    fn temp_base(name: &str) -> PathBuf {
+        let base = std::env::temp_dir().join(format!("klart-git-{name}-{}", std::process::id()));
+        let _ = fs::remove_dir_all(&base);
+        fs::create_dir_all(&base).unwrap();
+        git(
+            &base,
+            &["init", "--bare", "--initial-branch=main", "remote.git"],
+        );
+        base
+    }
+
+    #[test]
+    fn compares_data_versions_by_number() {
+        assert!(is_newer_data_version("0.10", "0.9"));
+        assert!(is_newer_data_version("1.0", "0.12"));
+        assert!(!is_newer_data_version("0.12", "0.12"));
+        assert!(!is_newer_data_version("0.11", "0.12"));
+        assert!(!is_newer_data_version("", "0.12"));
+    }
+
+    #[test]
+    fn an_older_app_neither_commits_nor_pushes_over_a_newer_one() {
+        if git_binary().is_none() {
+            return;
+        }
+        let base = temp_base("version");
+        let newer = clone(&base, "newer");
+        let older = clone(&base, "older");
+
+        fs::write(newer.join("klart.json"), config("0.13")).unwrap();
+        assert!(sync(&newer).pushed);
+
+        fs::write(older.join("klart.json"), config("0.12")).unwrap();
+        let error = sync_repo(older.to_str().unwrap(), Some("0.12")).unwrap_err();
+        assert_eq!(error, "newer-data-version:0.13");
+        // Nothing was committed: the local edit waits, uncommitted, for the update.
+        let status = Repo::open(older.to_str().unwrap())
+            .unwrap()
+            .run(&["status", "--porcelain"])
+            .unwrap();
+        assert!(status.contains("klart.json"));
+
+        let _ = fs::remove_dir_all(&base);
+    }
+
+    #[test]
+    fn a_klart_json_conflict_keeps_the_newer_data_version() {
+        if git_binary().is_none() {
+            return;
+        }
+        let base = temp_base("config-conflict");
+        let a = clone(&base, "a");
+        let b = clone(&base, "b");
+
+        fs::write(a.join("klart.json"), config("0.12")).unwrap();
+        sync(&a);
+        sync(&b);
+        fs::write(b.join("klart.json"), config("0.11").replace("[]", "[ ]")).unwrap();
+        // An app without the check (no version given) still can't lower the folder's version in a conflict.
+        fs::write(a.join("klart.json"), config("0.12").replace("[]", "[  ]")).unwrap();
+        sync(&a);
+        sync_repo(b.to_str().unwrap(), None).expect("sync");
+        assert!(fs::read_to_string(b.join("klart.json"))
+            .unwrap()
+            .contains("0.12"));
+
+        let _ = fs::remove_dir_all(&base);
     }
 
     #[test]

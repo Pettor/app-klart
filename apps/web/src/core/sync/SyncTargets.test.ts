@@ -37,35 +37,82 @@ describe("SyncTargets", () => {
     expect(getContextTargetId({ targets: [], contextTargets: {} }, "work")).toBeNull();
   });
 
-  it("scopes each sync to its contexts; only the primary holds shopping lists", () => {
-    const office = getSyncScope(SETUP, "office");
+  it("scopes each sync to the contexts its klart.json lists", () => {
+    const listings = { home: ["personal", "club"], office: ["work"] };
+    const office = getSyncScope(SETUP, "office", listings);
     expect(office.ownsContext("work")).toBe(true);
     expect(office.ownsContext("personal")).toBe(false);
     expect(office.isPrimary).toBe(false);
-    expect(getSyncScope(SETUP, "home").isPrimary).toBe(true);
+    expect(getSyncScope(SETUP, "home", listings).isPrimary).toBe(true);
   });
 
-  it("assigns contexts found in a sync to it, unless they already live in another sync", () => {
-    const next = assignFoundContexts(SETUP, "office", ["work", "club"]);
+  it("keeps a context in the folder that lists it, even when this device's setup says otherwise", () => {
+    // This device thinks "personal" lives in the office sync, but the home folder lists it.
+    const stale = { ...SETUP, contextTargets: { personal: "office", work: "office" } };
+    const listings = { home: ["personal"], office: ["work"] };
+    expect(getSyncScope(stale, "home", listings).ownsContext("personal")).toBe(true);
+    expect(getSyncScope(stale, "office", listings).ownsContext("personal")).toBe(false);
+  });
+
+  it("puts a context no folder lists in its assigned sync, once every sync has been read", () => {
+    const listings = { home: ["personal"], office: ["work"] };
+    expect(getSyncScope(SETUP, "home", listings).ownsContext("club")).toBe(true);
+    expect(getSyncScope(SETUP, "office", listings).ownsContext("club")).toBe(false);
+    // The office folder hasn't been read yet: it may hold "club", so nothing claims it.
+    expect(getSyncScope(SETUP, "home", { home: ["personal"] }).ownsContext("club")).toBe(false);
+    // Before the first read a folder holds nothing, so a push can't empty it.
+    expect(getSyncScope(SETUP, "home", {}).ownsContext("personal")).toBe(false);
+  });
+
+  it("assigns contexts found in a sync to it, unless the sync they live in lists them too", () => {
+    const listings = { home: ["personal"], office: ["work", "club"] };
+    const next = assignFoundContexts(SETUP, "office", ["work", "club"], listings);
     expect(next.contextTargets).toEqual({ work: "office", club: "office" });
-    expect(assignFoundContexts(SETUP, "home", ["club"])).toBe(SETUP);
+    expect(assignFoundContexts(SETUP, "home", ["personal"], listings)).toBe(SETUP);
+    const both = { home: ["club"], office: ["work", "club"] };
     expect(
-      assignFoundContexts({ ...SETUP, contextTargets: { work: "office", club: "home" } }, "office", ["club"])
+      assignFoundContexts({ ...SETUP, contextTargets: { work: "office", club: "home" } }, "office", ["club"], both)
     ).toEqual({ ...SETUP, contextTargets: { work: "office", club: "home" } });
+  });
+
+  it("doesn't move a context while the sync it lives in hasn't been read", () => {
+    expect(assignFoundContexts(SETUP, "office", ["personal"], { office: ["personal"] })).toBe(SETUP);
+  });
+
+  it("corrects an assignment its own folder doesn't back up", () => {
+    // Another device put "personal" in the office folder; it's back in the home folder only.
+    const stale = { ...SETUP, contextTargets: { personal: "office", work: "office" } };
+    const listings = { home: ["personal"], office: ["work"] };
+    expect(assignFoundContexts(stale, "home", ["personal"], listings).contextTargets).toEqual({
+      personal: "home",
+      work: "office",
+    });
+  });
+
+  it("doesn't let a sync take contexts from the primary that the primary lists", () => {
+    // The bug: "personal" only reached the primary by default, so any folder listing it claimed it.
+    const listings = { home: ["personal"], office: ["work", "personal"] };
+    expect(assignFoundContexts(SETUP, "office", ["work", "personal"], listings).contextTargets).toEqual({
+      work: "office",
+    });
   });
 
   it("picks up contexts kept on this device when a sync holds them", () => {
     const local = { ...SETUP, contextTargets: { work: DEVICE_ONLY, club: DEVICE_ONLY } };
-    expect(assignFoundContexts(local, "office", ["work"]).contextTargets).toEqual({
+    expect(assignFoundContexts(local, "office", ["work"], { office: ["work"] }).contextTargets).toEqual({
       work: "office",
       club: DEVICE_ONLY,
     });
-    expect(assignFoundContexts(local, "home", ["club"]).contextTargets).toEqual({ work: DEVICE_ONLY, club: "home" });
+    expect(assignFoundContexts(local, "home", ["club"], { home: ["club"] }).contextTargets).toEqual({
+      work: DEVICE_ONLY,
+      club: "home",
+    });
   });
 
   it("claims contexts assigned to a sync that was removed", () => {
     const stale = { ...SETUP, contextTargets: { club: "gone" } };
-    expect(assignFoundContexts(stale, "office", ["club"]).contextTargets).toEqual({ club: "office" });
+    const listings = { home: [], office: ["club"] };
+    expect(assignFoundContexts(stale, "office", ["club"], listings).contextTargets).toEqual({ club: "office" });
   });
 
   it("places a new context in the sync it was created in", () => {

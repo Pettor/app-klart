@@ -1,7 +1,7 @@
 import { useEffect, useEffectEvent, useMemo, useRef, useState } from "react";
 import { useAtomValue, useSetAtom, useStore } from "jotai";
 import { BrowserFolderBackend } from "./BrowserFolderBackend";
-import { NewerDataVersionError } from "./DataVersion";
+import { DATA_VERSION, NewerDataVersionError, readNewerDataVersionError } from "./DataVersion";
 import { DesktopFolderBackend } from "./DesktopFolderBackend";
 import { queryFolderPermission } from "./FileSystemAccess";
 import type { FolderBackend } from "./FolderBackend";
@@ -16,6 +16,7 @@ import {
   PLATFORM_DEVICE_NAMES,
   SYNC_SETUP_KEY,
   syncDevicesByTargetAtom,
+  syncListingsAtom,
   syncRequestAtom,
   syncSettingsAtom,
   syncSetupAtom,
@@ -163,6 +164,7 @@ export function useSyncTargetLifecycle(target: SyncTarget): void {
   const permissions = useAtomValue(folderPermissionsAtom);
   const setStatuses = useSetAtom(syncStatusesAtom);
   const setDevicesByTarget = useSetAtom(syncDevicesByTargetAtom);
+  const setListings = useSetAtom(syncListingsAtom);
   const syncRequest = useAtomValue(syncRequestAtom);
 
   const targetId = target.id;
@@ -242,8 +244,9 @@ export function useSyncTargetLifecycle(target: SyncTarget): void {
     () => () => {
       setStatuses((all) => withoutKey(all, targetId));
       setDevicesByTarget((all) => withoutKey(all, targetId));
+      setListings((all) => withoutKey(all, targetId));
     },
-    [targetId, setStatuses, setDevicesByTarget]
+    [targetId, setStatuses, setDevicesByTarget, setListings]
   );
 
   function enqueue(job: (engine: FolderSync) => Promise<void>): void {
@@ -264,10 +267,19 @@ export function useSyncTargetLifecycle(target: SyncTarget): void {
     });
   }
 
+  /** Shares what this sync's `klart.json` lists, which decides what every sync on this device holds. */
+  function shareListing(engine: FolderSync): void {
+    const listed = engine.listedContextIds;
+    const all = store.get(syncListingsAtom);
+    if (listed && listed.join() !== all[targetId]?.join()) {
+      store.set(syncListingsAtom, { ...all, [targetId]: listed });
+    }
+  }
+
   async function pullNow(engine: FolderSync): Promise<void> {
     // Read everything when the job runs, not when it was queued: another sync may have pulled in between.
     const base = store.get(klartDataAtom);
-    const scope = getSyncScope(store.get(syncSetupAtom), targetId);
+    const scope = getSyncScope(store.get(syncSetupAtom), targetId, store.get(syncListingsAtom));
     const result = await engine.pull(base, {
       today: store.get(todayAtom),
       acceptInbox: store.get(syncSettingsAtom).agentFiles.acceptInbox,
@@ -276,9 +288,12 @@ export function useSyncTargetLifecycle(target: SyncTarget): void {
     if (result.changed) {
       store.set(klartDataAtom, (latest) => rebase(base, result.data, latest));
     }
-    if (result.contextIds) {
+    shareListing(engine);
+    const listed = engine.listedContextIds;
+    if (listed) {
+      // On every pull, not only when klart.json changed: an assignment goes out of date when another sync is read.
       const current = store.get(syncSetupAtom);
-      const next = assignFoundContexts(current, targetId, result.contextIds);
+      const next = assignFoundContexts(current, targetId, listed, store.get(syncListingsAtom));
       if (next !== current) {
         store.set(syncSetupAtom, next);
       }
@@ -298,11 +313,16 @@ export function useSyncTargetLifecycle(target: SyncTarget): void {
   }
 
   async function pushNow(engine: FolderSync): Promise<number> {
+    // What the folder holds depends on its klart.json, so never write before reading it.
+    if (engine.listedContextIds === null) {
+      await pullNow(engine);
+    }
     const written = await engine.push(store.get(klartDataAtom), {
       today: store.get(todayAtom),
       options: store.get(syncSettingsAtom).agentFiles,
-      scope: getSyncScope(store.get(syncSetupAtom), targetId),
+      scope: getSyncScope(store.get(syncSetupAtom), targetId, store.get(syncListingsAtom)),
     });
+    shareListing(engine);
     updateStatus(() => ({ state: "synced", error: undefined, lastSyncedAt: toUtcTimestamp(new Date()) }));
     return written;
   }
@@ -360,7 +380,9 @@ export function useSyncTargetLifecycle(target: SyncTarget): void {
         return;
       }
       try {
-        const result = await desktop.gitSync(remote.root);
+        const result = await desktop.gitSync(remote.root, DATA_VERSION).catch((error: unknown) => {
+          throw readNewerDataVersionError(error) ?? error;
+        });
         updateStatus((current) => ({
           git: {
             ...current.git,
@@ -423,6 +445,8 @@ export function useSyncTargetLifecycle(target: SyncTarget): void {
     }
 
     engineRef.current = new FolderSync(backend, deviceName);
+    // A new engine hasn't read the folder yet.
+    setListings((all) => withoutKey(all, targetId));
     lastTouchRef.current = 0;
     setStatus({
       state: "syncing",

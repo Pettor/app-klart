@@ -66,9 +66,27 @@ export function getContextTargetId(setup: SyncSetup, contextId: string): string 
   return setup.targets[0]?.id ?? null;
 }
 
-export function getSyncScope(setup: SyncSetup, targetId: string): SyncScope {
+/**
+ * The context ids in each sync's `klart.json`, as this device last read or wrote
+ * it. A sync that hasn't been read since the app started is missing.
+ */
+export type SyncListings = Record<string, string[]>;
+
+/**
+ * What a sync's folder holds. The folder's own `klart.json` decides: a context
+ * listed there is kept there, whatever this device's setup says, so devices
+ * whose setups disagree never take contexts out of each other's folders. A
+ * context listed in no folder (a new one) goes to the sync it's assigned to, but
+ * only once every sync has been read, so it's never copied into a second folder.
+ */
+export function getSyncScope(setup: SyncSetup, targetId: string, listings: SyncListings): SyncScope {
+  const listed = new Set(listings[targetId] ?? []);
+  const allRead = setup.targets.every((target) => listings[target.id] !== undefined);
+  const listedAnywhere = new Set(setup.targets.flatMap((target) => listings[target.id] ?? []));
   return {
-    ownsContext: (contextId) => getContextTargetId(setup, contextId) === targetId,
+    ownsContext: (contextId) =>
+      listed.has(contextId) ||
+      (allRead && !listedAnywhere.has(contextId) && getContextTargetId(setup, contextId) === targetId),
     isPrimary: setup.targets[0]?.id === targetId,
   };
 }
@@ -76,18 +94,26 @@ export function getSyncScope(setup: SyncSetup, targetId: string): SyncScope {
 /**
  * Contexts found in a sync's `klart.json` live in that sync, which is how a
  * device learns where every context lives. One kept on this device (e.g. after
- * its sync was removed) is picked up again; one that already lives in another
- * sync stays there.
+ * its sync was removed) is picked up again. One assigned to another sync stays
+ * there while that sync lists it too (or hasn't been read yet); an assignment
+ * its own folder doesn't back up is out of date and moves here.
  */
-export function assignFoundContexts(setup: SyncSetup, targetId: string, contextIds: string[]): SyncSetup {
-  const isPrimary = setup.targets[0]?.id === targetId;
+export function assignFoundContexts(
+  setup: SyncSetup,
+  targetId: string,
+  contextIds: string[],
+  listings: SyncListings
+): SyncSetup {
   const found = contextIds.filter((id) => {
     const current = getContextTargetId(setup, id);
     if (current === targetId) {
       return false;
     }
-    // Unassigned contexts (or ones assigned to a removed sync) fall back to the primary, so another sync can claim them.
-    return current === null || (!isPrimary && setup.contextTargets[id] !== current);
+    if (current === null) {
+      return true;
+    }
+    const listedThere = listings[current];
+    return listedThere !== undefined && !listedThere.includes(id);
   });
   if (found.length === 0) {
     return setup;

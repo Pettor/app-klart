@@ -37,6 +37,20 @@ const KlartConfigSchema = z.object({
     .min(1),
 });
 
+/** Only the context ids, so a config this version can't fully read (e.g. no contexts) still says what it lists. */
+const ListedContextsSchema = z.object({
+  contexts: z.array(z.object({ id: z.string() }).catch({ id: "" })).catch([]),
+});
+
+function listedContextIds(text: string): string[] {
+  try {
+    const parsed = ListedContextsSchema.safeParse(JSON.parse(text));
+    return parsed.success ? parsed.data.contexts.map((context) => context.id).filter(Boolean) : [];
+  } catch {
+    return [];
+  }
+}
+
 /** Only the data version, so a folder whose config this version can't read still says what it needs. */
 const DataVersionSchema = z.object({ dataVersion: z.string().catch("") });
 
@@ -194,6 +208,8 @@ export class FolderSync {
   private readonly viewSignatures = new Map<string, string>();
   /** The data version last read from `klart.json`, by its `lastModified`. */
   private folderVersion: { lastModified: number; version: string } | null = null;
+  /** The context ids in the folder's `klart.json` as last read or written; `null` until the first pull. */
+  private listed: string[] | null = null;
 
   constructor(
     private readonly folder: FolderBackend,
@@ -204,6 +220,11 @@ export class FolderSync {
 
   get folderName(): string {
     return this.folder.name;
+  }
+
+  /** The context ids the folder's `klart.json` lists, or `null` before the first pull. */
+  get listedContextIds(): string[] | null {
+    return this.listed;
   }
 
   /** Reads a file only when it changed since last seen. Returns `null` when unchanged. */
@@ -251,6 +272,7 @@ export class FolderSync {
     this.known.set(path, { content, lastModified });
     if (path === CONFIG_FILE) {
       this.folderVersion = { lastModified, version: this.dataVersion };
+      this.listed = listedContextIds(content);
     }
   }
 
@@ -266,22 +288,31 @@ export class FolderSync {
 
     const configModified = await this.folder.stat(CONFIG_FILE);
     if (configModified !== null) {
+      // Only a context the folder listed and no longer does was removed; one it never listed isn't its to remove.
+      const wasListed = new Set(this.listed ?? []);
       const read = await this.readChangedSafely({ path: CONFIG_FILE, lastModified: configModified });
       const parsed = read && KlartConfigSchema.safeParse(read.json);
       if (read && parsed?.success) {
         const remote = parsed.data.contexts;
-        const contexts = read.isNew
-          ? mergeContexts(data.contexts, remote)
-          : mergeOwned(
-              data.contexts,
-              remote,
-              (context) => context.id,
-              (context) => scope.ownsContext(context.id)
-            );
+        const contexts =
+          read.isNew || this.listed === null
+            ? mergeContexts(data.contexts, remote)
+            : mergeOwned(
+                data.contexts,
+                remote,
+                (context) => context.id,
+                (context) => wasListed.has(context.id)
+              );
         data = { ...data, contexts };
         contextIds = remote.map((context) => context.id);
         changed = true;
       }
+      const known = this.known.get(CONFIG_FILE);
+      if (known) {
+        this.listed = listedContextIds(known.content);
+      }
+    } else {
+      this.listed = [];
     }
 
     // Push compares against what's on disk, so a folder written by an older version gets this version's LLMS.txt.
@@ -468,6 +499,13 @@ export class FolderSync {
     }
     for (const list of Object.values(data.lists)) {
       desired.set(listPath(list), serialize(list));
+    }
+    // A list without a context (from an older app) belongs to whichever context comes first, which can differ
+    // between devices; it stays in the folder that has it rather than moving with that.
+    for (const list of Object.values(all.lists)) {
+      if (list.context === null && this.known.has(listPath(list))) {
+        desired.set(listPath(list), serialize(list));
+      }
     }
     if (options.keepLlmsTxt) {
       desired.set(LLMS_FILE, LLMS_TXT);

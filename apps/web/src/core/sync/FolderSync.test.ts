@@ -474,6 +474,54 @@ describe("FolderSync with contexts split across syncs", () => {
     expect(pulled.data.days[TODAY]?.items.map((item) => item.taskId)).toEqual(["P1"]);
   });
 
+  it("doesn't drop a context the folder never listed, even when this device thinks the folder holds it", async () => {
+    const data = splitSeed();
+    await work.push(data, { today: TODAY, options: OPTIONS, scope: WORK });
+    await work.pull(data, { today: TODAY, acceptInbox: false, scope: WORK });
+    expect(work.listedContextIds).toEqual(["work"]);
+
+    // An out-of-date setup says the work folder also holds Personal; its klart.json says otherwise.
+    const wrong: SyncScope = { ownsContext: () => true, isPrimary: false };
+    await workRoot.write(
+      "klart.json",
+      serialize({ schema: "klart.config/v1", contexts: [{ id: "work", name: "Acme", color: "orange", tag: "work" }] })
+    );
+    const pulled = await work.pull(data, { today: TODAY, acceptInbox: false, scope: wrong });
+    expect(pulled.data.contexts.map((context) => context.id)).toEqual(["personal", "work"]);
+  });
+
+  it("drops a context another device removed from the folder", async () => {
+    const data = splitSeed();
+    await personal.push(data, { today: TODAY, options: OPTIONS, scope: { ...PERSONAL, ownsContext: () => true } });
+    await personal.pull(data, { today: TODAY, acceptInbox: false, scope: PERSONAL });
+    expect(personal.listedContextIds).toEqual(["personal", "work"]);
+
+    await personalRoot.write(
+      "klart.json",
+      serialize({ schema: "klart.config/v1", contexts: [data.contexts.find((context) => context.id === "personal")] })
+    );
+    const pulled = await personal.pull(data, { today: TODAY, acceptInbox: false, scope: PERSONAL });
+    expect(pulled.data.contexts.map((context) => context.id)).toEqual(["personal"]);
+    expect(personal.listedContextIds).toEqual(["personal"]);
+  });
+
+  it("keeps a list without a context in the folder that has it", async () => {
+    const list = createShoppingList("L3", "Gifts", "gift", "work", null, new Date());
+    const data = upsertList(splitSeed(), { ...list, context: null });
+    await work.push(data, { today: TODAY, options: OPTIONS, scope: { ...WORK, ownsContext: () => true } });
+    expect(workRoot.read("lists/L3.json")).toBeDefined();
+
+    // Personal comes first, so the list counts as Personal's; the work folder still keeps it.
+    await work.push(data, { today: TODAY, options: OPTIONS, scope: WORK });
+    expect(workRoot.read("lists/L3.json")).toBeDefined();
+  });
+
+  it("knows a folder without klart.json lists nothing", async () => {
+    expect(work.listedContextIds).toBeNull();
+    await work.pull(createEmptyData(), { today: TODAY, acceptInbox: false, scope: WORK });
+    expect(work.listedContextIds).toEqual([]);
+  });
+
   it("puts tasks from a folder's inbox in a context that folder holds", async () => {
     await workRoot.write("inbox/agent.txt", "prepare the slides\n");
     const pulled = await work.pull(createEmptyData(), { today: TODAY, acceptInbox: true, scope: WORK });

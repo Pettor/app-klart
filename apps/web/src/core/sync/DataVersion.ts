@@ -30,3 +30,13 @@ export class NewerDataVersionError extends Error {
     this.name = "NewerDataVersionError";
   }
 }
+
+const NEWER_DATA_VERSION_PREFIX = "newer-data-version:";
+
+/** The desktop Git sync's "a newer Klart wrote the remote" error as a {@link NewerDataVersionError}, or `null`. */
+export function readNewerDataVersionError(error: unknown): NewerDataVersionError | null {
+  const message = error instanceof Error ? error.message : String(error);
+  return message.startsWith(NEWER_DATA_VERSION_PREFIX)
+    ? new NewerDataVersionError(message.slice(NEWER_DATA_VERSION_PREFIX.length).trim())
+    : null;
+}

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isNewerDataVersion, toDataVersion } from "./DataVersion";
+import { isNewerDataVersion, NewerDataVersionError, readNewerDataVersionError, toDataVersion } from "./DataVersion";
 
 describe("DataVersion", () => {
   it("keeps only major and minor", () => {
@@ -12,5 +12,12 @@ describe("DataVersion", () => {
     expect(isNewerDataVersion("1.0", "0.99")).toBe(true);
     expect(isNewerDataVersion("0.7.5", "0.7.0")).toBe(false);
     expect(isNewerDataVersion("0.7", "0.8")).toBe(false);
+  });
+
+  it("reads the desktop Git sync's newer-version error", () => {
+    const error = readNewerDataVersionError("newer-data-version:0.13");
+    expect(error).toBeInstanceOf(NewerDataVersionError);
+    expect(error?.folderVersion).toBe("0.13");
+    expect(readNewerDataVersionError(new Error("Merging the remote changes failed"))).toBeNull();
   });
 });

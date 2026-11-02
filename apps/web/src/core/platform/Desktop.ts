@@ -39,7 +39,9 @@ export const desktop = {
   pickFolder: (): Promise<string | null> => invoke("pick_folder"),
   gitInfo: (root: string | null): Promise<DesktopGitInfo> => invoke("git_info", { root }),
   gitClone: (url: string, parent: string): Promise<string> => invoke("git_clone", { url, parent }),
-  gitSync: (root: string): Promise<DesktopGitSyncResult> => invoke("git_sync", { root }),
+  /** Fails with `newer-data-version:<version>` (see `readNewerDataVersionError`) before committing when a newer Klart wrote the remote. */
+  gitSync: (root: string, dataVersion: string): Promise<DesktopGitSyncResult> =>
+    invoke("git_sync", { root, dataVersion }),
   deviceName: (): Promise<string | null> => invoke("device_name"),
   showNotification: (title: string, body: string): Promise<void> => invoke("show_notification", { title, body }),
   openUrl: (url: string): Promise<void> => invoke("open_url", { url }),

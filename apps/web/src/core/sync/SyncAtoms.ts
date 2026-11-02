@@ -3,7 +3,7 @@ import { atomWithStorage } from "jotai/utils";
 import type { FolderPermission } from "./FileSystemAccess";
 import type { AgentFileOptions, DeviceInfo } from "./FolderSync";
 import type { GitHubErrorKind } from "./GitHubBackend";
-import type { SyncSetup, SyncTarget } from "./SyncTargets";
+import type { SyncListings, SyncSetup, SyncTarget } from "./SyncTargets";
 import { EMPTY_SYNC_SETUP } from "./SyncTargets";
 
 export interface SyncSettings {
@@ -136,6 +136,9 @@ export const folderPermissionsAtom = atom<Record<string, FolderPermission>>({});
 
 /** Each sync's state, by sync id. */
 export const syncStatusesAtom = atom<Record<string, SyncStatus>>({});
+
+/** The contexts in each sync's `klart.json` as last read or written, by sync id; see {@link SyncListings}. */
+export const syncListingsAtom = atom<SyncListings>({});
 
 /** The devices each sync has seen, by sync id. */
 export const syncDevicesByTargetAtom = atom<Record<string, DeviceInfo[]>>({});
