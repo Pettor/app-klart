@@ -15,6 +15,31 @@ export interface ReleaseNote {
   fixes: ReleaseNoteItem[];
 }
 
+const v0130 = defineMessages({
+  taskStyleTitle: {
+    description: "ReleaseNotes 0.13.0 - highlight title: task style setting",
+    defaultMessage: "Dress your tasks your way",
+    id: "v1SsnE",
+  },
+  taskStyleDescription: {
+    description: "ReleaseNotes 0.13.0 - highlight text: task style setting",
+    defaultMessage:
+      "Settings › Appearance has a new Task style: Raised, Floating, Flat, Square, Glow or Outline. Each one goes with any theme, so Glow on Paper or Square on Midnight are yours to try.",
+    id: "9LTY7f",
+  },
+  previewTitle: {
+    description: "ReleaseNotes 0.13.0 - highlight title: task styles take the theme's colors",
+    defaultMessage: "Your theme, a new shape",
+    id: "/Khr+F",
+  },
+  previewDescription: {
+    description: "ReleaseNotes 0.13.0 - highlight text: task styles take the theme's colors",
+    defaultMessage:
+      "A task style only changes how cards are shaped and edged; the colors still come from your theme. Watch the preview change as you pick, or choose Theme's own to go back.",
+    id: "62WgH/",
+  },
+});
+
 const v0120 = defineMessages({
   stayPutTitle: {
     description: "ReleaseNotes 0.12.0 - highlight title: contexts stay in their own sync",
@@ -724,6 +749,14 @@ const v010 = defineMessages({
  * entry here; people who update see every entry newer than the last one they saw.
  */
 export const RELEASE_NOTES: ReleaseNote[] = [
+  {
+    version: "0.13.0",
+    highlights: [
+      { emoji: "🃏", title: v0130.taskStyleTitle, description: v0130.taskStyleDescription },
+      { emoji: "🎨", title: v0130.previewTitle, description: v0130.previewDescription },
+    ],
+    fixes: [],
+  },
   {
     version: "0.12.0",
     highlights: [
