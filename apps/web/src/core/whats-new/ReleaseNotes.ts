@@ -15,6 +15,52 @@ export interface ReleaseNote {
   fixes: ReleaseNoteItem[];
 }
 
+const v0120 = defineMessages({
+  stayPutTitle: {
+    description: "ReleaseNotes 0.12.0 - highlight title: contexts stay in their own sync",
+    defaultMessage: "Everything stays where it belongs",
+    id: "0K83QH",
+  },
+  stayPutDescription: {
+    description: "ReleaseNotes 0.12.0 - highlight text: contexts stay in their own sync",
+    defaultMessage:
+      "With several syncs, like a family repo and a personal one, contexts, tasks and shopping lists no longer jump between contexts or vanish depending on which device synced last. Each sync's folder now decides what it holds.",
+    id: "IKS/0j",
+  },
+  sameVersionTitle: {
+    description: "ReleaseNotes 0.12.0 - highlight title: devices on older versions pause syncing",
+    defaultMessage: "Every device on the same page",
+    id: "J22P9o",
+  },
+  sameVersionDescription: {
+    description: "ReleaseNotes 0.12.0 - highlight text: devices on older versions pause syncing",
+    defaultMessage:
+      "Devices still on an older Klart pause syncing until they're updated, so they can't undo each other's changes. Their edits wait on the device and sync after the update.",
+    id: "zOC6jG",
+  },
+  listsFixTitle: {
+    description: "ReleaseNotes 0.12.0 - fix title: shopping lists keep their context",
+    defaultMessage: "Shopping lists stay put",
+    id: "gjJpmQ",
+  },
+  listsFixDescription: {
+    description: "ReleaseNotes 0.12.0 - fix text: shopping lists keep their context",
+    defaultMessage: "Older shopping lists without a context no longer show up in a different context on each device.",
+    id: "UaoOB/",
+  },
+  gitFixTitle: {
+    description: "ReleaseNotes 0.12.0 - fix title: desktop Git sync checks the version first",
+    defaultMessage: "Safer Git sync",
+    id: "w/YV5y",
+  },
+  gitFixDescription: {
+    description: "ReleaseNotes 0.12.0 - fix text: desktop Git sync checks the version first",
+    defaultMessage:
+      "The desktop app checks which Klart version last wrote a repository before it commits or pushes anything.",
+    id: "Ux0B16",
+  },
+});
+
 const v0110 = defineMessages({
   topPickTitle: {
     description: "ReleaseNotes 0.11.0 - highlight title: suggestions lead with a top pick",
@@ -678,6 +724,17 @@ const v010 = defineMessages({
  * entry here; people who update see every entry newer than the last one they saw.
  */
 export const RELEASE_NOTES: ReleaseNote[] = [
+  {
+    version: "0.12.0",
+    highlights: [
+      { emoji: "🏠", title: v0120.stayPutTitle, description: v0120.stayPutDescription },
+      { emoji: "🔄", title: v0120.sameVersionTitle, description: v0120.sameVersionDescription },
+    ],
+    fixes: [
+      { emoji: "🛒", title: v0120.listsFixTitle, description: v0120.listsFixDescription },
+      { emoji: "🌿", title: v0120.gitFixTitle, description: v0120.gitFixDescription },
+    ],
+  },
   {
     version: "0.11.0",
     highlights: [

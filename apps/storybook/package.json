@@ -1,6 +1,6 @@
 {
   "name": "@app/storybook",
-  "version": "0.11.0",
+  "version": "0.12.0",
   "description": "Storybook configuration for the web application",
   "license": "MIT",
   "private": true,
