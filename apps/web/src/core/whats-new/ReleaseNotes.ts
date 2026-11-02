@@ -15,6 +15,20 @@ export interface ReleaseNote {
   fixes: ReleaseNoteItem[];
 }
 
+const v0141 = defineMessages({
+  backFixTitle: {
+    description: "ReleaseNotes 0.14.1 - fix title: Back from a shopping list returns to the lists",
+    defaultMessage: "Back means back",
+    id: "P4ZIg7",
+  },
+  backFixDescription: {
+    description: "ReleaseNotes 0.14.1 - fix text: Back from a shopping list returns to the lists",
+    defaultMessage:
+      "On phones, going Back from a shopping list now takes you to your lists instead of all the way to My Day.",
+    id: "s1a35j",
+  },
+});
+
 const v0140 = defineMessages({
   centeredTitle: {
     description: "ReleaseNotes 0.14.0 - highlight title: My Day keeps to a centered column on wide screens",
@@ -773,6 +787,11 @@ const v010 = defineMessages({
  * entry here; people who update see every entry newer than the last one they saw.
  */
 export const RELEASE_NOTES: ReleaseNote[] = [
+  {
+    version: "0.14.1",
+    highlights: [],
+    fixes: [{ emoji: "↩️", title: v0141.backFixTitle, description: v0141.backFixDescription }],
+  },
   {
     version: "0.14.0",
     highlights: [{ emoji: "🖥️", title: v0140.centeredTitle, description: v0140.centeredDescription }],
