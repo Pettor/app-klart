@@ -67,8 +67,9 @@ export function ShoppingItemRow({
           data-testid="shopping-item"
           className={clsx(
             "shop-row hover:bg-surface-secondary/60 flex min-h-[52px] items-center gap-1 py-1 pr-2 pl-1.5 transition-colors",
-            hasSeparator && "border-separator border-t",
-            isSelected && "outline-2 -outline-offset-2 outline-(color:--ctx)",
+            hasSeparator && clsx("border-t", isSelected ? "border-transparent" : "border-separator"),
+            // Rounded like the card, so the card's clipping doesn't cut the outline's corners.
+            isSelected && "rounded-(--slab-radius) outline-2 -outline-offset-2 outline-(color:--ctx)",
             completion.isChecking && "slab-checking",
             completion.phase === "leaving" && "opacity-0 transition-opacity duration-300"
           )}
