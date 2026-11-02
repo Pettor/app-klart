@@ -15,6 +15,30 @@ export interface ReleaseNote {
   fixes: ReleaseNoteItem[];
 }
 
+const v0140 = defineMessages({
+  centeredTitle: {
+    description: "ReleaseNotes 0.14.0 - highlight title: My Day keeps to a centered column on wide screens",
+    defaultMessage: "Made for big screens",
+    id: "lFU0Dx",
+  },
+  centeredDescription: {
+    description: "ReleaseNotes 0.14.0 - highlight text: My Day keeps to a centered column on wide screens",
+    defaultMessage:
+      "On wide monitors My Day now keeps your tasks in a comfy centered column instead of stretching them edge to edge. Prefer the old look? Turn on Full width in the Display menu.",
+    id: "tTrL8j",
+  },
+  shoppingFixTitle: {
+    description: "ReleaseNotes 0.14.0 - fix title: the selected shopping item's outline",
+    defaultMessage: "Neater shopping selection",
+    id: "EXbtQo",
+  },
+  shoppingFixDescription: {
+    description: "ReleaseNotes 0.14.0 - fix text: the selected shopping item's outline",
+    defaultMessage: "The outline around the shopping item you're editing now follows the list's rounded corners.",
+    id: "xao01q",
+  },
+});
+
 const v0130 = defineMessages({
   taskStyleTitle: {
     description: "ReleaseNotes 0.13.0 - highlight title: task style setting",
@@ -749,6 +773,11 @@ const v010 = defineMessages({
  * entry here; people who update see every entry newer than the last one they saw.
  */
 export const RELEASE_NOTES: ReleaseNote[] = [
+  {
+    version: "0.14.0",
+    highlights: [{ emoji: "🖥️", title: v0140.centeredTitle, description: v0140.centeredDescription }],
+    fixes: [{ emoji: "🛒", title: v0140.shoppingFixTitle, description: v0140.shoppingFixDescription }],
+  },
   {
     version: "0.13.0",
     highlights: [
