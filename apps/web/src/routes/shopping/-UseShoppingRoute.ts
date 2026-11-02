@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useBreakpoint } from "@package/react";
 import { useIntl } from "react-intl";
 import type { ShoppingItemRowItem } from "~/components/display/shopping-item-row/ShoppingItemRow";
 import type {
@@ -107,6 +108,8 @@ function toSelected(
 export function useShoppingRoute(listId: string | null): ShoppingViewProps {
   const intl = useIntl();
   const navigation = useHierarchyNavigation();
+  // Below `lg` the lists and the selected list are separate screens; wider, both show side by side.
+  const isSplit = useBreakpoint("lg");
   const shopping = useShopping();
   const actions = useShoppingActions();
   const [draft, setDraft] = useState("");
@@ -127,8 +130,10 @@ export function useShoppingRoute(listId: string | null): ShoppingViewProps {
   function selectList(id: string): void {
     setDraft("");
     setEditingItemId(null);
-    // Shopping is one entry in the history like a smart view, so Back from any list returns to My Day.
-    navigation.across({ to: "/shopping", search: { list: id } });
+    // Opening a list from the lists screen is a step down, so Back returns to the lists. Side by side, or when
+    // switching lists, it replaces the entry, so Back from any list returns to where Shopping was opened from.
+    const open = !isSplit && !listId ? navigation.down : navigation.across;
+    open({ to: "/shopping", search: { list: id } });
   }
 
   function findItem(itemId: string): ShoppingItem | undefined {
@@ -144,7 +149,7 @@ export function useShoppingRoute(listId: string | null): ShoppingViewProps {
     onSelectList: selectList,
     onBackToLists: () => {
       setEditingItemId(null);
-      navigation.across({ to: "/shopping" });
+      navigation.upTo({ to: "/shopping" });
     },
     newList: {
       onCreate: (name, kind) => selectList(actions.createList(name, kind).id),
@@ -208,7 +213,7 @@ export function useShoppingRoute(listId: string | null): ShoppingViewProps {
         if (list) {
           actions.deleteList(list.id);
           // Back to the lists, so phones don't jump to some other list.
-          navigation.across({ to: "/shopping" });
+          navigation.upTo({ to: "/shopping" });
         }
       },
     },

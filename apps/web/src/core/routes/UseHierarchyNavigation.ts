@@ -2,13 +2,14 @@ import { useMemo } from "react";
 import { useNavigate, useRouter } from "@tanstack/react-router";
 import type { HistoryState, NavigateOptions } from "@tanstack/react-router";
 
-/** History-state flag set on entries pushed from their parent view, so going up can pop instead of push. */
+/** History state naming the views each entry was pushed from, so going up can pop instead of push. */
 interface HierarchyHistoryState {
-  klartHasParent?: boolean;
+  /** Paths of the parent views, outermost first; the last one is the entry right behind. */
+  klartParents?: string[];
 }
 
-function toHistoryState(hasParent: boolean): HistoryState {
-  return { klartHasParent: hasParent } satisfies HierarchyHistoryState as HistoryState;
+function toHistoryState(parents: string[]): HistoryState {
+  return { klartParents: parents } satisfies HierarchyHistoryState as HistoryState;
 }
 
 export interface HierarchyNavigation {
@@ -21,6 +22,11 @@ export interface HierarchyNavigation {
    * never cycles between views like a browser would; otherwise (a deep link, a reload) replaces it.
    */
   up: (fallback: NavigateOptions) => void;
+  /**
+   * Returns to the nearest parent view at `target.to`, popping every entry above it (Back from a shopping list opened
+   * from the lists lands on the lists); with no such parent, replaces the entry with `target`.
+   */
+  upTo: (target: NavigateOptions & { to: string }) => void;
 }
 
 /**
@@ -32,18 +38,28 @@ export function useHierarchyNavigation(): HierarchyNavigation {
   const navigate = useNavigate();
 
   return useMemo(() => {
-    function hasParent(): boolean {
-      return (router.state.location.state as HierarchyHistoryState).klartHasParent === true;
+    function getParents(): string[] {
+      return (router.state.location.state as HierarchyHistoryState).klartParents ?? [];
     }
 
     return {
-      down: (options) => void navigate({ ...options, state: toHistoryState(true) }),
-      across: (options) => void navigate({ ...options, replace: true, state: toHistoryState(hasParent()) }),
+      down: (options) =>
+        void navigate({ ...options, state: toHistoryState([...getParents(), router.state.location.pathname]) }),
+      across: (options) => void navigate({ ...options, replace: true, state: toHistoryState(getParents()) }),
       up: (fallback) => {
-        if (hasParent()) {
+        if (getParents().length > 0) {
           router.history.back();
         } else {
           void navigate({ ...fallback, replace: true });
+        }
+      },
+      upTo: (target) => {
+        const parents = getParents();
+        const index = parents.lastIndexOf(target.to);
+        if (index >= 0) {
+          router.history.go(index - parents.length);
+        } else {
+          void navigate({ ...target, replace: true, state: toHistoryState(parents) });
         }
       },
     };

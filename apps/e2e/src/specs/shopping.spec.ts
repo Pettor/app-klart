@@ -114,6 +114,24 @@ test.describe("shopping", () => {
     await expect(item).toHaveCount(0);
   });
 
+  test("on phones Back from a list returns to the lists, then to My Day", async ({ page }) => {
+    await page.getByTestId("shopping__new-list-name").fill("Week");
+    await page.getByTestId("shopping__create-list").click();
+    await expect(page.getByTestId("shopping__list-name")).toHaveText("Week");
+
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.getByTestId("shopping__back").click();
+    await page.getByTestId("shopping-list-card").filter({ hasText: "Week" }).click();
+    await expect(page.getByTestId("shopping__list-name")).toBeVisible();
+
+    await page.goBack();
+    await expect(page.getByTestId("shopping__list-name")).toBeHidden();
+    await expect(page.getByTestId("shopping-list-card")).toBeVisible();
+
+    await page.goBack();
+    await expect(page.getByTestId("quick-add__input")).toBeVisible();
+  });
+
   test("renames and deletes a list", async ({ page }) => {
     await page.getByTestId("shopping__new-list-name").fill("Week");
     await page.getByTestId("shopping__create-list").click();

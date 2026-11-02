@@ -116,7 +116,8 @@ export function useMyDayRoute(editingId: string | null, page: "day" | "shop" = "
 
   function leaveShopping(): void {
     if (page === "shop") {
-      navigation.up({ to: "/" });
+      // From a list opened from the lists, this pops both, so Back doesn't return to Shopping.
+      navigation.upTo({ to: "/" });
     }
   }
 
