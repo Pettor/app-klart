@@ -3,6 +3,8 @@ import { useIntl } from "react-intl";
 import { SettingsRow, SettingsSegmented } from "./SettingsRow";
 import { SettingsPanel, SettingsSectionShell } from "./SettingsSectionShell";
 import { SettingsSwitchRow } from "./SettingsSwitchRow";
+import type { TaskStyleSelectorProps } from "~/components/actions/task-style-selector/TaskStyleSelector";
+import { TaskStyleSelector } from "~/components/actions/task-style-selector/TaskStyleSelector";
 import type { ThemeSelectorProps } from "~/components/actions/theme-selector/ThemeSelector";
 import { ThemeSelector } from "~/components/actions/theme-selector/ThemeSelector";
 import { AppearancePreview } from "~/components/display/appearance-preview/AppearancePreview";
@@ -13,6 +15,8 @@ export interface SettingsAppearanceSectionProps {
   /** Today's date, for the due dates in the preview. */
   today: string;
   themeSelector: ThemeSelectorProps;
+  /** The shape of task cards, which goes with any theme. */
+  taskStyleSelector: TaskStyleSelectorProps;
   density: Density;
   onDensityChange: (density: Density) => void;
   tintByContext: boolean;
@@ -25,6 +29,7 @@ export function SettingsAppearanceSection({
   title,
   today,
   themeSelector,
+  taskStyleSelector,
   density,
   onDensityChange,
   tintByContext,
@@ -50,14 +55,32 @@ export function SettingsAppearanceSection({
       title={title}
       description={intl.formatMessage({
         description: "SettingsAppearance - intro",
-        defaultMessage: "Pick a theme. System follows your device's light or dark mode.",
-        id: "YIH7GO",
+        defaultMessage:
+          "Pick a theme, then a task style to go with it. System follows your device's light or dark mode.",
+        id: "gxMXdn",
       })}
     >
       {/* The preview sits beside the choices on wide screens and follows the pane as it scrolls. */}
       <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_320px]">
         <div className="flex flex-col gap-3.5">
           <ThemeSelector {...themeSelector} />
+          <div className="mt-2 flex flex-col gap-1 px-1">
+            <h2 className="font-semibold">
+              {intl.formatMessage({
+                description: "SettingsAppearance - heading of the task style choices",
+                defaultMessage: "Task style",
+                id: "IQXh5Y",
+              })}
+            </h2>
+            <p className="text-muted text-sm">
+              {intl.formatMessage({
+                description: "SettingsAppearance - hint under the task style heading",
+                defaultMessage: "How task cards are shaped and edged. The colors still come from the theme.",
+                id: "IOcEUO",
+              })}
+            </p>
+          </div>
+          <TaskStyleSelector {...taskStyleSelector} />
           <SettingsPanel>
             <SettingsRow
               label={densityLabel}

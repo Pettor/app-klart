@@ -22,3 +22,20 @@ export type Density = "comfortable" | "compact";
 
 /** `system` follows the OS "reduce motion" setting; `full` and `reduced` override it. */
 export type MotionPreference = "full" | "reduced" | "system";
+
+/**
+ * The shape of task cards: how they're edged, shadowed and rounded. Each theme has its own, and any of them can go
+ * with any theme; `theme` keeps the theme's own. Colors always come from the theme.
+ */
+export type TaskStyle = "theme" | "raised" | "floating" | "flat" | "square" | "glow" | "outline";
+
+/** The task style each theme has of its own. */
+export const THEME_TASK_STYLES: Record<ResolvedThemeMode, Exclude<TaskStyle, "theme">> = {
+  light: "raised",
+  paper: "flat",
+  bloom: "glow",
+  dark: "floating",
+  midnight: "raised",
+  graphite: "square",
+  vivid: "outline",
+};

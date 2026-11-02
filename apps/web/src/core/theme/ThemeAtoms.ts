@@ -2,7 +2,7 @@ import type { Atom } from "jotai";
 import { atom } from "jotai";
 import { atomWithStorage } from "jotai/utils";
 import { atomEffect } from "jotai-effect";
-import type { Density, MotionPreference, ResolvedThemeMode, ThemeMode } from "./ThemeMode";
+import type { Density, MotionPreference, ResolvedThemeMode, TaskStyle, ThemeMode } from "./ThemeMode";
 import { THEME_CLASSES } from "./ThemeMode";
 
 const themeLocalStorageAtom = atomWithStorage<ThemeMode>("theme", "auto");
@@ -45,10 +45,17 @@ export const motionAtom = atomWithStorage<MotionPreference>("klart-motion", "sys
   getOnInit: true,
 });
 
-/** Mirrors the appearance settings onto `<html>` as `data-density`, `data-tint` and `data-motion` for CSS. */
+/** The shape of task cards, on top of the theme. Remembered per device. */
+export const taskStyleAtom = atomWithStorage<TaskStyle>("klart-task-style", "theme", undefined, { getOnInit: true });
+
+/**
+ * Mirrors the appearance settings onto `<html>` as `data-density`, `data-tint`, `data-motion` and `data-task-style`
+ * for CSS.
+ */
 export const appearanceEffect: Atom<void> = atomEffect((get) => {
   const html = document.documentElement;
   html.dataset.density = get(densityAtom);
   html.dataset.tint = get(tintByContextAtom) ? "on" : "off";
   html.dataset.motion = get(motionAtom);
+  html.dataset.taskStyle = get(taskStyleAtom);
 });

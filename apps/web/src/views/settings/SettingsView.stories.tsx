@@ -82,6 +82,7 @@ const defaultArgs = {
   appearance: {
     today: "2026-10-21",
     themeSelector: { mode: "auto", onSelect: fn() },
+    taskStyleSelector: { style: "theme", themeStyle: "floating", onSelect: fn() },
     density: "comfortable",
     onDensityChange: fn(),
     tintByContext: true,

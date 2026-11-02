@@ -165,6 +165,18 @@ test.describe("settings.appearance", () => {
     await tint.locator("xpath=ancestor::label[1]").click();
     await expect(tint).toBeChecked({ checked: !wasOn });
   });
+
+  test("picks a task style that goes with any theme and remembers it", async ({ page }) => {
+    await page.goto("/#/settings?section=appearance");
+    const html = page.locator("html");
+    await expect(html).toHaveAttribute("data-task-style", "theme");
+    await page.getByRole("radio", { name: "Paper" }).click({ force: true });
+    await page.getByRole("radio", { name: "Glow" }).click({ force: true });
+    await expect(html).toHaveAttribute("data-task-style", "glow");
+    await expect(html).toHaveClass(/paper/);
+    await page.reload();
+    await expect(html).toHaveAttribute("data-task-style", "glow");
+  });
 });
 
 test.describe("settings.sync", () => {

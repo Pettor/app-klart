@@ -1,6 +1,7 @@
 import { toast } from "@heroui/react";
 import { useAtom, useAtomValue } from "jotai";
 import { useIntl } from "react-intl";
+import { useTaskStyleSelector } from "~/components/actions/task-style-selector/UseTaskStyleSelector";
 import { useThemeSelector } from "~/components/actions/theme-selector/UseThemeSelector";
 import { useAppInfo } from "~/core/config/UseAppInfo";
 import { getContextNotifications } from "~/core/notifications/NotificationSettings";
@@ -35,6 +36,7 @@ export function useSettingsRoute(section?: SettingsSectionId): SettingsViewProps
   const sync = useFolderSync();
   const notifications = useNotifications();
   const themeSelector = useThemeSelector();
+  const taskStyleSelector = useTaskStyleSelector();
   const today = useAtomValue(todayAtom);
   const { appName, appVersion } = useAppInfo();
   const whatsNew = useWhatsNew();
@@ -220,6 +222,7 @@ export function useSettingsRoute(section?: SettingsSectionId): SettingsViewProps
     appearance: {
       today,
       themeSelector,
+      taskStyleSelector,
       density,
       onDensityChange: setDensity,
       tintByContext,
