@@ -14,6 +14,7 @@ import {
   reopenShoppingList,
   setItemBought,
   toggleItemImportant,
+  updateShoppingItem,
   upsertList,
 } from "./ShoppingData";
 import { parseShoppingItem } from "./ShoppingItemParse";
@@ -83,6 +84,71 @@ describe("the two-way link", () => {
     const data = withMilkInDay();
     const stale = { ...data, tasks: { ...data.tasks, T1: { ...data.tasks.T1!, status: "done" as const } } };
     expect(reconcileShoppingTasks(stale).lists.L1!.items[0]!.bought).toBe(false);
+  });
+});
+
+describe("updateShoppingItem", () => {
+  it("edits the item's fields, trimming the name", () => {
+    const data = updateShoppingItem(
+      seed(),
+      "L1",
+      "bread",
+      { name: " Limpa ", price: 30, category: "pantry" },
+      "Buy: Limpa",
+      T1
+    );
+    expect(data.lists.L1!.items[1]).toMatchObject({
+      name: "Limpa",
+      price: 30,
+      category: "pantry",
+      updatedAt: "2026-10-28T09:00:00Z",
+    });
+  });
+
+  it("keeps the old name when the new one is blank", () => {
+    const data = updateShoppingItem(seed(), "L1", "bread", { name: "  ", note: "Fresh" }, "Buy: Bröd", T1);
+    expect(data.lists.L1!.items[1]).toMatchObject({ name: "Bröd", note: "Fresh" });
+  });
+
+  it("ignores a patch that changes nothing", () => {
+    const data = seed();
+    expect(updateShoppingItem(data, "L1", "milk", { name: "mjölk", qty: 2 }, "Buy: mjölk × 2", T1)).toBe(data);
+    expect(updateShoppingItem(data, "L1", "nope", { name: "x" }, "Buy: x", T1)).toBe(data);
+  });
+
+  it("retitles the linked task when the name or quantity changes", () => {
+    const renamed = updateShoppingItem(
+      withMilkInDay(),
+      "L1",
+      "milk",
+      { name: "Havremjölk" },
+      "Buy: Havremjölk × 2",
+      T2
+    );
+    expect(renamed.tasks.T1!.title).toBe("Buy: Havremjölk × 2");
+    const counted = updateShoppingItem(withMilkInDay(), "L1", "milk", { qty: 3 }, "Buy: mjölk × 3", T2);
+    expect(counted.tasks.T1!.title).toBe("Buy: mjölk × 3");
+  });
+
+  it("keeps a task renamed by hand when only the price or category changes", () => {
+    const named = updateTask(withMilkInDay(), "T1", { title: "Milk for the cake" }, T1);
+    const data = updateShoppingItem(named, "L1", "milk", { price: 25, category: "other" }, "Buy: mjölk × 2", T2);
+    expect(data.lists.L1!.items[0]).toMatchObject({ price: 25, category: "other" });
+    expect(data.tasks.T1!.title).toBe("Milk for the cake");
+  });
+
+  it("carries the note and link to the linked task, leaving its other links", () => {
+    const withLinks = updateTask(withMilkInDay(), "T1", { links: ["https://a.se/"] }, T1);
+    const linked = updateShoppingItem(withLinks, "L1", "milk", { link: "https://b.se/", note: "Oat" }, "Buy", T2);
+    expect(linked.tasks.T1).toMatchObject({ links: ["https://a.se/", "https://b.se/"], notes: "Oat" });
+    const later = new Date("2026-10-28T11:00:00Z");
+    const unlinked = updateShoppingItem(linked, "L1", "milk", { link: null }, "Buy", later);
+    expect(unlinked.tasks.T1!.links).toEqual(["https://a.se/"]);
+  });
+
+  it("isn't undone by reconciling with its task", () => {
+    const data = updateShoppingItem(withMilkInDay(), "L1", "milk", { name: "Havremjölk" }, "Buy: Havremjölk × 2", T2);
+    expect(reconcileShoppingTasks(data)).toBe(data);
   });
 });
 

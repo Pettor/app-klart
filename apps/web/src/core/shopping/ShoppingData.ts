@@ -6,6 +6,7 @@ import { addToDay, archiveTask, removeFromDay, setTaskDone, updateTask, upsertTa
 import { toUtcTimestamp } from "~/core/tasks/LocalDate";
 import type { Task } from "~/core/tasks/Task";
 import { TASK_SCHEMA } from "~/core/tasks/Task";
+import { toTaskLinks } from "~/core/tasks/TaskLink";
 
 export type ShoppingItemPatch = Partial<Pick<ShoppingItem, "name" | "qty" | "price" | "link" | "note" | "category">>;
 
@@ -108,14 +109,54 @@ export function addShoppingItem(data: KlartData, listId: string, item: ShoppingI
   return changeList(data, listId, now, (list) => ({ items: [...list.items, item] }));
 }
 
+/** The task's links with the item's old link swapped for its new one, leaving links added on the task alone. */
+function swapTaskLink(links: string[], from: string | null, to: string | null): string[] {
+  const kept = links.filter((link) => link !== from);
+  return to ? toTaskLinks([...kept, to]) : kept;
+}
+
+/**
+ * Edits an item, and its linked My Day task to match. A new name or quantity retitles the task to `taskTitle`, so a
+ * task renamed by hand keeps its title until then. A blank name keeps the old one; a patch changing nothing is ignored.
+ */
 export function updateShoppingItem(
   data: KlartData,
   listId: string,
   itemId: string,
   patch: ShoppingItemPatch,
+  taskTitle: string,
   now: Date
 ): KlartData {
-  return changeItem(data, listId, itemId, now, () => patch);
+  const item = findItem(data, listId, itemId);
+  if (!item) {
+    return data;
+  }
+  const name = patch.name?.trim() || item.name;
+  const changes: ShoppingItemPatch = { ...patch, name };
+  const isRetitled = name !== item.name || (patch.qty !== undefined && patch.qty !== item.qty);
+  const isNoteChanged = patch.note !== undefined && patch.note !== item.note;
+  const isLinkChanged = patch.link !== undefined && patch.link !== item.link;
+  const isCategoryChanged = patch.category !== undefined && patch.category !== item.category;
+  const isPriceChanged = patch.price !== undefined && patch.price !== item.price;
+  if (!isRetitled && !isNoteChanged && !isLinkChanged && !isCategoryChanged && !isPriceChanged) {
+    return data;
+  }
+
+  const next = changeItem(data, listId, itemId, now, () => changes);
+  const task = linkedTask(next, item.taskId);
+  if (!task || (!isRetitled && !isNoteChanged && !isLinkChanged)) {
+    return next;
+  }
+  return updateTask(
+    next,
+    task.id,
+    {
+      ...(isRetitled && { title: taskTitle }),
+      ...(isNoteChanged && { notes: patch.note }),
+      ...(isLinkChanged && { links: swapTaskLink(task.links, item.link, patch.link ?? null) }),
+    },
+    now
+  );
 }
 
 /** Marks an item bought or not, and completes or reopens its My Day task to match. */

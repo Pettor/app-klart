@@ -191,7 +191,9 @@ export const ShoppingPage: Story = {
         newList={{ onCreate: fn() }}
         draft={{ value: "", onChange: fn(), onSubmit: fn(), preview: null }}
         moveTargets={[]}
+        itemEditor={{ item: null, color: "green", showCategory: true, onChange: fn(), onClose: fn() }}
         listActions={{
+          onOpenItem: fn(),
           onToggleBought: fn(),
           onToggleImportant: fn(),
           onToggleItemMyDay: fn(),

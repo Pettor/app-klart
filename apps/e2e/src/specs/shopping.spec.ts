@@ -66,6 +66,54 @@ test.describe("shopping", () => {
     await expect(page.getByTestId("shopping-item")).toContainText("Kaffe");
   });
 
+  test("edits an item in the editor, and its My Day task follows", async ({ page }) => {
+    await page.getByTestId("shopping__new-list-name").fill("Week");
+    await page.getByTestId("shopping__create-list").click();
+    await page.getByTestId("shopping__item-input").fill("Mjölk");
+    await page.getByTestId("shopping__item-input").press("Enter");
+    await page.getByTestId("shopping-item").hover();
+    await page.getByTestId("shopping-item__my-day").click();
+
+    await page.getByTestId("shopping-item__open").click();
+    await page.getByTestId("shopping-item-editor__name").fill("Havremjölk");
+    await page.getByTestId("shopping-item-editor__qty").fill("2");
+    await page.getByTestId("shopping-item-editor__price").fill("19,50");
+    await page.getByTestId("shopping-item-editor__link").fill("www.ica.se");
+    await page.getByTestId("shopping-item-editor__note").fill("Barista");
+
+    // Closing with a field still focused saves it too.
+    await page.getByTestId("shopping-item-editor__close").click();
+    await expect(page.getByTestId("shopping-item-editor")).toHaveCount(0);
+
+    const item = page.getByTestId("shopping-item");
+    await expect(item.getByTestId("shopping-item__name")).toHaveText("Havremjölk");
+    await expect(item).toContainText("× 2");
+    await expect(item).toContainText("39 kr");
+    await expect(item).toContainText("Barista");
+    await expect(item.getByTestId("shopping-item__link")).toHaveAttribute("href", "https://www.ica.se");
+
+    // A new store section moves the item under that heading.
+    await page.getByTestId("shopping-item__open").click();
+    await page.getByTestId("shopping-item-editor__category").getByRole("button").click();
+    await page.getByRole("option", { name: "Pantry" }).click();
+    await expect(page.getByRole("heading", { name: "Pantry" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Dairy" })).toHaveCount(0);
+
+    // Edits survive a reload.
+    await page.reload();
+    await expect(item.getByTestId("shopping-item__name")).toHaveText("Havremjölk");
+
+    await page.getByTestId("sidebar__view-day").click();
+    await expect(page.getByTestId("task-row").filter({ hasText: "Buy: Havremjölk × 2" })).toBeVisible();
+
+    // Removing from the editor closes it.
+    await page.getByTestId("sidebar__shopping").click();
+    await page.getByTestId("shopping-item__open").click();
+    await page.getByTestId("shopping-item-editor__remove").click();
+    await expect(page.getByTestId("shopping-item-editor")).toHaveCount(0);
+    await expect(item).toHaveCount(0);
+  });
+
   test("renames and deletes a list", async ({ page }) => {
     await page.getByTestId("shopping__new-list-name").fill("Week");
     await page.getByTestId("shopping__create-list").click();

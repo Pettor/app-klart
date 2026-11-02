@@ -3,10 +3,12 @@ import { ArrowLeftIcon } from "@heroicons/react/24/outline";
 import { Button } from "@heroui/react";
 import clsx from "clsx";
 import { useIntl } from "react-intl";
+import { ShoppingItemEditorPanel } from "./ShoppingItemEditorPanel";
 import { ShoppingListPanel } from "./ShoppingListPanel";
 import { ShoppingListsPanel } from "./ShoppingListsPanel";
 import type {
   ShoppingDraftProps,
+  ShoppingItemEditorState,
   ShoppingListActions,
   ShoppingMoveTarget,
   ShoppingNewListProps,
@@ -29,9 +31,10 @@ export interface ShoppingViewProps {
   draft: ShoppingDraftProps;
   moveTargets: ShoppingMoveTarget[];
   listActions: ShoppingListActions;
+  itemEditor: ShoppingItemEditorState;
 }
 
-/** The Shopping page: the lists, then the one picked. My Day's sidebar stays beside it. */
+/** The Shopping page: the lists, the one picked, and the item being edited. My Day's sidebar stays beside it. */
 export function ShoppingView({
   today,
   openLists,
@@ -44,6 +47,7 @@ export function ShoppingView({
   draft,
   moveTargets,
   listActions,
+  itemEditor,
 }: ShoppingViewProps): ReactElement {
   const intl = useIntl();
   const showList = isListShownOnPhone && !!selected;
@@ -96,6 +100,7 @@ export function ShoppingView({
             draft={draft}
             moveTargets={moveTargets}
             actions={listActions}
+            editingItemId={itemEditor.item?.id ?? null}
           />
         ) : (
           <p className="text-muted max-w-[760px] p-8 text-center">
@@ -107,6 +112,8 @@ export function ShoppingView({
           </p>
         )}
       </section>
+
+      <ShoppingItemEditorPanel editor={itemEditor} actions={listActions} />
     </main>
   );
 }

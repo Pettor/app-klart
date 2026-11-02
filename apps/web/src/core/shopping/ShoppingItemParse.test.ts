@@ -1,5 +1,24 @@
 import { describe, expect, it } from "vitest";
-import { parseShoppingItem } from "./ShoppingItemParse";
+import { parseItemPrice, parseItemQty, parseShoppingItem } from "./ShoppingItemParse";
+
+describe("parseItemQty", () => {
+  it("reads whole numbers of at least one", () => {
+    expect(parseItemQty(" 3 ")).toBe(3);
+    expect(parseItemQty("0")).toBeNull();
+    expect(parseItemQty("1.5")).toBeNull();
+    expect(parseItemQty("two")).toBeNull();
+  });
+});
+
+describe("parseItemPrice", () => {
+  it("reads either decimal mark, and free", () => {
+    expect(parseItemPrice("25,50")).toBe(25.5);
+    expect(parseItemPrice("25.5")).toBe(25.5);
+    expect(parseItemPrice("0")).toBe(0);
+    expect(parseItemPrice("-1")).toBeNull();
+    expect(parseItemPrice("cheap")).toBeNull();
+  });
+});
 
 describe("parseShoppingItem", () => {
   it("reads a plain name and guesses its store section", () => {

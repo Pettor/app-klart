@@ -1,6 +1,8 @@
 import type { ShoppingItemRowItem } from "~/components/display/shopping-item-row/ShoppingItemRow";
 import type { ShoppingListCardList } from "~/components/display/shopping-list-card/ShoppingListCard";
+import type { ContextColor } from "~/core/contexts/KlartContext";
 import type { ShoppingCategory } from "~/core/shopping/ShoppingCategory";
+import type { ShoppingItemPatch } from "~/core/shopping/ShoppingData";
 import type { ShoppingListKind } from "~/core/shopping/ShoppingList";
 
 /** Items not bought yet under one heading: a store section on grocery lists, or `null` for one plain group. */
@@ -36,7 +38,35 @@ export interface ShoppingDraftProps {
   preview: ShoppingItemPreview | null;
 }
 
+/** Everything the item editor shows and edits. Built by the route hook from a domain `ShoppingItem`. */
+export interface ShoppingEditorItem {
+  id: string;
+  name: string;
+  qty: number | null;
+  /** Per piece, in kronor. */
+  price: number | null;
+  link: string | null;
+  note: string;
+  category: ShoppingCategory;
+  bought: boolean;
+  important: boolean;
+  isInMyDay: boolean;
+}
+
+export interface ShoppingItemEditorState {
+  /** The item being edited; `null` when the editor is closed. */
+  item: ShoppingEditorItem | null;
+  /** The list's accent. */
+  color: ContextColor;
+  /** The list groups by store section, so the editor offers it. */
+  showCategory: boolean;
+  onChange: (patch: ShoppingItemPatch) => void;
+  onClose: () => void;
+}
+
 export interface ShoppingListActions {
+  /** Opens the item in the editor. */
+  onOpenItem: (itemId: string) => void;
   onToggleBought: (itemId: string, bought: boolean) => void;
   onToggleImportant: (itemId: string) => void;
   onToggleItemMyDay: (itemId: string) => void;

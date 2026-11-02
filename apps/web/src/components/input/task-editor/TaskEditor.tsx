@@ -156,11 +156,11 @@ export function TaskEditor({
           className="min-w-0 flex-1"
         >
           <TextArea
-            rows={2}
+            rows={1}
             onBlur={drafts.commitTitle}
             onKeyDown={blurOnEnter}
             className={clsx(
-              "resize-none border-0 bg-transparent px-0 py-1 text-[17px] leading-snug font-semibold shadow-none",
+              "field-sizing-content min-h-9 resize-none border-0 bg-transparent px-2 py-1.5 text-[17px] leading-snug font-semibold shadow-none",
               task.done && "text-muted line-through"
             )}
             data-testid="task-editor__title"

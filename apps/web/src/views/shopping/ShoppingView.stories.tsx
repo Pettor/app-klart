@@ -85,7 +85,15 @@ function buildArgs(listIndex: number, isAllContexts = false): Props {
     newList: { onCreate: fn() },
     draft: { value: "", onChange: fn(), onSubmit: fn(), preview: null },
     moveTargets: lists.filter((list, index) => index !== listIndex && !list.completedAt),
+    itemEditor: {
+      item: null,
+      color: SHOPPING_KIND_COLORS[lists[listIndex]!.kind],
+      showCategory: lists[listIndex]!.kind === "grocery",
+      onChange: fn(),
+      onClose: fn(),
+    },
     listActions: {
+      onOpenItem: fn(),
       onToggleBought: fn(),
       onToggleImportant: fn(),
       onToggleItemMyDay: fn(),
@@ -142,6 +150,20 @@ export const Typing: Story = {
   },
   play: async ({ canvas }) => {
     await expect(canvas.getByTestId("shopping__item-preview")).toHaveTextContent("to Dairy");
+  },
+};
+
+const groceries = buildArgs(0);
+const editedItem = lists[0]!.items[0]!;
+
+/** An item open in the editor: a pane beside the list on wide screens, a sheet on narrow ones. */
+export const EditItem: Story = {
+  args: {
+    ...groceries,
+    itemEditor: { ...groceries.itemEditor, item: { ...editedItem, isInMyDay: false } },
+  },
+  play: async () => {
+    await expect(await screen.findByTestId("shopping-item-editor__name")).toHaveValue(editedItem.name);
   },
 };
 

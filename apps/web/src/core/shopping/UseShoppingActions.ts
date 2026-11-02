@@ -31,7 +31,8 @@ export interface ShoppingActions {
   createList: (name: string, kind: ShoppingListKind) => ShoppingList;
   /** Parses a quick-add line (`2x milk`, `199 kr`, a link) and adds the item. Returns `false` for an empty name. */
   addItem: (listId: string, text: string) => boolean;
-  updateItem: (listId: string, itemId: string, patch: ShoppingItemPatch) => void;
+  /** Edits the item. `taskTitle` retitles its My Day task when the name or quantity changes. */
+  updateItem: (listId: string, itemId: string, patch: ShoppingItemPatch, taskTitle: string) => void;
   setBought: (listId: string, itemId: string, bought: boolean) => void;
   toggleImportant: (listId: string, itemId: string) => void;
   removeItem: (listId: string, itemId: string) => void;
@@ -84,8 +85,8 @@ export function useShoppingActions(): ShoppingActions {
         );
         return true;
       },
-      updateItem: (listId, itemId, patch) =>
-        change((current, now) => updateShoppingItem(current, listId, itemId, patch, now)),
+      updateItem: (listId, itemId, patch, taskTitle) =>
+        change((current, now) => updateShoppingItem(current, listId, itemId, patch, taskTitle, now)),
       setBought: (listId, itemId, bought) =>
         change((current, now) => setItemBought(current, listId, itemId, bought, now)),
       toggleImportant: (listId, itemId) => change((current, now) => toggleItemImportant(current, listId, itemId, now)),

@@ -68,6 +68,8 @@ views/shopping.json for what's left to buy; write the list files.
   context it's for (the first context in klart.json if unsure).
 - Add an item: append it to "items". Never add the same thing twice; raise
   "qty" instead.
+- Edit an item: change its fields and "updatedAt". If it has a "taskId", keep
+  that task's title, "notes" and link in "links" in step.
 - Mark bought: set "bought": true, and if it has a "taskId" complete that
   task too. Star: set "important": true, and on its task too.
 - Remove an item: take it out of "items". If it has a "taskId", archive

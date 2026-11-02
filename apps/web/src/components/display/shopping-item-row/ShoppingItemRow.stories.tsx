@@ -72,6 +72,14 @@ export const Bought: Story = {
   args: { ...defaultArgs, item: { ...defaultArgs.item, bought: true } },
 };
 
+export const OpensEditor: Story = {
+  args: { ...defaultArgs, onOpen: fn(), isSelected: true },
+  play: async ({ canvas, args }) => {
+    canvas.getByRole("button", { name: "Edit item: Mjölk" }).click();
+    await expect(args.onOpen).toHaveBeenCalledWith("i1");
+  },
+};
+
 export const CheckOff: Story = {
   args: defaultArgs,
   play: async ({ canvas, args }) => {

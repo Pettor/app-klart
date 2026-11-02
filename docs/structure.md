@@ -178,6 +178,7 @@ views/
 │   ├── ShoppingListsPanel.tsx / ShoppingNewListForm.tsx
 │   ├── ShoppingListPanel.tsx    # Header, add-item field, grouped items, cart
 │   ├── ShoppingCompleteDialog.tsx / ShoppingItemInput.tsx
+│   ├── ShoppingItemEditorPanel.tsx / ShoppingItemEditor.tsx / UseShoppingItemEditor.ts  # Edit one item: pane or sheet
 │   └── ShoppingTypes.ts / ShoppingLabels.ts
 └── settings/
     ├── SettingsView.tsx

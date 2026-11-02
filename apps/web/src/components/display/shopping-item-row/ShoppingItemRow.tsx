@@ -28,6 +28,10 @@ export interface ShoppingItemRowItem {
 
 export interface ShoppingItemRowProps {
   item: ShoppingItemRowItem;
+  /** Pressing the name opens the item for editing. */
+  onOpen?: (itemId: string) => void;
+  /** The item is open in the editor. */
+  isSelected?: boolean;
   onToggleBought: (itemId: string, bought: boolean) => void;
   onToggleImportant?: (itemId: string) => void;
   onToggleMyDay?: (itemId: string) => void;
@@ -37,12 +41,14 @@ export interface ShoppingItemRowProps {
 }
 
 /**
- * One item on a shopping list: its price and link, then the sun, star and remove buttons. Checking it strikes the name
- * and lets the row collapse into "In the cart". The sun makes it a task in My Day; the buttons show on hover unless
- * they're on.
+ * One item on a shopping list: its price and link, then the sun, star and remove buttons. Pressing the name opens it
+ * for editing. Checking it strikes the name and lets the row collapse into "In the cart". The sun makes it a task in
+ * My Day; the buttons show on hover unless they're on.
  */
 export function ShoppingItemRow({
   item,
+  onOpen,
+  isSelected = false,
   onToggleBought,
   onToggleImportant,
   onToggleMyDay,
@@ -62,6 +68,7 @@ export function ShoppingItemRow({
           className={clsx(
             "shop-row hover:bg-surface-secondary/60 flex min-h-[52px] items-center gap-1 py-1 pr-2 pl-1.5 transition-colors",
             hasSeparator && "border-separator border-t",
+            isSelected && "outline-2 -outline-offset-2 outline-(color:--ctx)",
             completion.isChecking && "slab-checking",
             completion.phase === "leaving" && "opacity-0 transition-opacity duration-300"
           )}
@@ -72,7 +79,25 @@ export function ShoppingItemRow({
             onPress={completion.toggle}
             testId="shopping-item__toggle"
           />
-          <div className="flex min-w-0 flex-1 items-baseline gap-2.5">
+          <div className="relative flex min-w-0 flex-1 items-baseline gap-2.5 self-stretch py-3">
+            {onOpen && (
+              // An invisible button over the whole column, so the quantity and note open the item too.
+              <Button
+                variant="ghost"
+                aria-label={intl.formatMessage(
+                  {
+                    description: "ShoppingItemRow - aria-label of the item's name, which opens the item editor",
+                    defaultMessage: "Edit item: {name}",
+                    id: "XfJENi",
+                  },
+                  { name: item.name }
+                )}
+                onPress={() => onOpen(item.id)}
+                // Clears the ghost button's hover and press fills, which would cover the name it sits over.
+                className="absolute inset-0 h-auto min-h-0 w-auto transform-none rounded-md p-0 [--button-bg-hover:transparent] [--button-bg-pressed:transparent]"
+                data-testid="shopping-item__open"
+              />
+            )}
             <span
               className={clsx(
                 "min-w-0 truncate text-[15px]",

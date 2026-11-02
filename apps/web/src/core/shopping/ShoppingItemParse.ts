@@ -18,6 +18,18 @@ function toNumber(value: string): number {
   return Number(value.replace(",", "."));
 }
 
+/** A typed quantity: a whole number of at least one, or `null` for anything else. */
+export function parseItemQty(text: string): number | null {
+  const typed = text.trim();
+  return /^\d+$/.test(typed) && Number(typed) > 0 ? Number(typed) : null;
+}
+
+/** A typed price, with `.` or `,` for decimals, or `null` for anything else. */
+export function parseItemPrice(text: string): number | null {
+  const typed = text.trim();
+  return NUMBER.test(typed) ? toNumber(typed) : null;
+}
+
 /**
  * Reads the shopping quick-add line: `2x` or `x2` or `2st` is the quantity, `199kr`, `199 kr` or `199:-` the
  * price, an `http(s)://` or `www.` word the product link. Everything else is the name; a bare link names the

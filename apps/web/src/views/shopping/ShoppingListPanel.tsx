@@ -28,10 +28,18 @@ export interface ShoppingListPanelProps {
   draft: ShoppingDraftProps;
   moveTargets: ShoppingMoveTarget[];
   actions: ShoppingListActions;
+  /** The item open in the editor, marked on its row. */
+  editingItemId: string | null;
 }
 
 /** The selected list: header with Complete and a rename/delete menu, the add-item field, items to buy, and the cart. */
-export function ShoppingListPanel({ list, draft, moveTargets, actions }: ShoppingListPanelProps): ReactElement {
+export function ShoppingListPanel({
+  list,
+  draft,
+  moveTargets,
+  actions,
+  editingItemId,
+}: ShoppingListPanelProps): ReactElement {
   const intl = useIntl();
   const panel = useShoppingListPanel(list, moveTargets, actions);
   const isEmpty = list.groups.length === 0;
@@ -272,6 +280,8 @@ export function ShoppingListPanel({ list, draft, moveTargets, actions }: Shoppin
                   key={item.id}
                   item={item}
                   hasSeparator={index > 0}
+                  isSelected={item.id === editingItemId}
+                  onOpen={actions.onOpenItem}
                   onToggleBought={actions.onToggleBought}
                   onToggleImportant={actions.onToggleImportant}
                   onToggleMyDay={actions.onToggleItemMyDay}
@@ -324,6 +334,8 @@ export function ShoppingListPanel({ list, draft, moveTargets, actions }: Shoppin
                   key={item.id}
                   item={item}
                   hasSeparator={index > 0}
+                  isSelected={item.id === editingItemId}
+                  onOpen={actions.onOpenItem}
                   onToggleBought={actions.onToggleBought}
                 />
               ))}

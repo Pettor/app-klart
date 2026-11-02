@@ -16,7 +16,7 @@ import { useShopping } from "~/core/shopping/UseShopping";
 import { useShoppingActions } from "~/core/shopping/UseShoppingActions";
 import { formatTaskLink } from "~/core/tasks/TaskLink";
 import { getItemTaskTitle } from "~/views/shopping/ShoppingLabels";
-import type { ShoppingItemGroup, ShoppingSelectedList } from "~/views/shopping/ShoppingTypes";
+import type { ShoppingEditorItem, ShoppingItemGroup, ShoppingSelectedList } from "~/views/shopping/ShoppingTypes";
 import type { ShoppingViewProps } from "~/views/shopping/ShoppingView";
 
 /** The list's context, or `null` when one context is selected and every list shown is in it. */
@@ -61,6 +61,21 @@ function toRow(item: ShoppingItem, inTodayIds: Set<string>): ShoppingItemRowItem
   };
 }
 
+function toEditorItem(item: ShoppingItem, inTodayIds: Set<string>): ShoppingEditorItem {
+  return {
+    id: item.id,
+    name: item.name,
+    qty: item.qty,
+    price: item.price,
+    link: item.link,
+    note: item.note,
+    category: item.category,
+    bought: item.bought,
+    important: item.important,
+    isInMyDay: !!item.taskId && inTodayIds.has(item.taskId),
+  };
+}
+
 /** Items to buy, starred first. Grocery lists split them by store section, in walking order. */
 function toGroups(list: ShoppingList, inTodayIds: Set<string>): ShoppingItemGroup[] {
   const left = list.items.filter((item) => !item.bought);
@@ -95,12 +110,15 @@ export function useShoppingRoute(listId: string | null): ShoppingViewProps {
   const shopping = useShopping();
   const actions = useShoppingActions();
   const [draft, setDraft] = useState("");
+  const [editingItemId, setEditingItemId] = useState<string | null>(null);
 
   const { openLists, doneLists, inTodayIds, contexts, isAllContexts } = shopping;
   // Wide screens always show a list: the one in the URL, or the newest open one.
   const list =
     [...openLists, ...doneLists].find((candidate) => candidate.id === listId) ?? openLists[0] ?? doneLists[0] ?? null;
   const parsed = draft.trim() ? parseShoppingItem(draft) : null;
+  // Gone from the list (removed, moved, or another list picked) closes the editor.
+  const editingItem = list?.items.find((item) => item.id === editingItemId) ?? null;
 
   function card(other: ShoppingList): ShoppingListCardList {
     return toCard(other, toListContext(other, contexts, isAllContexts));
@@ -108,6 +126,7 @@ export function useShoppingRoute(listId: string | null): ShoppingViewProps {
 
   function selectList(id: string): void {
     setDraft("");
+    setEditingItemId(null);
     // Shopping is one entry in the history like a smart view, so Back from any list returns to My Day.
     navigation.across({ to: "/shopping", search: { list: id } });
   }
@@ -123,7 +142,10 @@ export function useShoppingRoute(listId: string | null): ShoppingViewProps {
     selected: list ? toSelected(list, toListContext(list, contexts, isAllContexts), inTodayIds) : null,
     isListShownOnPhone: !!listId,
     onSelectList: selectList,
-    onBackToLists: () => navigation.across({ to: "/shopping" }),
+    onBackToLists: () => {
+      setEditingItemId(null);
+      navigation.across({ to: "/shopping" });
+    },
     newList: {
       onCreate: (name, kind) => selectList(actions.createList(name, kind).id),
     },
@@ -150,7 +172,21 @@ export function useShoppingRoute(listId: string | null): ShoppingViewProps {
       // Lists of the same kind first: leftover groceries most likely go on the next grocery run.
       .sort((a, b) => Number(b.kind === list?.kind) - Number(a.kind === list?.kind))
       .map((other) => ({ id: other.id, name: other.name })),
+    itemEditor: {
+      item: editingItem && toEditorItem(editingItem, inTodayIds),
+      color: list ? SHOPPING_KIND_COLORS[list.kind] : "blue",
+      showCategory: list?.kind === "grocery",
+      onChange: (patch) => {
+        if (list && editingItem) {
+          const qty = patch.qty !== undefined ? patch.qty : editingItem.qty;
+          const title = getItemTaskTitle(intl, patch.name ?? editingItem.name, qty);
+          actions.updateItem(list.id, editingItem.id, patch, title);
+        }
+      },
+      onClose: () => setEditingItemId(null),
+    },
     listActions: {
+      onOpenItem: setEditingItemId,
       onToggleBought: (itemId, bought) => list && actions.setBought(list.id, itemId, bought),
       onToggleImportant: (itemId) => list && actions.toggleImportant(list.id, itemId),
       onToggleItemMyDay: (itemId) => {
