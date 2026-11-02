@@ -15,6 +15,53 @@ export interface ReleaseNote {
   fixes: ReleaseNoteItem[];
 }
 
+const v0110 = defineMessages({
+  topPickTitle: {
+    description: "ReleaseNotes 0.11.0 - highlight title: suggestions lead with a top pick",
+    defaultMessage: "One clear place to start",
+    id: "4CjuAN",
+  },
+  topPickDescription: {
+    description: "ReleaseNotes 0.11.0 - highlight text: suggestions lead with a top pick",
+    defaultMessage:
+      "Suggestions now lead with a top pick and a short Next up list, each with a reason. A task overdue for ages stops shouting and asks if it's still relevant.",
+    id: "zuhivk",
+  },
+  notTodayTitle: {
+    description: "ReleaseNotes 0.11.0 - highlight title: hide a suggestion until tomorrow",
+    defaultMessage: "Not today, thanks",
+    id: "urHsAv",
+  },
+  notTodayDescription: {
+    description: "ReleaseNotes 0.11.0 - highlight text: hide a suggestion until tomorrow",
+    defaultMessage:
+      "Press the moon on a suggestion to hide it until tomorrow on this device. Changed your mind? Undo is right there at the bottom of the panel.",
+    id: "kZULcW",
+  },
+  findTitle: {
+    description: "ReleaseNotes 0.11.0 - highlight title: filter and search suggestions",
+    defaultMessage: "Find what fits",
+    id: "FLdANT",
+  },
+  findDescription: {
+    description: "ReleaseNotes 0.11.0 - highlight text: filter and search suggestions",
+    defaultMessage:
+      "Narrow Suggestions to Overdue, Soon, Goes with today or Important, or press the magnifying glass to search by title or #tag.",
+    id: "CcwXSc",
+  },
+  shoppingEditTitle: {
+    description: "ReleaseNotes 0.11.0 - highlight title: edit pane for shopping items",
+    defaultMessage: "Fine-tune your shopping",
+    id: "TkVgEx",
+  },
+  shoppingEditDescription: {
+    description: "ReleaseNotes 0.11.0 - highlight text: edit pane for shopping items",
+    defaultMessage:
+      "Open an item on a shopping list to edit it in its own pane, like its name, quantity, price or category.",
+    id: "eXXcgr",
+  },
+});
+
 const v0100 = defineMessages({
   themesTitle: {
     description: "ReleaseNotes 0.10.0 - highlight title: four new themes",
@@ -631,6 +678,16 @@ const v010 = defineMessages({
  * entry here; people who update see every entry newer than the last one they saw.
  */
 export const RELEASE_NOTES: ReleaseNote[] = [
+  {
+    version: "0.11.0",
+    highlights: [
+      { emoji: "🎯", title: v0110.topPickTitle, description: v0110.topPickDescription },
+      { emoji: "🌙", title: v0110.notTodayTitle, description: v0110.notTodayDescription },
+      { emoji: "🔍", title: v0110.findTitle, description: v0110.findDescription },
+      { emoji: "🛒", title: v0110.shoppingEditTitle, description: v0110.shoppingEditDescription },
+    ],
+    fixes: [],
+  },
   {
     version: "0.10.0",
     highlights: [
