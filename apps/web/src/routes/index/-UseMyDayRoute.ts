@@ -3,7 +3,7 @@ import { useBreakpoint } from "@package/react";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { useIntl } from "react-intl";
 import type { ContextSwitcherOption } from "~/components/actions/context-switcher/ContextSwitcher";
-import type { SuggestionListGroup } from "~/components/display/suggestion-list/SuggestionList";
+import type { SuggestionItem } from "~/components/display/suggestion-list/SuggestionList";
 import type { TaskEditorTask } from "~/components/input/task-editor/TaskEditor";
 import type { KlartContext } from "~/core/contexts/KlartContext";
 import { ALL_CONTEXTS, findContext } from "~/core/contexts/KlartContext";
@@ -21,19 +21,17 @@ import {
   searchFocusRequestAtom,
   showSuggestionsAtom,
   sidebarCollapsedAtom,
+  snoozedSuggestionsAtom,
 } from "~/core/tasks/KlartAtoms";
 import type { TaskPatch } from "~/core/tasks/KlartData";
 import { parseQuickAdd } from "~/core/tasks/QuickAdd";
-import { selectDueSuggestions } from "~/core/tasks/Suggestions";
+import { getSnoozedToday, isUrgentSuggestion, selectDueSuggestions } from "~/core/tasks/Suggestions";
 import type { Task } from "~/core/tasks/Task";
 import { useKlartActions } from "~/core/tasks/UseKlartActions";
 import { useMyDay } from "~/core/tasks/UseMyDay";
 import { useTask } from "~/core/tasks/UseTask";
 import type { MyDayTask, MyDayTaskEditorProps } from "~/views/my-day/MyDayTypes";
 import type { MyDayViewProps } from "~/views/my-day/MyDayView";
-
-/** Suggestion groups longer than this are truncated in the panel (the agent file keeps everything). */
-const MAX_ITEMS_PER_GROUP = 12;
 
 function toMyDayTask(
   task: Task,
@@ -91,6 +89,7 @@ export function useMyDayRoute(editingId: string | null, page: "day" | "shop" = "
   const isWide = useBreakpoint("xl");
   const [showSuggestions, setShowSuggestions] = useAtom(showSuggestionsAtom);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const [snoozes, setSnoozes] = useAtom(snoozedSuggestionsAtom);
   const [displayOptions, setDisplayOptions] = useAtom(displayOptionsAtom);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useAtom(sidebarCollapsedAtom);
   const requestSearchFocus = useSetAtom(searchFocusRequestAtom);
@@ -162,17 +161,23 @@ export function useMyDayRoute(editingId: string | null, page: "day" | "shop" = "
     [allName, contexts, myDay.dayCountByContext]
   );
 
-  const suggestionGroups = useMemo<SuggestionListGroup[]>(
+  const suggestionItems = useMemo<SuggestionItem[]>(
     () =>
-      myDay.suggestionGroups.map((group) => ({
-        reason: group.reason,
-        total: group.tasks.length,
-        items: group.tasks.slice(0, MAX_ITEMS_PER_GROUP).map((task) => {
-          const row = toMyDayTask(task, contexts, inTodayIds);
-          return { id: row.id, title: row.title, contextColor: row.contextColor, due: row.due, tags: row.tags };
-        }),
-      })),
-    [contexts, inTodayIds, myDay.suggestionGroups]
+      myDay.rankedSuggestions.map(({ task, reason, why, kinds }) => {
+        const row = toMyDayTask(task, contexts, inTodayIds);
+        return {
+          id: row.id,
+          title: row.title,
+          contextColor: row.contextColor,
+          contextName: row.contextName,
+          important: row.important,
+          tags: row.tags,
+          reason,
+          why,
+          kinds,
+        };
+      }),
+    [contexts, inTodayIds, myDay.rankedSuggestions]
   );
   const dueSuggestions = selectDueSuggestions(myDay.suggestionGroups);
 
@@ -315,9 +320,11 @@ export function useMyDayRoute(editingId: string | null, page: "day" | "shop" = "
         : null,
     },
     suggestions: {
-      groups: suggestionGroups,
-      count: suggestionGroups.reduce((sum, group) => sum + group.total, 0),
+      items: suggestionItems,
+      count: suggestionItems.length,
+      urgentCount: myDay.rankedSuggestions.filter(isUrgentSuggestion).length,
       dueCount: dueSuggestions.length,
+      snoozedCount: myDay.snoozedCount,
       // On wide screens the editor replaces the panel, so the toggle closes the editor and brings suggestions back.
       isOpen: isWide ? showSuggestions && !editor.task : isSheetOpen,
       onToggle: () => {
@@ -332,6 +339,12 @@ export function useMyDayRoute(editingId: string | null, page: "day" | "shop" = "
       },
       onAdd: (taskId, reason) => actions.addToToday([{ taskId, reason }]),
       onAddAllDue: () => actions.addToToday(dueSuggestions.map(({ task, reason }) => ({ taskId: task.id, reason }))),
+      onSnooze: (taskId) => {
+        // Rewritten from today's entries only, so yesterday's don't pile up.
+        const kept = [...getSnoozedToday(snoozes, today), taskId];
+        setSnoozes(Object.fromEntries(kept.map((id) => [id, today])));
+      },
+      onUndoSnooze: () => setSnoozes({}),
     },
     editor,
     agentJson: displayOptions.agentJson ? JSON.stringify(myDay.todayView, null, 2) : "",

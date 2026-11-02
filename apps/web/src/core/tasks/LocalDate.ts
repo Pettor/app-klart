@@ -64,3 +64,8 @@ export function minutesOfDay(time: string): number {
   const [hours, minutes] = time.split(":").map(Number);
   return (hours ?? 0) * 60 + (minutes ?? 0);
 }
+
+/** Whole days from one local date to another; negative when `to` comes first. */
+export function daysBetween(from: string, to: string): number {
+  return Math.round((parseLocalDate(to).getTime() - parseLocalDate(from).getTime()) / 86_400_000);
+}

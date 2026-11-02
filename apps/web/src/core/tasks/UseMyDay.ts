@@ -8,14 +8,15 @@ import {
   searchFocusRequestAtom,
   searchQueryAtom,
   smartViewAtom,
+  snoozedSuggestionsAtom,
   suggestionSettingsAtom,
   tagFilterAtom,
   todayAtom,
   visibleKlartDataAtom,
 } from "./KlartAtoms";
 import { addDays, toUtcTimestamp } from "./LocalDate";
-import type { SuggestionGroup } from "./Suggestions";
-import { buildSuggestions } from "./Suggestions";
+import type { RankedSuggestion, SuggestionGroup } from "./Suggestions";
+import { buildSuggestions, getSnoozedToday, rankSuggestions } from "./Suggestions";
 import type { Task } from "./Task";
 import { compareByDue, isOpen } from "./Task";
 import type { ContextSelection, KlartContext } from "~/core/contexts/KlartContext";
@@ -44,6 +45,10 @@ export interface MyDayState {
   /** Completed tasks in today's My Day. */
   doneTasks: Task[];
   suggestionGroups: SuggestionGroup[];
+  /** The same suggestions as one scored list, best first. */
+  rankedSuggestions: RankedSuggestion[];
+  /** Open tasks hidden from the suggestions until tomorrow. */
+  snoozedCount: number;
   /** Open My Day tasks per context id, plus `all`. */
   dayCountByContext: Record<string, number>;
   smartCounts: Record<SmartView, number>;
@@ -78,6 +83,7 @@ export function useMyDay(): MyDayState {
   const [search, setSearch] = useAtom(searchQueryAtom);
   const searchFocusRequest = useAtomValue(searchFocusRequestAtom);
   const suggestionSettings = useAtomValue(suggestionSettingsAtom);
+  const snoozes = useAtomValue(snoozedSuggestionsAtom);
 
   const currentContext =
     currentContextRaw === ALL_CONTEXTS || data.contexts.some((context) => context.id === currentContextRaw)
@@ -152,14 +158,16 @@ export function useMyDay(): MyDayState {
       .sort(([a, aCount], [b, bCount]) => bCount - aCount || a.localeCompare(b))
       .map(([name]) => name);
 
-    const suggestionGroups = buildSuggestions({
+    const snoozedIds = getSnoozedToday(snoozes, today);
+    const suggestionInput = {
       tasks: visible,
       today,
       todayDay,
       yesterdayDay: data.days[addDays(today, -1)],
       contextTags,
       settings: suggestionSettings,
-    });
+      snoozedIds,
+    };
 
     const fullView = buildTodayView(data, today, toUtcTimestamp(new Date()));
     const todayView: TodayView = { ...fullView, items: fullView.items.filter((item) => visibleById.has(item.taskId)) };
@@ -167,7 +175,9 @@ export function useMyDay(): MyDayState {
     return {
       listTasks: lists[smartView],
       doneTasks: dayTasks.filter((task) => task.status === "done"),
-      suggestionGroups,
+      suggestionGroups: buildSuggestions(suggestionInput),
+      rankedSuggestions: rankSuggestions(suggestionInput),
+      snoozedCount: open.filter((task) => snoozedIds.has(task.id) && !inTodayIds.has(task.id)).length,
       dayCountByContext,
       smartCounts,
       tags,
@@ -175,7 +185,7 @@ export function useMyDay(): MyDayState {
       inTodayIds,
       todayView,
     };
-  }, [data, today, currentContext, tag, search, smartView, suggestionSettings]);
+  }, [data, today, currentContext, tag, search, smartView, suggestionSettings, snoozes]);
 
   return {
     today,

@@ -1,11 +1,11 @@
 import { useState } from "react";
-import type { SuggestionListGroup } from "./SuggestionList";
+import type { SuggestionItem } from "./SuggestionList";
 import type { SuggestionReason } from "~/core/tasks/Day";
 
 /** The + turns into a check, then the card slides out and the list closes the gap. */
 const LEAVE_MS = 460;
 
-/** The groups "Add all due" takes in. */
+/** The reasons "Add all due" takes in. */
 const DUE_REASONS: SuggestionReason[] = ["overdue", "due_today"];
 
 export interface SuggestionLeave {
@@ -17,7 +17,7 @@ export interface SuggestionLeave {
 
 /** Adding a suggestion lets its card leave the panel first, then adds it to My Day. */
 export function useSuggestionLeave(
-  groups: SuggestionListGroup[],
+  items: SuggestionItem[],
   onAdd: (taskId: string, reason: SuggestionReason) => void,
   onAddAllDue: () => void
 ): SuggestionLeave {
@@ -40,9 +40,7 @@ export function useSuggestionLeave(
       }
     },
     addAllDue: () => {
-      const ids = groups
-        .filter((group) => DUE_REASONS.includes(group.reason))
-        .flatMap((group) => group.items.map((item) => item.id));
+      const ids = items.filter((item) => DUE_REASONS.includes(item.reason)).map((item) => item.id);
       leave(ids, onAddAllDue);
     },
   };

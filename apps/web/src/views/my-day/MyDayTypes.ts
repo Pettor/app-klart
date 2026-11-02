@@ -1,5 +1,5 @@
 import type { ContextSwitcherOption } from "~/components/actions/context-switcher/ContextSwitcher";
-import type { SuggestionListGroup } from "~/components/display/suggestion-list/SuggestionList";
+import type { SuggestionItem } from "~/components/display/suggestion-list/SuggestionList";
 import type { TaskRowTask } from "~/components/display/task-row/TaskRow";
 import type { TaskDropPosition } from "~/components/display/task-row/UseTaskReorder";
 import type { QuickAddPreview } from "~/components/input/quick-add/QuickAddInput";
@@ -71,13 +71,18 @@ export interface MyDayQuickAddProps {
 }
 
 export interface MyDaySuggestionsProps {
-  groups: SuggestionListGroup[];
+  items: SuggestionItem[];
   count: number;
+  /** Suggestions that need attention today, shown on the panel's toggle. */
+  urgentCount: number;
   dueCount: number;
+  snoozedCount: number;
   isOpen: boolean;
   onToggle: () => void;
   onAdd: (taskId: string, reason: SuggestionReason) => void;
   onAddAllDue: () => void;
+  onSnooze: (taskId: string) => void;
+  onUndoSnooze: () => void;
 }
 
 export interface MyDaySidebarProps {

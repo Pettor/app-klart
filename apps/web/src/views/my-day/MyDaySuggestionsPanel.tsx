@@ -8,7 +8,6 @@ import type { MyDayPane } from "./UseMyDayPaneWidth";
 import { SuggestionList } from "~/components/display/suggestion-list/SuggestionList";
 
 export interface MyDaySuggestionsPanelProps {
-  today: string;
   contextColor: string;
   suggestions: MyDaySuggestionsProps;
   onOpenTask?: (taskId: string) => void;
@@ -17,7 +16,6 @@ export interface MyDaySuggestionsPanelProps {
 
 /** A side panel on wide screens; a bottom sheet on phones and tablets. */
 export function MyDaySuggestionsPanel({
-  today,
   contextColor,
   suggestions,
   onOpenTask,
@@ -29,11 +27,14 @@ export function MyDaySuggestionsPanel({
   function list(hideHeading: boolean): ReactElement {
     return (
       <SuggestionList
-        groups={suggestions.groups}
-        today={today}
+        items={suggestions.items}
+        urgentCount={suggestions.urgentCount}
         dueCount={suggestions.dueCount}
+        snoozedCount={suggestions.snoozedCount}
         onAdd={suggestions.onAdd}
         onAddAllDue={suggestions.onAddAllDue}
+        onSnooze={suggestions.onSnooze}
+        onUndoSnooze={suggestions.onUndoSnooze}
         hideHeading={hideHeading}
         onOpen={onOpenTask}
       />

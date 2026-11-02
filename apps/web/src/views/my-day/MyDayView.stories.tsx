@@ -10,7 +10,7 @@ import { buildTodayView } from "~/core/tasks/AgentViews";
 import type { DisplayOptions } from "~/core/tasks/DisplayOptions";
 import { MINIMAL_DISPLAY_OPTIONS } from "~/core/tasks/DisplayOptions";
 import { addDays } from "~/core/tasks/LocalDate";
-import { buildSuggestions, selectDueSuggestions } from "~/core/tasks/Suggestions";
+import { isUrgentSuggestion, rankSuggestions, selectDueSuggestions, buildSuggestions } from "~/core/tasks/Suggestions";
 import type { Task } from "~/core/tasks/Task";
 import { DEMO_DATA, DEMO_TODAY } from "~/storybook/data/KlartDemoData";
 import { demoSyncOverview } from "~/storybook/data/SyncDemoData";
@@ -45,13 +45,15 @@ function buildArgs(contextId: string): Props {
     (task) => contextId === ALL_CONTEXTS || task.context === contextId
   );
   const dayTasks = DEMO_DATA.days[DEMO_TODAY]!.items.flatMap((item) => tasks.filter((task) => task.id === item.taskId));
-  const groups = buildSuggestions({
+  const suggestionInput = {
     tasks,
     today: DEMO_TODAY,
     todayDay: DEMO_DATA.days[DEMO_TODAY],
     yesterdayDay: DEMO_DATA.days[addDays(DEMO_TODAY, -1)],
     contextTags: DEMO_DATA.contexts.map((context) => context.tag),
-  });
+  };
+  const groups = buildSuggestions(suggestionInput);
+  const ranked = rankSuggestions(suggestionInput);
   const selected = findContext(DEMO_DATA.contexts, contextId);
   const open = tasks.filter((task) => task.status === "open");
   const tagCounts = new Map<string, number>();
@@ -116,20 +118,30 @@ function buildArgs(contextId: string): Props {
     },
     quickAdd: { value: "", onChange: fn(), onSubmit: fn(), preview: null },
     suggestions: {
-      groups: groups.map((group) => ({
-        reason: group.reason,
-        total: group.tasks.length,
-        items: group.tasks.map((task) => {
-          const row = toRow(task);
-          return { id: row.id, title: row.title, contextColor: row.contextColor, due: row.due, tags: row.tags };
-        }),
-      })),
-      count: groups.reduce((sum, group) => sum + group.tasks.length, 0),
+      items: ranked.map(({ task, reason, why, kinds }) => {
+        const row = toRow(task);
+        return {
+          id: row.id,
+          title: row.title,
+          contextColor: row.contextColor,
+          contextName: row.contextName,
+          important: row.important,
+          tags: row.tags,
+          reason,
+          why,
+          kinds,
+        };
+      }),
+      count: ranked.length,
+      urgentCount: ranked.filter(isUrgentSuggestion).length,
       dueCount: selectDueSuggestions(groups).length,
+      snoozedCount: 0,
       isOpen: true,
       onToggle: fn(),
       onAdd: fn(),
       onAddAllDue: fn(),
+      onSnooze: fn(),
+      onUndoSnooze: fn(),
     },
     editor: {
       task: null,
@@ -320,7 +332,7 @@ export const Empty: Story = {
     ...buildArgs("personal"),
     tasks: [],
     doneTasks: [],
-    suggestions: { ...buildArgs("personal").suggestions, groups: [], count: 0, dueCount: 0 },
+    suggestions: { ...buildArgs("personal").suggestions, items: [], count: 0, urgentCount: 0, dueCount: 0 },
   },
 };
 

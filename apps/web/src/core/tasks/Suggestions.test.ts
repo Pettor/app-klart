@@ -1,7 +1,14 @@
 import { describe, expect, it } from "vitest";
 import type { DayFile } from "./Day";
 import { addDays } from "./LocalDate";
-import { buildSuggestions, selectDueSuggestions } from "./Suggestions";
+import type { RankedSuggestion } from "./Suggestions";
+import {
+  buildSuggestions,
+  getSnoozedToday,
+  isUrgentSuggestion,
+  rankSuggestions,
+  selectDueSuggestions,
+} from "./Suggestions";
 import type { Task } from "./Task";
 
 const TODAY = "2026-10-21";
@@ -109,5 +116,99 @@ describe("buildSuggestions", () => {
       ["overdue-new", "overdue"],
       ["due-today", "due_today"],
     ]);
+  });
+});
+
+describe("rankSuggestions", () => {
+  function rank(tasks: Task[], planned: string[] = [], yesterday: string[] = []): RankedSuggestion[] {
+    return rankSuggestions({
+      tasks,
+      today: TODAY,
+      todayDay: day(TODAY, planned),
+      yesterdayDay: day(addDays(TODAY, -1), yesterday),
+      contextTags: ["work"],
+    });
+  }
+
+  it("orders by urgency: overdue, due today, left from yesterday, soon, undated", () => {
+    const ranked = rank(
+      [
+        task("undated"),
+        task("soon", { due: addDays(TODAY, 2) }),
+        task("yesterday"),
+        task("today", { due: TODAY }),
+        task("overdue", { due: addDays(TODAY, -2) }),
+      ],
+      [],
+      ["yesterday"]
+    );
+    expect(ranked.map((suggestion) => suggestion.task.id)).toEqual([
+      "overdue",
+      "today",
+      "yesterday",
+      "soon",
+      "undated",
+    ]);
+    expect(ranked.map((suggestion) => suggestion.why)).toEqual([
+      { type: "overdue", days: 2 },
+      { type: "due_today" },
+      { type: "left_from_yesterday" },
+      { type: "due_in", days: 2 },
+      { type: "no_date" },
+    ]);
+  });
+
+  it("asks about long-overdue tasks instead of leading with them", () => {
+    const ranked = rank([task("stale", { due: addDays(TODAY, -54) }), task("yesterday")], [], ["yesterday"]);
+    expect(ranked.map((suggestion) => suggestion.task.id)).toEqual(["yesterday", "stale"]);
+    expect(ranked[1]).toMatchObject({ why: { type: "stale", days: 54 }, kinds: ["overdue"] });
+    expect(isUrgentSuggestion(ranked[1]!)).toBe(false);
+  });
+
+  it("lifts important tasks and tasks with a reminder today", () => {
+    const ranked = rank([
+      task("plain"),
+      task("reminder", { remindAt: `${TODAY}T14:00` }),
+      task("star", { important: true }),
+    ]);
+    expect(ranked.map((suggestion) => suggestion.task.id)).toEqual(["star", "reminder", "plain"]);
+    expect(ranked[0]!.kinds).toEqual(["important"]);
+  });
+
+  it("explains a weak suggestion by its shared tag, ignoring context tags", () => {
+    const ranked = rank(
+      [
+        task("planned", { tags: ["acme", "work"] }),
+        task("related", { tags: ["acme"] }),
+        task("work-only", { tags: ["work"] }),
+        task("overdue", { due: addDays(TODAY, -2), tags: ["acme"] }),
+      ],
+      ["planned"]
+    );
+    const byId = Object.fromEntries(ranked.map((suggestion) => [suggestion.task.id, suggestion]));
+    expect(byId.related).toMatchObject({ why: { type: "goes_with_today", tag: "acme" }, kinds: ["related"] });
+    expect(byId["work-only"]).toMatchObject({ why: { type: "no_date" }, kinds: [] });
+    expect(byId.overdue).toMatchObject({ why: { type: "overdue", days: 2 }, kinds: ["overdue", "related"] });
+  });
+
+  it("counts anything due today or worse as urgent", () => {
+    const ranked = rank([task("today", { due: TODAY }), task("tomorrow", { due: addDays(TODAY, 1) })]);
+    expect(ranked.filter(isUrgentSuggestion).map((suggestion) => suggestion.task.id)).toEqual(["today"]);
+  });
+
+  it("leaves out snoozed tasks and follows settings", () => {
+    const ranked = rankSuggestions({
+      tasks: [task("snoozed", { due: TODAY }), task("soon", { due: addDays(TODAY, 5) }), task("loose")],
+      today: TODAY,
+      snoozedIds: new Set(["snoozed"]),
+      settings: { disabled: ["recently_added"], comingUpDays: 7 },
+    });
+    expect(ranked.map((suggestion) => suggestion.task.id)).toEqual(["soon"]);
+  });
+});
+
+describe("getSnoozedToday", () => {
+  it("only keeps today's, so a snoozed task returns the next day", () => {
+    expect([...getSnoozedToday({ a: TODAY, b: addDays(TODAY, -1) }, TODAY)]).toEqual(["a"]);
   });
 });

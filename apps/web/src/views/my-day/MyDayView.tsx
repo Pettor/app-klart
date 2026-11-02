@@ -154,7 +154,7 @@ export function MyDayView({
               contextName={context.selectedName}
               tag={tags.active}
               onClearTag={() => tags.onSelect(null)}
-              suggestionCount={suggestions.count}
+              suggestionCount={suggestions.urgentCount}
               isSuggestionsOpen={suggestions.isOpen}
               onToggleSuggestions={suggestions.onToggle}
               onOpenNotifications={onOpenNotifications}
@@ -224,7 +224,6 @@ export function MyDayView({
           <MyDayTaskEditorPanel editor={editor} pane={pane} />
           {!(isWide && editor.task) && (
             <MyDaySuggestionsPanel
-              today={today}
               contextColor={context.selectedColor}
               suggestions={suggestions}
               onOpenTask={taskActions.onOpen}

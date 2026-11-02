@@ -116,6 +116,14 @@ export const sidebarCollapsedAtom = atomWithStorage<boolean>("klart-sidebar-coll
   getOnInit: true,
 });
 
+/** Suggestions hidden with "Not today": task id to the date it was hidden. Remembered per device. */
+export const snoozedSuggestionsAtom = atomWithStorage<Record<string, string>>(
+  "klart-snoozed-suggestions",
+  {},
+  undefined,
+  { getOnInit: true }
+);
+
 /** Which suggestion groups My Day offers. Remembered per device. */
 export const suggestionSettingsAtom = atomWithStorage<SuggestionSettings>(
   "klart-suggestion-settings",

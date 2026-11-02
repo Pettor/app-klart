@@ -17,6 +17,7 @@ export interface MyDayHeaderProps {
   contextName: string;
   tag: string | null;
   onClearTag: () => void;
+  /** Suggestions that need attention today; none hides the count. */
   suggestionCount: number;
   isSuggestionsOpen: boolean;
   onToggleSuggestions: () => void;
@@ -117,7 +118,7 @@ export function MyDayHeader({
             defaultMessage: "Suggestions",
             id: "nKIanK",
           })}
-          <span className="font-semibold text-(--ctx)">{suggestionCount}</span>
+          {suggestionCount > 0 && <span className="font-semibold text-(--ctx)">{suggestionCount}</span>}
         </ToggleButton>
       </div>
     </header>

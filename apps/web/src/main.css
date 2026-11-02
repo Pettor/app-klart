@@ -577,6 +577,9 @@
     opacity: 0.5;
     transition: opacity 0.15s;
   }
+  .suggestion-row:hover {
+    background: var(--slab);
+  }
   .slab:hover .slab-grip,
   .slab-grip:focus-within {
     opacity: 1;
@@ -591,6 +594,7 @@
   .slab:hover .slab-reveal,
   .slab-done:hover .slab-reveal,
   .shop-row:hover .slab-reveal,
+  .suggestion-row:hover .slab-reveal,
   .slab-reveal:focus-within,
   .slab-reveal[aria-expanded="true"] {
     opacity: 1;
@@ -644,6 +648,16 @@
   color: var(--color-muted);
   background-size: 100% 1.5px;
 }
+/* The top pick in Suggestions: a raised card that stays put on hover, unlike a task's slab. */
+.suggestion-card {
+  border-radius: 14px;
+  background: var(--slab);
+  box-shadow: var(--slab-shadow);
+}
+.suggestion-row {
+  border-radius: 10px;
+  transition: background 0.15s;
+}
 .slab-leave {
   display: grid;
   /* `minmax(0, …)` so a long one-line title truncates instead of widening the card. */
@@ -664,7 +678,9 @@
 .slab-leaving .slab-leave-in {
   overflow: hidden;
 }
-.slab-leaving .slab {
+.slab-leaving .slab,
+.slab-leaving .suggestion-card,
+.slab-leaving .suggestion-row {
   opacity: 0;
   transform: translateY(14px) scale(0.94);
   transition:
@@ -672,7 +688,9 @@
     opacity 0.3s ease;
 }
 /* A suggestion added to My Day: its + turns into a check, then the card slides out toward the list. */
-.slab-leave-side.slab-leaving .slab {
+.slab-leave-side.slab-leaving .slab,
+.slab-leave-side.slab-leaving .suggestion-card,
+.slab-leave-side.slab-leaving .suggestion-row {
   transform: translateX(-24px) scale(0.96);
   transition-delay: 0.12s;
 }
