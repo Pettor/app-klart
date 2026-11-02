@@ -14,6 +14,8 @@ export interface DisplayOptions {
   completed: boolean;
   /** Today as `views/today.json`, above the list. */
   agentJson: boolean;
+  /** Lets the list fill wide screens instead of a centered column. */
+  fullWidth: boolean;
 }
 
 export type DisplayOption = keyof DisplayOptions;
@@ -27,9 +29,10 @@ export const MINIMAL_DISPLAY_OPTIONS: DisplayOptions = {
   tagFilter: false,
   completed: false,
   agentJson: false,
+  fullWidth: false,
 };
 
 /** Options that add to the minimal view; the Display button shows a dot while any is on. */
 export function hasDisplayExtras(options: DisplayOptions): boolean {
-  return options.taskTags || options.tagFilter || options.completed || options.agentJson;
+  return options.taskTags || options.tagFilter || options.completed || options.agentJson || options.fullWidth;
 }

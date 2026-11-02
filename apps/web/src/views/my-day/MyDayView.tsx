@@ -135,7 +135,9 @@ export function MyDayView({
           <main
             className={clsx(
               `ctx-${context.selectedColor}`,
-              "hero-glow flex min-w-0 flex-1 flex-col gap-5 bg-(--ctx-backdrop) bg-no-repeat px-4 pt-4 pb-[calc(env(safe-area-inset-bottom)+12px)] sm:px-8 sm:pb-0 lg:pt-10"
+              "hero-glow flex min-w-0 flex-1 flex-col gap-5 bg-(--ctx-backdrop) bg-no-repeat px-4 pt-4 pb-[calc(env(safe-area-inset-bottom)+12px)] sm:px-8 sm:pb-0 lg:pt-10",
+              // On wide screens the list keeps to a centered column, unless "Full width" is on.
+              !options.fullWidth && "*:mx-auto *:w-full *:max-w-[880px]"
             )}
           >
             <MyDayMobileBar

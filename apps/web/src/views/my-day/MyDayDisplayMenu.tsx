@@ -133,10 +133,23 @@ export function MyDayDisplayMenu({ display, variant, contextColor, className }: 
         id: "mDmG9M",
       }),
     },
+    fullWidth: {
+      label: intl.formatMessage({
+        description: "MyDayDisplayMenu - option letting the task list fill wide screens",
+        defaultMessage: "Full width",
+        id: "lPJemF",
+      }),
+      hint: intl.formatMessage({
+        description: "MyDayDisplayMenu - hint for the full width option",
+        defaultMessage: "Let the list fill wide screens",
+        id: "1HyA1Z",
+      }),
+    },
   };
   const keys: DisplayOption[] = ["details", "notes", "links", "taskTags", "tagFilter", "completed"];
+  // Phones are never wide enough for these.
   if (!isSheet) {
-    keys.push("agentJson");
+    keys.push("agentJson", "fullWidth");
   }
 
   const heading = intl.formatMessage({
