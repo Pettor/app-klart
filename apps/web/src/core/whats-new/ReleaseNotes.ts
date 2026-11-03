@@ -15,6 +15,42 @@ export interface ReleaseNote {
   fixes: ReleaseNoteItem[];
 }
 
+const v0150 = defineMessages({
+  stayPutTitle: {
+    description: "ReleaseNotes 0.15.0 - highlight title: contexts stay in the sync they live in",
+    defaultMessage: "Contexts stay where they belong",
+    id: "mmHo4n",
+  },
+  stayPutDescription: {
+    description: "ReleaseNotes 0.15.0 - highlight text: contexts stay in the sync they live in",
+    defaultMessage:
+      "With several syncs, a context now stays in the one it lives in. A device that's been closed for a while no longer copies contexts into other syncs or takes them out of their own.",
+    id: "Tt7TE2",
+  },
+  removedTitle: {
+    description: "ReleaseNotes 0.15.0 - highlight title: removed tasks and contexts stay removed",
+    defaultMessage: "Gone means gone",
+    id: "16tIpu",
+  },
+  removedDescription: {
+    description: "ReleaseNotes 0.15.0 - highlight text: removed tasks and contexts stay removed",
+    defaultMessage:
+      "Tasks, lists and contexts removed on one device, or straight in the folder, stay removed. Other devices won't quietly bring them back the next time they open.",
+    id: "AohgNh",
+  },
+  safetyTitle: {
+    description: "ReleaseNotes 0.15.0 - highlight title: sync stops instead of emptying a folder",
+    defaultMessage: "A safety net for your folders",
+    id: "NVL8RV",
+  },
+  safetyDescription: {
+    description: "ReleaseNotes 0.15.0 - highlight text: sync stops instead of emptying a folder",
+    defaultMessage:
+      "If a sync folder suddenly looks empty, Klart stops and tells you instead of clearing your data everywhere. Several open windows also take turns syncing.",
+    id: "1/QWCc",
+  },
+});
+
 const v0141 = defineMessages({
   backFixTitle: {
     description: "ReleaseNotes 0.14.1 - fix title: Back from a shopping list returns to the lists",
@@ -787,6 +823,15 @@ const v010 = defineMessages({
  * entry here; people who update see every entry newer than the last one they saw.
  */
 export const RELEASE_NOTES: ReleaseNote[] = [
+  {
+    version: "0.15.0",
+    highlights: [
+      { emoji: "🏠", title: v0150.stayPutTitle, description: v0150.stayPutDescription },
+      { emoji: "🧹", title: v0150.removedTitle, description: v0150.removedDescription },
+      { emoji: "🛟", title: v0150.safetyTitle, description: v0150.safetyDescription },
+    ],
+    fixes: [],
+  },
   {
     version: "0.14.1",
     highlights: [],
