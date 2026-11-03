@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { BrowserFolderBackend } from "./BrowserFolderBackend";
 import { NewerDataVersionError } from "./DataVersion";
-import type { SyncScope } from "./FolderSync";
-import { FolderSync, serialize } from "./FolderSync";
+import type { SyncBase, SyncScope } from "./FolderSync";
+import { EmptiedFolderError, FolderSync, serialize } from "./FolderSync";
 import { LLMS_TXT } from "./LlmsTxt";
 import {
   addItemToDay,
@@ -97,6 +97,16 @@ class FakeDir {
       return child instanceof FakeFile ? child.content : undefined;
     }
     return child instanceof FakeDir ? child.read(rest.join("/")) : undefined;
+  }
+
+  /** Test helper: removes a file by path, as another device or a person in the Git repo would. */
+  async remove(path: string): Promise<void> {
+    const [head, ...rest] = path.split("/");
+    if (rest.length === 0) {
+      await this.removeEntry(head!);
+      return;
+    }
+    await (await this.getDirectoryHandle(head!)).remove(rest.join("/"));
   }
 
   /** Test helper: writes a file by path, as another device or an agent would. */
@@ -490,7 +500,7 @@ describe("FolderSync with contexts split across syncs", () => {
     expect(pulled.data.contexts.map((context) => context.id)).toEqual(["personal", "work"]);
   });
 
-  it("drops a context another device removed from the folder", async () => {
+  it("keeps a context another device took out of the folder, since it may live in another sync", async () => {
     const data = splitSeed();
     await personal.push(data, { today: TODAY, options: OPTIONS, scope: { ...PERSONAL, ownsContext: () => true } });
     await personal.pull(data, { today: TODAY, acceptInbox: false, scope: PERSONAL });
@@ -501,8 +511,62 @@ describe("FolderSync with contexts split across syncs", () => {
       serialize({ schema: "klart.config/v1", contexts: [data.contexts.find((context) => context.id === "personal")] })
     );
     const pulled = await personal.pull(data, { today: TODAY, acceptInbox: false, scope: PERSONAL });
-    expect(pulled.data.contexts.map((context) => context.id)).toEqual(["personal"]);
+    // The sync lifecycle drops it only once no folder lists it (findStaleContexts).
+    expect(pulled.data.contexts.map((context) => context.id)).toEqual(["personal", "work"]);
     expect(personal.listedContextIds).toEqual(["personal"]);
+  });
+
+  it("keeps a context in its own folder when another folder lets go of it", async () => {
+    // Work used to be in both folders; someone takes it out of the personal one by hand.
+    const data = splitSeed();
+    const both: SyncScope = { ...PERSONAL, ownsContext: () => true };
+    await personal.push(data, { today: TODAY, options: OPTIONS, scope: both });
+    await work.push(data, { today: TODAY, options: OPTIONS, scope: WORK });
+    const first = await personal.pull(data, { today: TODAY, acceptInbox: false, scope: both });
+    await work.pull(first.data, { today: TODAY, acceptInbox: false, scope: WORK });
+
+    await personalRoot.write(
+      "klart.json",
+      serialize({ schema: "klart.config/v1", contexts: [data.contexts.find((context) => context.id === "personal")] })
+    );
+    const pulled = await personal.pull(first.data, { today: TODAY, acceptInbox: false, scope: PERSONAL });
+    await work.pull(pulled.data, { today: TODAY, acceptInbox: false, scope: WORK });
+    await work.push(pulled.data, { today: TODAY, options: OPTIONS, scope: WORK });
+
+    const listed = JSON.parse(workRoot.read("klart.json")!) as { contexts: { id: string }[] };
+    expect(listed.contexts.map((context) => context.id)).toEqual(["work"]);
+    expect(workRoot.read("tasks/work/T1.json")).toBeDefined();
+  });
+
+  it("never empties a folder's klart.json", async () => {
+    const data = splitSeed();
+    await work.push(data, { today: TODAY, options: OPTIONS, scope: WORK });
+    await work.pull(data, { today: TODAY, acceptInbox: false, scope: WORK });
+
+    await work.push(data, { today: TODAY, options: OPTIONS, scope: { ownsContext: () => false, isPrimary: false } });
+    const listed = JSON.parse(workRoot.read("klart.json")!) as { contexts: { id: string }[] };
+    expect(listed.contexts.map((context) => context.id)).toEqual(["work"]);
+  });
+
+  it("stops when a folder that listed contexts suddenly lists none", async () => {
+    const data = splitSeed();
+    await work.push(data, { today: TODAY, options: OPTIONS, scope: WORK });
+    await work.pull(data, { today: TODAY, acceptInbox: false, scope: WORK });
+
+    await workRoot.write("klart.json", serialize({ schema: "klart.config/v1", contexts: [] }));
+    await expect(work.pull(data, { today: TODAY, acceptInbox: false, scope: WORK })).rejects.toBeInstanceOf(
+      EmptiedFolderError
+    );
+    // Also after a restart.
+    const restarted = new FolderSync(
+      new BrowserFolderBackend(workRoot as unknown as FileSystemDirectoryHandle),
+      "MacBook Air",
+      undefined,
+      { contexts: ["work"], tasks: {}, lists: {} }
+    );
+    await expect(restarted.pull(data, { today: TODAY, acceptInbox: false, scope: WORK })).rejects.toBeInstanceOf(
+      EmptiedFolderError
+    );
   });
 
   it("keeps a list without a context in the folder that has it", async () => {
@@ -526,6 +590,96 @@ describe("FolderSync with contexts split across syncs", () => {
     await workRoot.write("inbox/agent.txt", "prepare the slides\n");
     const pulled = await work.pull(createEmptyData(), { today: TODAY, acceptInbox: true, scope: WORK });
     expect(Object.values(pulled.data.tasks).map((task) => task.context)).toEqual(["work"]);
+  });
+});
+
+describe("FolderSync across sessions", () => {
+  let root: FakeDir;
+
+  function engine(base: SyncBase | null = null): FolderSync {
+    return new FolderSync(
+      new BrowserFolderBackend(root as unknown as FileSystemDirectoryHandle),
+      "Linux PC",
+      undefined,
+      base
+    );
+  }
+
+  beforeEach(() => {
+    root = new FakeDir("Klart");
+  });
+
+  /** Syncs `data` once and returns what this device keeps for its next session. */
+  async function syncOnce(data: KlartData): Promise<SyncBase> {
+    const first = engine();
+    await first.pull(data, { today: TODAY, acceptInbox: false });
+    await first.push(data, { today: TODAY, options: OPTIONS });
+    return first.base;
+  }
+
+  it("doesn't write back a task another device removed while this one was closed", async () => {
+    const data = seed();
+    const base = await syncOnce(data);
+    expect(base.tasks).toEqual({ T1: data.tasks.T1!.updatedAt });
+
+    // Another device (or a person in the Git repo) removes the task file.
+    await root.remove("tasks/work/T1.json");
+
+    const restarted = engine(base);
+    const pulled = await restarted.pull(data, { today: TODAY, acceptInbox: false });
+    expect(pulled.data.tasks.T1).toBeUndefined();
+    await restarted.push(pulled.data, { today: TODAY, options: OPTIONS });
+    expect(root.read("tasks/work/T1.json")).toBeUndefined();
+  });
+
+  it("writes a removed task back when it was edited here after the removal", async () => {
+    const data = seed();
+    const base = await syncOnce(data);
+    await root.remove("tasks/work/T1.json");
+
+    const edited = updateTask(data, "T1", { title: "Still needed" }, new Date("2026-10-22T08:00:00Z"));
+    const restarted = engine(base);
+    const pulled = await restarted.pull(edited, { today: TODAY, acceptInbox: false });
+    expect(pulled.data.tasks.T1?.title).toBe("Still needed");
+    await restarted.push(pulled.data, { today: TODAY, options: OPTIONS });
+    expect(root.read("tasks/work/T1.json")).toBeDefined();
+  });
+
+  it("notices a task removed while it's running, not only after a restart", async () => {
+    const data = seed();
+    const running = engine();
+    await running.pull(data, { today: TODAY, acceptInbox: false });
+    await running.push(data, { today: TODAY, options: OPTIONS });
+
+    await root.remove("tasks/work/T1.json");
+    const pulled = await running.pull(data, { today: TODAY, acceptInbox: false });
+    expect(pulled.data.tasks.T1).toBeUndefined();
+  });
+
+  it("doesn't write back a shopping list another device removed", async () => {
+    const data = upsertList(seed(), createShoppingList("L1", "Groceries", "grocery", "personal", null, new Date()));
+    const base = await syncOnce(data);
+    await root.remove("lists/L1.json");
+
+    const restarted = engine(base);
+    const pulled = await restarted.pull(data, { today: TODAY, acceptInbox: false });
+    expect(pulled.data.lists.L1).toBeUndefined();
+  });
+
+  it("still writes tasks made here that the folder never had", async () => {
+    const data = seed();
+    const base = await syncOnce(data);
+    const task = createTask(
+      parseQuickAdd("new on this device", { today: TODAY, contexts: data.contexts, currentContext: "work" }),
+      new Date("2026-10-22T08:00:00Z"),
+      "T2"
+    );
+    const withNew = { ...data, tasks: { ...data.tasks, T2: task } };
+
+    const restarted = engine(base);
+    const pulled = await restarted.pull(withNew, { today: TODAY, acceptInbox: false });
+    await restarted.push(pulled.data, { today: TODAY, options: OPTIONS });
+    expect(root.read("tasks/work/T2.json")).toBeDefined();
   });
 });
 

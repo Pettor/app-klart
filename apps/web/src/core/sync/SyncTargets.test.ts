@@ -2,16 +2,20 @@ import { describe, expect, it } from "vitest";
 import type { SyncStatus } from "./SyncAtoms";
 import type { SyncSetup } from "./SyncTargets";
 import {
+  adoptLocalContexts,
   assignFoundContexts,
   buildSyncOverview,
   DEVICE_ONLY,
+  findStaleContexts,
   getContextTargetId,
   getSyncScope,
   makePrimarySyncTarget,
   placeNewContext,
   removeSyncTarget,
+  settlePendingContexts,
 } from "./SyncTargets";
 import type { KlartContext } from "~/core/contexts/KlartContext";
+import type { Task } from "~/core/tasks/Task";
 
 const CONTEXTS: KlartContext[] = [
   { id: "personal", name: "Personal", color: "blue", tag: "personal" },
@@ -54,14 +58,58 @@ describe("SyncTargets", () => {
     expect(getSyncScope(stale, "office", listings).ownsContext("personal")).toBe(false);
   });
 
-  it("puts a context no folder lists in its assigned sync, once every sync has been read", () => {
+  it("puts a context created here and listed in no folder in its assigned sync, once every sync has been read", () => {
+    const created = { ...SETUP, pendingContexts: ["club"] };
     const listings = { home: ["personal"], office: ["work"] };
-    expect(getSyncScope(SETUP, "home", listings).ownsContext("club")).toBe(true);
-    expect(getSyncScope(SETUP, "office", listings).ownsContext("club")).toBe(false);
+    expect(getSyncScope(created, "home", listings).ownsContext("club")).toBe(true);
+    expect(getSyncScope(created, "office", listings).ownsContext("club")).toBe(false);
     // The office folder hasn't been read yet: it may hold "club", so nothing claims it.
-    expect(getSyncScope(SETUP, "home", { home: ["personal"] }).ownsContext("club")).toBe(false);
+    expect(getSyncScope(created, "home", { home: ["personal"] }).ownsContext("club")).toBe(false);
     // Before the first read a folder holds nothing, so a push can't empty it.
     expect(getSyncScope(SETUP, "home", {}).ownsContext("personal")).toBe(false);
+  });
+
+  it("never writes a context that no folder lists and wasn't created here back into a folder", () => {
+    // A device that was closed while "club" was removed (or moved to a sync it doesn't have) still holds it.
+    const listings = { home: ["personal"], office: ["work"] };
+    expect(getSyncScope(SETUP, "home", listings).ownsContext("club")).toBe(false);
+    expect(getSyncScope(SETUP, "office", listings).ownsContext("club")).toBe(false);
+  });
+
+  it("finds contexts no folder lists once every sync has been read, keeping new and device-only ones", () => {
+    const listings = { home: ["personal"], office: [] };
+    expect(findStaleContexts(SETUP, listings, CONTEXTS)).toEqual(["work", "club"]);
+    expect(findStaleContexts({ ...SETUP, pendingContexts: ["club"] }, listings, CONTEXTS)).toEqual(["work"]);
+    expect(findStaleContexts({ ...SETUP, contextTargets: { work: DEVICE_ONLY } }, listings, CONTEXTS)).toEqual([
+      "club",
+    ]);
+    // Not before every sync has been read: the office folder may still list them.
+    expect(findStaleContexts(SETUP, { home: ["personal"] }, CONTEXTS)).toEqual([]);
+    // Never every context, and never without syncs.
+    expect(findStaleContexts(SETUP, { home: [], office: [] }, CONTEXTS)).toEqual([]);
+    expect(findStaleContexts({ targets: [], contextTargets: {} }, {}, CONTEXTS)).toEqual([]);
+  });
+
+  it("drops pending contexts once a folder lists them", () => {
+    const created = { ...SETUP, pendingContexts: ["club", "garden"] };
+    expect(settlePendingContexts(created, { home: ["personal", "club"] }).pendingContexts).toEqual(["garden"]);
+    expect(settlePendingContexts(created, { home: ["personal"] })).toBe(created);
+  });
+
+  it("gives the first sync this device's contexts on its first read", () => {
+    const first: SyncSetup = { targets: [{ ...SETUP.targets[0]!, adoptLocalData: true }], contextTargets: {} };
+    const task = { context: "club" } as Task;
+    const data = { contexts: CONTEXTS, tasks: { T1: task }, lists: {} };
+
+    // An empty folder gets everything.
+    const empty = adoptLocalContexts(first, "home", data, []);
+    expect(empty.pendingContexts).toEqual(["personal", "work", "club"]);
+    expect(empty.targets[0]?.adoptLocalData).toBeUndefined();
+    // A folder in use only gets contexts with something in them.
+    expect(adoptLocalContexts(first, "home", data, ["personal"]).pendingContexts).toEqual(["club"]);
+    // Only once, and only for the sync that was just added.
+    expect(adoptLocalContexts(empty, "home", data, [])).toBe(empty);
+    expect(adoptLocalContexts(SETUP, "home", data, [])).toBe(SETUP);
   });
 
   it("assigns contexts found in a sync to it, unless the sync they live in lists them too", () => {
@@ -116,7 +164,9 @@ describe("SyncTargets", () => {
   });
 
   it("places a new context in the sync it was created in", () => {
-    expect(placeNewContext(SETUP, "club", "office").contextTargets).toEqual({ work: "office", club: "office" });
+    const placed = placeNewContext(SETUP, "club", "office");
+    expect(placed.contextTargets).toEqual({ work: "office", club: "office" });
+    expect(placed.pendingContexts).toEqual(["club"]);
     expect(placeNewContext(SETUP, "club", "gone")).toBe(SETUP);
   });
 

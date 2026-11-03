@@ -3,7 +3,7 @@ import { DATA_VERSION, isNewerDataVersion, NewerDataVersionError } from "./DataV
 import type { FolderBackend, FolderFileInfo } from "./FolderBackend";
 import { LLMS_TXT } from "./LlmsTxt";
 import type { KlartContext } from "~/core/contexts/KlartContext";
-import { ALL_CONTEXTS, CONTEXT_COLORS, findContext } from "~/core/contexts/KlartContext";
+import { ALL_CONTEXTS, CONTEXT_COLORS } from "~/core/contexts/KlartContext";
 import { reconcileShoppingTasks } from "~/core/shopping/ShoppingData";
 import type { ShoppingList } from "~/core/shopping/ShoppingList";
 import { getListContext, ShoppingListFileSchema } from "~/core/shopping/ShoppingList";
@@ -96,6 +96,33 @@ export interface PullResult {
   contextIds: string[] | null;
 }
 
+/**
+ * What a folder held after this device last synced with it, kept between
+ * sessions. It's the common ancestor that tells a file another device removed
+ * apart from one this device hasn't written yet, so a device that was closed
+ * for a while doesn't write removed contexts, tasks or lists back.
+ */
+export interface SyncBase {
+  /** The context ids in the folder's `klart.json`. */
+  contexts: string[];
+  /** Task ids in the folder, with the `updatedAt` of the version it held. */
+  tasks: Record<string, string>;
+  /** Shopping list ids in the folder, with the `updatedAt` of the version it held. */
+  lists: Record<string, string>;
+}
+
+/**
+ * A folder that listed contexts last time now has no `klart.json`, or one that
+ * lists none. That's a wiped folder or a broken write, not a decision to delete
+ * everything, so this sync stops until someone fixes the folder.
+ */
+export class EmptiedFolderError extends Error {
+  constructor() {
+    super("This folder's klart.json is missing or lists no contexts. Restore it before syncing again.");
+    this.name = "EmptiedFolderError";
+  }
+}
+
 interface KnownFile {
   content: string;
   lastModified: number;
@@ -126,6 +153,24 @@ export function toDeviceId(name: string): string {
   );
 }
 
+/** The id a task or list file is named after: `tasks/work/T1.json` → `T1`. */
+function fileId(path: string): string {
+  return path.slice(path.lastIndexOf("/") + 1).replace(/\.json$/, "");
+}
+
+/** `data` without the task and its My Day items. */
+function withoutTask(data: KlartData, taskId: string): KlartData {
+  const tasks = { ...data.tasks };
+  delete tasks[taskId];
+  const days: Record<string, DayFile> = {};
+  for (const [date, day] of Object.entries(data.days)) {
+    days[date] = day.items.some((item) => item.taskId === taskId)
+      ? { ...day, items: day.items.filter((item) => item.taskId !== taskId) }
+      : day;
+  }
+  return { ...data, tasks, days };
+}
+
 function mergeDays(local: DayFile | undefined, remote: DayFile): DayFile {
   if (!local) {
     return remote;
@@ -134,8 +179,21 @@ function mergeDays(local: DayFile | undefined, remote: DayFile): DayFile {
   return { ...remote, items: [...remote.items, ...local.items.filter((item) => !remoteIds.has(item.taskId))] };
 }
 
+/**
+ * Takes the folder's version of every context it lists and keeps the rest. A
+ * pull never removes a context: one that left this folder may live in another
+ * sync, and the sync lifecycle only drops it once no folder lists it.
+ */
 function mergeContexts(local: KlartContext[], remote: KlartContext[]): KlartContext[] {
-  return [...remote, ...local.filter((context) => !findContext(remote, context.id))];
+  if (local.length === 0) {
+    return remote;
+  }
+  return mergeOwned(
+    local,
+    remote,
+    (context) => context.id,
+    () => false
+  );
 }
 
 /**
@@ -208,23 +266,47 @@ export class FolderSync {
   private readonly viewSignatures = new Map<string, string>();
   /** The data version last read from `klart.json`, by its `lastModified`. */
   private folderVersion: { lastModified: number; version: string } | null = null;
-  /** The context ids in the folder's `klart.json` as last read or written; `null` until the first pull. */
-  private listed: string[] | null = null;
+  /** The context ids in the folder's `klart.json` as last read or written; `null` when never seen. */
+  private listed: string[] | null;
+  /** Task and list ids the folder held, with the `updatedAt` it held them at; see {@link SyncBase}. */
+  private readonly seenTasks: Map<string, string>;
+  private readonly seenLists: Map<string, string>;
+  private read = false;
 
   constructor(
     private readonly folder: FolderBackend,
     private readonly deviceName: string,
     /** This app's data version; injected in tests. */
-    private readonly dataVersion = DATA_VERSION
-  ) {}
+    private readonly dataVersion = DATA_VERSION,
+    /** What the folder held when this device last synced with it, from an earlier session. */
+    base: SyncBase | null = null
+  ) {
+    this.listed = base ? [...base.contexts] : null;
+    this.seenTasks = new Map(Object.entries(base?.tasks ?? {}));
+    this.seenLists = new Map(Object.entries(base?.lists ?? {}));
+  }
 
   get folderName(): string {
     return this.folder.name;
   }
 
+  /** Whether this engine has read the folder; nothing should be written before it has. */
+  get hasRead(): boolean {
+    return this.read;
+  }
+
   /** The context ids the folder's `klart.json` lists, or `null` before the first pull. */
   get listedContextIds(): string[] | null {
-    return this.listed;
+    return this.read ? this.listed : null;
+  }
+
+  /** What the folder holds as of the last pull or push, to keep for the next session. */
+  get base(): SyncBase {
+    return {
+      contexts: [...(this.listed ?? [])],
+      tasks: Object.fromEntries(this.seenTasks),
+      lists: Object.fromEntries(this.seenLists),
+    };
   }
 
   /** Reads a file only when it changed since last seen. Returns `null` when unchanged. */
@@ -286,34 +368,25 @@ export class FolderSync {
 
     await this.checkDataVersion();
 
+    const listedBefore = this.listed ?? [];
     const configModified = await this.folder.stat(CONFIG_FILE);
+    let listedNow: string[] = [];
     if (configModified !== null) {
-      // Only a context the folder listed and no longer does was removed; one it never listed isn't its to remove.
-      const wasListed = new Set(this.listed ?? []);
       const read = await this.readChangedSafely({ path: CONFIG_FILE, lastModified: configModified });
       const parsed = read && KlartConfigSchema.safeParse(read.json);
       if (read && parsed?.success) {
         const remote = parsed.data.contexts;
-        const contexts =
-          read.isNew || this.listed === null
-            ? mergeContexts(data.contexts, remote)
-            : mergeOwned(
-                data.contexts,
-                remote,
-                (context) => context.id,
-                (context) => wasListed.has(context.id)
-              );
-        data = { ...data, contexts };
+        data = { ...data, contexts: mergeContexts(data.contexts, remote) };
         contextIds = remote.map((context) => context.id);
         changed = true;
       }
       const known = this.known.get(CONFIG_FILE);
-      if (known) {
-        this.listed = listedContextIds(known.content);
-      }
-    } else {
-      this.listed = [];
+      listedNow = known ? listedContextIds(known.content) : [];
     }
+    if (listedNow.length === 0 && listedBefore.length > 0) {
+      throw new EmptiedFolderError();
+    }
+    this.listed = listedNow;
 
     // Push compares against what's on disk, so a folder written by an older version gets this version's LLMS.txt.
     const llmsModified = await this.folder.stat(LLMS_FILE);
@@ -322,6 +395,7 @@ export class FolderSync {
     }
 
     const taskFiles = (await this.folder.list("tasks", 1)).filter((file) => file.path.endsWith(".json"));
+    const taskIdsInFolder = new Set(taskFiles.map((file) => fileId(file.path)));
     for (const file of taskFiles) {
       const read = await this.readChangedSafely(file);
       if (!read) {
@@ -332,12 +406,26 @@ export class FolderSync {
         continue;
       }
       const remote = parsed.data as Task;
+      this.seenTasks.set(remote.id, remote.updatedAt);
       const current = data.tasks[remote.id];
       if (!current || remote.updatedAt > current.updatedAt) {
         data = { ...data, tasks: { ...data.tasks, [remote.id]: remote } };
         changed = true;
       } else if (remote.updatedAt < current.updatedAt && !read.isNew) {
         await this.write(`.conflicts/${remote.id}-${remote.updatedAt.replace(/[:]/g, "")}.json`, read.text);
+      }
+    }
+    // A task the folder held and no longer does was removed (or moved to another sync, which brings it back).
+    // An edit made here since then wins over the removal and is written back.
+    for (const [id, seenAt] of [...this.seenTasks]) {
+      if (taskIdsInFolder.has(id)) {
+        continue;
+      }
+      this.seenTasks.delete(id);
+      const current = data.tasks[id];
+      if (current && current.updatedAt <= seenAt) {
+        data = withoutTask(data, id);
+        changed = true;
       }
     }
 
@@ -366,6 +454,7 @@ export class FolderSync {
     }
 
     const listFiles = (await this.folder.list("lists", 0)).filter((file) => file.path.endsWith(".json"));
+    const listIdsInFolder = new Set(listFiles.map((file) => fileId(file.path)));
     for (const file of listFiles) {
       const read = await this.readChangedSafely(file);
       const parsed = read && ShoppingListFileSchema.safeParse(read.json);
@@ -373,6 +462,7 @@ export class FolderSync {
         continue;
       }
       const remote = parsed.data as ShoppingList;
+      this.seenLists.set(remote.id, remote.updatedAt);
       const current = data.lists[remote.id];
       if (!current || remote.updatedAt > current.updatedAt) {
         data = { ...data, lists: { ...data.lists, [remote.id]: remote } };
@@ -381,6 +471,20 @@ export class FolderSync {
         await this.write(`.conflicts/list-${remote.id}-${remote.updatedAt.replace(/[:]/g, "")}.json`, read.text);
       }
     }
+    for (const [id, seenAt] of [...this.seenLists]) {
+      if (listIdsInFolder.has(id)) {
+        continue;
+      }
+      this.seenLists.delete(id);
+      const current = data.lists[id];
+      if (current && current.updatedAt <= seenAt) {
+        const lists = { ...data.lists };
+        delete lists[id];
+        data = { ...data, lists };
+        changed = true;
+      }
+    }
+    this.read = true;
 
     // A task completed in another app or by an agent marks its shopping item bought.
     if (changed) {
@@ -484,10 +588,13 @@ export class FolderSync {
 
     const data = scopeData(all, scope);
     const desired = new Map<string, string>();
-    desired.set(
-      CONFIG_FILE,
-      serialize({ schema: "klart.config/v1", dataVersion: this.dataVersion, contexts: data.contexts })
-    );
+    // Never empty a folder's klart.json: with no contexts left to list, this device is out of date, not the folder.
+    if (data.contexts.length > 0 || !this.known.has(CONFIG_FILE)) {
+      desired.set(
+        CONFIG_FILE,
+        serialize({ schema: "klart.config/v1", dataVersion: this.dataVersion, contexts: data.contexts })
+      );
+    }
     for (const task of Object.values(data.tasks)) {
       desired.set(taskPath(task), serialize(task));
     }
@@ -524,6 +631,18 @@ export class FolderSync {
       if ((path.startsWith("tasks/") || path.startsWith("lists/")) && !desired.has(path)) {
         await this.folder.remove(path);
         this.known.delete(path);
+      }
+    }
+
+    // The folder now holds exactly these tasks and lists, as far as this device knows.
+    this.seenTasks.clear();
+    for (const task of Object.values(data.tasks)) {
+      this.seenTasks.set(task.id, task.updatedAt);
+    }
+    this.seenLists.clear();
+    for (const [path, content] of desired) {
+      if (path.startsWith("lists/")) {
+        this.seenLists.set(fileId(path), (JSON.parse(content) as ShoppingList).updatedAt);
       }
     }
 

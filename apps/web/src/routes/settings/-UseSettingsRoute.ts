@@ -169,9 +169,8 @@ export function useSettingsRoute(section?: SettingsSectionId): SettingsViewProps
       syncs: sync.overview.targets.map(({ id, name }) => ({ id, name })),
       onCreate: (name, color, syncId) => {
         const context = actions.createContext(name, color);
-        if (syncId) {
-          sync.placeNewContext(context.id, syncId);
-        }
+        // Only contexts created here go into a folder that doesn't list them yet.
+        sync.placeNewContext(context.id, syncId ?? undefined);
       },
       onUpdate: actions.updateContext,
       onRemove: actions.removeContext,

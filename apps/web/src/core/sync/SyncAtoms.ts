@@ -1,7 +1,7 @@
 import { atom } from "jotai";
 import { atomWithStorage } from "jotai/utils";
 import type { FolderPermission } from "./FileSystemAccess";
-import type { AgentFileOptions, DeviceInfo } from "./FolderSync";
+import type { AgentFileOptions, DeviceInfo, SyncBase } from "./FolderSync";
 import type { GitHubErrorKind } from "./GitHubBackend";
 import type { SyncListings, SyncSetup, SyncTarget } from "./SyncTargets";
 import { EMPTY_SYNC_SETUP } from "./SyncTargets";
@@ -139,6 +139,17 @@ export const syncStatusesAtom = atom<Record<string, SyncStatus>>({});
 
 /** The contexts in each sync's `klart.json` as last read or written, by sync id; see {@link SyncListings}. */
 export const syncListingsAtom = atom<SyncListings>({});
+
+/** A sync's {@link SyncBase}, with the connection it was read from so a sync pointed elsewhere starts over. */
+export interface StoredSyncBase {
+  connection: string;
+  base: SyncBase;
+}
+
+/** What each sync's folder held when this device last synced with it, by sync id. Kept between sessions. */
+export const syncBasesAtom = atomWithStorage<Record<string, StoredSyncBase>>("klart-sync-bases", {}, undefined, {
+  getOnInit: true,
+});
 
 /** The devices each sync has seen, by sync id. */
 export const syncDevicesByTargetAtom = atom<Record<string, DeviceInfo[]>>({});

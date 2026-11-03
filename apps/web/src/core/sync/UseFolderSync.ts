@@ -8,6 +8,7 @@ import {
   folderHandlesAtom,
   folderPermissionsAtom,
   gitAvailableAtom,
+  syncBasesAtom,
   syncDevicesAtom,
   syncDevicesByTargetAtom,
   syncRequestAtom,
@@ -15,7 +16,7 @@ import {
   syncSetupAtom,
   syncStatusesAtom,
 } from "./SyncAtoms";
-import type { StoredSyncConnection, SyncOverview } from "./SyncTargets";
+import type { StoredSyncConnection, SyncOverview, SyncTarget } from "./SyncTargets";
 import {
   buildSyncOverview,
   createSyncTargetId,
@@ -80,7 +81,8 @@ export interface UseFolderSyncResult {
   rename: (targetId: string, name: string) => void;
   makePrimary: (targetId: string) => void;
   /** Puts a just-created context in a sync. Contexts live where they were created and can't be moved. */
-  placeNewContext: (contextId: string, targetId: string) => void;
+  /** Records a context created on this device, for `targetId` or the primary sync, so it's written there. */
+  placeNewContext: (contextId: string, targetId?: string) => void;
   syncNow: () => void;
   setDeviceName: (name: string) => void;
   setAgentOption: (key: keyof AgentFileOptions, value: boolean) => void;
@@ -102,6 +104,7 @@ export function useFolderSync(): UseFolderSyncResult {
   const setPermissions = useSetAtom(folderPermissionsAtom);
   const setSyncRequest = useSetAtom(syncRequestAtom);
   const setDevicesByTarget = useSetAtom(syncDevicesByTargetAtom);
+  const setBases = useSetAtom(syncBasesAtom);
   const onDesktop = isDesktop();
 
   /** Adds a sync, or points `targetId` at a new place. Returns the sync's id. */
@@ -114,9 +117,13 @@ export function useFolderSync(): UseFolderSyncResult {
           targets: current.targets.map((target) => (target.id === id ? { ...target, connection } : target)),
         };
       }
-      return { ...current, targets: [...current.targets, { id, name, connection }] };
+      // The first sync takes the data this device already has; later ones only get the contexts placed in them.
+      const target: SyncTarget = { id, name, connection, adoptLocalData: current.targets.length === 0 || undefined };
+      return { ...current, targets: [...current.targets, target] };
     });
     setDevicesByTarget((all) => withoutKey(all, id));
+    // Pointed somewhere new, it has to read that folder from scratch.
+    setBases((all) => withoutKey(all, id));
     return id;
   }
 
@@ -210,12 +217,14 @@ export function useFolderSync(): UseFolderSyncResult {
 
   async function remove(targetId: string): Promise<void> {
     setSetup((current) => removeSyncTarget(current, targetId, data.contexts));
+    setBases((all) => withoutKey(all, targetId));
     await forgetFolder(targetId);
   }
 
   async function disconnect(): Promise<void> {
     const ids = setup.targets.map((target) => target.id);
     setSetup({ targets: [], contextTargets: {} });
+    setBases({});
     await Promise.all(ids.map(forgetFolder));
   }
 
@@ -245,7 +254,8 @@ export function useFolderSync(): UseFolderSyncResult {
         targets: current.targets.map((target) => (target.id === targetId ? { ...target, name } : target)),
       })),
     makePrimary: (targetId) => setSetup((current) => makePrimarySyncTarget(current, targetId, data.contexts)),
-    placeNewContext: (contextId, targetId) => setSetup((current) => placeNewContext(current, contextId, targetId)),
+    placeNewContext: (contextId, targetId) =>
+      setSetup((current) => placeNewContext(current, contextId, targetId ?? current.targets[0]?.id ?? "")),
     syncNow: () => setSyncRequest((count) => count + 1),
     setDeviceName: (deviceName) => setSettings((current) => ({ ...current, deviceName })),
     setAgentOption: (key, value) =>

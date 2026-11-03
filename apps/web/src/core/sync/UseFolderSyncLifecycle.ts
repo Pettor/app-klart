@@ -8,6 +8,7 @@ import type { FolderBackend } from "./FolderBackend";
 import { LEGACY_FOLDER_KEY, loadFolderHandle } from "./FolderHandleStore";
 import { FolderSync } from "./FolderSync";
 import { GitHubBackend, GitHubError } from "./GitHubBackend";
+import { backUpDroppedContexts, withoutContexts } from "./StaleContexts";
 import type { SyncConnection, SyncStatus } from "./SyncAtoms";
 import {
   folderHandlesAtom,
@@ -15,6 +16,7 @@ import {
   gitAvailableAtom,
   PLATFORM_DEVICE_NAMES,
   SYNC_SETUP_KEY,
+  syncBasesAtom,
   syncDevicesByTargetAtom,
   syncListingsAtom,
   syncRequestAtom,
@@ -23,7 +25,15 @@ import {
   syncStatusesAtom,
 } from "./SyncAtoms";
 import type { StoredSyncConnection, SyncTarget } from "./SyncTargets";
-import { assignFoundContexts, getSyncScope, methodOfConnection, withoutKey } from "./SyncTargets";
+import {
+  adoptLocalContexts,
+  assignFoundContexts,
+  findStaleContexts,
+  getSyncScope,
+  methodOfConnection,
+  settlePendingContexts,
+  withoutKey,
+} from "./SyncTargets";
 import { desktop, isDesktop } from "~/core/platform/Desktop";
 import { klartDataAtom, todayAtom } from "~/core/tasks/KlartAtoms";
 import type { KlartData } from "~/core/tasks/KlartData";
@@ -64,6 +74,12 @@ function rebase(base: KlartData, pulled: KlartData, current: KlartData): KlartDa
       tasks[id] = task;
     }
   }
+  // Removed by another device, unless edited here while the pull ran.
+  for (const [id, task] of Object.entries(base.tasks)) {
+    if (!pulled.tasks[id] && current.tasks[id] === task) {
+      delete tasks[id];
+    }
+  }
   const days = { ...current.days };
   for (const [date, day] of Object.entries(pulled.days)) {
     if (day !== base.days[date]) {
@@ -74,6 +90,11 @@ function rebase(base: KlartData, pulled: KlartData, current: KlartData): KlartDa
   for (const [id, list] of Object.entries(pulled.lists)) {
     if (list !== base.lists[id]) {
       lists[id] = list;
+    }
+  }
+  for (const [id, list] of Object.entries(base.lists)) {
+    if (!pulled.lists[id] && current.lists[id] === list) {
+      delete lists[id];
     }
   }
   const contexts = pulled.contexts !== base.contexts ? pulled.contexts : current.contexts;
@@ -100,6 +121,17 @@ type FolderState = "checking" | "ok" | "missing";
 
 /** One queue for every sync, so two syncs never pull over the same data at once. */
 let syncQueue: Promise<void> = Promise.resolve();
+
+/**
+ * Other tabs and windows of the app sync the same folders, so their jobs take
+ * turns with this tab's (Web Locks; one tab at a time where they aren't supported).
+ */
+function withSyncLock(job: () => Promise<void>): Promise<void> {
+  if (typeof navigator === "undefined" || !("locks" in navigator)) {
+    return job();
+  }
+  return navigator.locks.request("klart-sync", job);
+}
 
 /**
  * Moves a browser folder connected before several syncs (kept only in
@@ -250,21 +282,69 @@ export function useSyncTargetLifecycle(target: SyncTarget): void {
   );
 
   function enqueue(job: (engine: FolderSync) => Promise<void>): void {
-    syncQueue = syncQueue.then(async () => {
-      const engine = engineRef.current;
-      if (!engine) {
-        return;
-      }
-      try {
-        await job(engine);
-      } catch (error) {
-        updateStatus(() =>
-          error instanceof NewerDataVersionError
-            ? { state: "outdated", folderVersion: error.folderVersion, error: undefined }
-            : { state: "error", error: describe(error) }
-        );
-      }
-    });
+    syncQueue = syncQueue.then(() =>
+      withSyncLock(async () => {
+        const engine = engineRef.current;
+        if (!engine) {
+          return;
+        }
+        try {
+          await job(engine);
+        } catch (error) {
+          updateStatus(() =>
+            error instanceof NewerDataVersionError
+              ? { state: "outdated", folderVersion: error.folderVersion, error: undefined }
+              : { state: "error", error: describe(error) }
+          );
+        } finally {
+          saveBase(engine);
+        }
+      })
+    );
+  }
+
+  /** Keeps what the folder holds for the next session, once the engine has read it. */
+  function saveBase(engine: FolderSync): void {
+    if (!engine.hasRead || engine !== engineRef.current) {
+      return;
+    }
+    // GitHub writes stay in memory until committed and are gone after a reload, so only a committed state counts.
+    const remote = remoteRef.current;
+    if (remote?.kind === "github" && remote.backend.hasChanges) {
+      return;
+    }
+    const stored = { connection: connectionKey, base: engine.base };
+    const all = store.get(syncBasesAtom);
+    if (JSON.stringify(all[targetId]) !== JSON.stringify(stored)) {
+      store.set(syncBasesAtom, { ...all, [targetId]: stored });
+    }
+  }
+
+  /**
+   * Settles where contexts live after a read: the first sync takes this device's
+   * data, placed contexts stop being pending, and once every sync has been read,
+   * contexts no folder lists are dropped from this device instead of written back.
+   */
+  function settleContexts(engine: FolderSync): void {
+    const listed = engine.listedContextIds;
+    if (!listed) {
+      return;
+    }
+    const listings = store.get(syncListingsAtom);
+    const current = store.get(syncSetupAtom);
+    let next = adoptLocalContexts(current, targetId, store.get(klartDataAtom), listed);
+    // On every pull, not only when klart.json changed: an assignment goes out of date when another sync is read.
+    next = assignFoundContexts(next, targetId, listed, listings);
+    next = settlePendingContexts(next, listings);
+    if (next !== current) {
+      store.set(syncSetupAtom, next);
+    }
+    const data = store.get(klartDataAtom);
+    const stale = findStaleContexts(next, listings, data.contexts);
+    if (stale.length > 0) {
+      backUpDroppedContexts(data, stale, toUtcTimestamp(new Date()));
+      store.set(klartDataAtom, (latest) => withoutContexts(latest, stale));
+    }
   }
 
   /** Shares what this sync's `klart.json` lists, which decides what every sync on this device holds. */
@@ -289,15 +369,7 @@ export function useSyncTargetLifecycle(target: SyncTarget): void {
       store.set(klartDataAtom, (latest) => rebase(base, result.data, latest));
     }
     shareListing(engine);
-    const listed = engine.listedContextIds;
-    if (listed) {
-      // On every pull, not only when klart.json changed: an assignment goes out of date when another sync is read.
-      const current = store.get(syncSetupAtom);
-      const next = assignFoundContexts(current, targetId, listed, store.get(syncListingsAtom));
-      if (next !== current) {
-        store.set(syncSetupAtom, next);
-      }
-    }
+    settleContexts(engine);
     const touchInterval =
       remoteRef.current?.kind === "github" ? GITHUB_DEVICE_TOUCH_INTERVAL_MS : DEVICE_TOUCH_INTERVAL_MS;
     if (Date.now() - lastTouchRef.current > touchInterval && document.hasFocus()) {
@@ -313,16 +385,16 @@ export function useSyncTargetLifecycle(target: SyncTarget): void {
   }
 
   async function pushNow(engine: FolderSync): Promise<number> {
-    // What the folder holds depends on its klart.json, so never write before reading it.
-    if (engine.listedContextIds === null) {
-      await pullNow(engine);
-    }
+    // Read right before writing: what the folder holds depends on its klart.json, and a file another device
+    // changed since the last pull is merged (newest `updatedAt` wins) instead of overwritten.
+    await pullNow(engine);
     const written = await engine.push(store.get(klartDataAtom), {
       today: store.get(todayAtom),
       options: store.get(syncSettingsAtom).agentFiles,
       scope: getSyncScope(store.get(syncSetupAtom), targetId, store.get(syncListingsAtom)),
     });
     shareListing(engine);
+    settleContexts(engine);
     updateStatus(() => ({ state: "synced", error: undefined, lastSyncedAt: toUtcTimestamp(new Date()) }));
     return written;
   }
@@ -331,7 +403,6 @@ export function useSyncTargetLifecycle(target: SyncTarget): void {
   async function githubSyncNow(engine: FolderSync, backend: GitHubBackend): Promise<void> {
     for (let attempt = 1; ; attempt += 1) {
       await backend.refresh();
-      await pullNow(engine);
       await pushNow(engine);
       try {
         await backend.commit(`klart: update from ${store.get(syncSettingsAtom).deviceName}`);
@@ -444,7 +515,13 @@ export function useSyncTargetLifecycle(target: SyncTarget): void {
       store.set(klartDataAtom, withoutSampleData);
     }
 
-    engineRef.current = new FolderSync(backend, deviceName);
+    const stored = store.get(syncBasesAtom)[targetId];
+    engineRef.current = new FolderSync(
+      backend,
+      deviceName,
+      DATA_VERSION,
+      stored?.connection === connectionKey ? stored.base : null
+    );
     // A new engine hasn't read the folder yet.
     setListings((all) => withoutKey(all, targetId));
     lastTouchRef.current = 0;

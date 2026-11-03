@@ -2,6 +2,7 @@ import { isNewerDataVersion } from "./DataVersion";
 import type { SyncScope } from "./FolderSync";
 import type { GitHubConnection, SyncMethod, SyncState, SyncStatus } from "./SyncAtoms";
 import type { ContextColor, KlartContext } from "~/core/contexts/KlartContext";
+import type { KlartData } from "~/core/tasks/KlartData";
 
 /** A context assigned here stays on this device and isn't written to any sync. */
 export const DEVICE_ONLY = "device";
@@ -21,6 +22,11 @@ export interface SyncTarget {
   id: string;
   name: string;
   connection: StoredSyncConnection;
+  /**
+   * The device's first sync, not read yet: on its first read it takes this
+   * device's contexts that the folder doesn't have (see {@link adoptLocalContexts}).
+   */
+  adoptLocalData?: boolean;
 }
 
 /**
@@ -32,6 +38,12 @@ export interface SyncSetup {
   targets: SyncTarget[];
   /** Context id to sync id, or {@link DEVICE_ONLY}. Contexts not listed sync with the primary. */
   contextTargets: Record<string, string>;
+  /**
+   * Contexts created on this device that no folder lists yet. Only these may be
+   * written to a folder that doesn't list them; any other context no folder
+   * lists is out of date here (removed, or moved to a sync this device doesn't have).
+   */
+  pendingContexts?: string[];
 }
 
 export const EMPTY_SYNC_SETUP: SyncSetup = { targets: [], contextTargets: {} };
@@ -72,23 +84,95 @@ export function getContextTargetId(setup: SyncSetup, contextId: string): string 
  */
 export type SyncListings = Record<string, string[]>;
 
+/** Whether every sync on this device has read its folder since the app started. */
+export function hasReadEverySync(setup: SyncSetup, listings: SyncListings): boolean {
+  return setup.targets.every((target) => listings[target.id] !== undefined);
+}
+
 /**
  * What a sync's folder holds. The folder's own `klart.json` decides: a context
  * listed there is kept there, whatever this device's setup says, so devices
  * whose setups disagree never take contexts out of each other's folders. A
- * context listed in no folder (a new one) goes to the sync it's assigned to, but
- * only once every sync has been read, so it's never copied into a second folder.
+ * context listed in no folder goes to the sync it's assigned to only when it
+ * was created on this device ({@link SyncSetup.pendingContexts}), and only once
+ * every sync has been read, so it's never copied into a second folder. Any other
+ * context no folder lists is out of date here and is never written back.
  */
 export function getSyncScope(setup: SyncSetup, targetId: string, listings: SyncListings): SyncScope {
   const listed = new Set(listings[targetId] ?? []);
-  const allRead = setup.targets.every((target) => listings[target.id] !== undefined);
+  const allRead = hasReadEverySync(setup, listings);
   const listedAnywhere = new Set(setup.targets.flatMap((target) => listings[target.id] ?? []));
+  const pending = new Set(setup.pendingContexts ?? []);
   return {
     ownsContext: (contextId) =>
       listed.has(contextId) ||
-      (allRead && !listedAnywhere.has(contextId) && getContextTargetId(setup, contextId) === targetId),
+      (allRead &&
+        pending.has(contextId) &&
+        !listedAnywhere.has(contextId) &&
+        getContextTargetId(setup, contextId) === targetId),
     isPrimary: setup.targets[0]?.id === targetId,
   };
+}
+
+/** Drops pending contexts a folder now lists: they've been placed. */
+export function settlePendingContexts(setup: SyncSetup, listings: SyncListings): SyncSetup {
+  const pending = setup.pendingContexts ?? [];
+  const listed = new Set(Object.values(listings).flat());
+  const left = pending.filter((id) => !listed.has(id));
+  return left.length === pending.length ? setup : { ...setup, pendingContexts: left };
+}
+
+/**
+ * The first read of a device's first sync: the folder gets this device's
+ * contexts it doesn't list, so data made before connecting isn't lost. An empty
+ * folder gets every context; an existing one only those with tasks or shopping
+ * lists, so the starter contexts of a new device stay out of it.
+ */
+export function adoptLocalContexts(
+  setup: SyncSetup,
+  targetId: string,
+  data: Pick<KlartData, "contexts" | "tasks" | "lists">,
+  listed: string[]
+): SyncSetup {
+  const target = setup.targets.find((candidate) => candidate.id === targetId);
+  if (!target?.adoptLocalData) {
+    return setup;
+  }
+  const inFolder = new Set(listed);
+  const used = new Set([
+    ...Object.values(data.tasks).map((task) => task.context),
+    ...Object.values(data.lists).map((list) => list.context),
+  ]);
+  const adopted = data.contexts
+    .map((context) => context.id)
+    .filter((id) => !inFolder.has(id) && (listed.length === 0 || used.has(id)));
+  const pending = setup.pendingContexts ?? [];
+  return {
+    ...setup,
+    targets: setup.targets.map((candidate) =>
+      candidate.id === targetId ? { ...candidate, adoptLocalData: undefined } : candidate
+    ),
+    pendingContexts: [...pending, ...adopted.filter((id) => !pending.includes(id))],
+  };
+}
+
+/**
+ * Contexts this device holds that no sync lists, once every sync has been read:
+ * another device removed them, or moved them to a sync this device doesn't
+ * have. They're dropped here instead of being written back. Contexts created on
+ * this device and not placed yet, and ones kept on this device on purpose, stay.
+ * Never every context, so a device whose folders all look empty keeps its data.
+ */
+export function findStaleContexts(setup: SyncSetup, listings: SyncListings, contexts: KlartContext[]): string[] {
+  if (setup.targets.length === 0 || !hasReadEverySync(setup, listings)) {
+    return [];
+  }
+  const listed = new Set(setup.targets.flatMap((target) => listings[target.id] ?? []));
+  const pending = new Set(setup.pendingContexts ?? []);
+  const stale = contexts
+    .map((context) => context.id)
+    .filter((id) => !listed.has(id) && !pending.has(id) && setup.contextTargets[id] !== DEVICE_ONLY);
+  return stale.length < contexts.length ? stale : [];
 }
 
 /**
@@ -133,7 +217,12 @@ export function placeNewContext(setup: SyncSetup, contextId: string, targetId: s
   if (!setup.targets.some((target) => target.id === targetId)) {
     return setup;
   }
-  return { ...setup, contextTargets: { ...setup.contextTargets, [contextId]: targetId } };
+  const pending = (setup.pendingContexts ?? []).filter((id) => id !== contextId);
+  return {
+    ...setup,
+    contextTargets: { ...setup.contextTargets, [contextId]: targetId },
+    pendingContexts: [...pending, contextId],
+  };
 }
 
 /**
@@ -156,7 +245,7 @@ export function removeSyncTarget(setup: SyncSetup, targetId: string, contexts: K
       delete contextTargets[id];
     }
   }
-  return { targets, contextTargets };
+  return { ...setup, targets, contextTargets };
 }
 
 /** Makes `targetId` the primary. Contexts on the old primary stay there. */
@@ -172,7 +261,11 @@ export function makePrimarySyncTarget(setup: SyncSetup, targetId: string, contex
       contextTargets[context.id] = primary.id;
     }
   }
-  return { targets: [target, ...setup.targets.filter((candidate) => candidate.id !== targetId)], contextTargets };
+  return {
+    ...setup,
+    targets: [target, ...setup.targets.filter((candidate) => candidate.id !== targetId)],
+    contextTargets,
+  };
 }
 
 export interface SyncOverviewContext {
