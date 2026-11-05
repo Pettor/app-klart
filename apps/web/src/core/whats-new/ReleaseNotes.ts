@@ -15,6 +15,41 @@ export interface ReleaseNote {
   fixes: ReleaseNoteItem[];
 }
 
+const v0160 = defineMessages({
+  runTitle: {
+    description: "ReleaseNotes 0.16.0 - highlight title: Run button in My Day runs automations",
+    defaultMessage: "Fresh tasks at the press of a button",
+    id: "emixKM",
+  },
+  runDescription: {
+    description: "ReleaseNotes 0.16.0 - highlight text: Run button in My Day runs automations",
+    defaultMessage:
+      "Turn on Automations in Settings → Agents & files and a Run button shows up in My Day. Press it to run your own scripts that gather tasks, and Klart syncs in whatever they wrote.",
+    id: "R/jZT4",
+  },
+  anywhereTitle: {
+    description: "ReleaseNotes 0.16.0 - highlight title: webhooks and request files work from any device",
+    defaultMessage: "Works from your phone too",
+    id: "774U0J",
+  },
+  anywhereDescription: {
+    description: "ReleaseNotes 0.16.0 - highlight text: webhooks and request files work from any device",
+    defaultMessage:
+      "Besides shell commands in the desktop app, an automation can call a webhook or drop a request file in your sync, so a GitHub Action or a script on another computer can do the work.",
+    id: "mwGS4u",
+  },
+  paletteTitle: {
+    description: "ReleaseNotes 0.16.0 - highlight title: run automations from the command palette",
+    defaultMessage: "Run it from ⌘K",
+    id: "32zc5j",
+  },
+  paletteDescription: {
+    description: "ReleaseNotes 0.16.0 - highlight text: run automations from the command palette",
+    defaultMessage: "Your automations are in the command palette too: run one, or all of them at once.",
+    id: "P33r9N",
+  },
+});
+
 const v0150 = defineMessages({
   stayPutTitle: {
     description: "ReleaseNotes 0.15.0 - highlight title: contexts stay in the sync they live in",
@@ -823,6 +858,15 @@ const v010 = defineMessages({
  * entry here; people who update see every entry newer than the last one they saw.
  */
 export const RELEASE_NOTES: ReleaseNote[] = [
+  {
+    version: "0.16.0",
+    highlights: [
+      { emoji: "🚀", title: v0160.runTitle, description: v0160.runDescription },
+      { emoji: "📱", title: v0160.anywhereTitle, description: v0160.anywhereDescription },
+      { emoji: "⌨️", title: v0160.paletteTitle, description: v0160.paletteDescription },
+    ],
+    fixes: [],
+  },
   {
     version: "0.15.0",
     highlights: [
