@@ -7,6 +7,7 @@ import {
   LightBulbIcon,
   MagnifyingGlassIcon,
   MoonIcon,
+  PlayIcon,
   RectangleStackIcon,
   SparklesIcon,
   Square2StackIcon,
@@ -22,6 +23,7 @@ import type { CommandPaletteProps } from "./CommandPalette";
 import { useCommandPalette } from "./UseCommandPalette";
 import { useCommandPaletteShortcut } from "./UseCommandPaletteShortcut";
 import { useCommandShortcuts } from "./UseCommandShortcuts";
+import { useAutomations } from "~/core/automations/UseAutomations";
 import { ALL_CONTEXTS } from "~/core/contexts/KlartContext";
 import { useHierarchyNavigation } from "~/core/routes/UseHierarchyNavigation";
 import {
@@ -55,6 +57,7 @@ export function useCommandPaletteController(): CommandPaletteProps {
   const setShowSuggestions = useSetAtom(showSuggestionsAtom);
   const requestSearchFocus = useSetAtom(searchFocusRequestAtom);
   const setSidebarCollapsed = useSetAtom(sidebarCollapsedAtom);
+  const automations = useAutomations();
 
   const navigationGroup = intl.formatMessage({
     description: "CommandPaletteController: label - navigation group",
@@ -321,8 +324,46 @@ export function useCommandPaletteController(): CommandPaletteProps {
     setSidebarCollapsed,
   ]);
 
-  useCommandPaletteShortcut();
-  useCommandShortcuts(commands);
+  // Same gate as the My Day Run button: hidden unless turned on in Settings.
+  const automationsGroup = intl.formatMessage({
+    description: "CommandPaletteController: label - automations group",
+    defaultMessage: "Automations",
+    id: "KGEFg7",
+  });
+  const runnable = automations.settings.showButton ? automations.runnable : [];
+  const automationCommands: Command[] = runnable.map((automation) => ({
+    id: `automation-${automation.id}`,
+    label: intl.formatMessage(
+      {
+        description: "CommandPaletteController: label - run one automation command",
+        defaultMessage: "Run {name}",
+        id: "+k1l3M",
+      },
+      { name: automation.name }
+    ),
+    group: automationsGroup,
+    keywords: ["automation", "script", "run", automation.name.toLowerCase()],
+    icon: <PlayIcon className="h-4 w-4" />,
+    perform: () => automations.run(automation.id),
+  }));
+  if (runnable.length > 1) {
+    automationCommands.unshift({
+      id: "automations-run-all",
+      label: intl.formatMessage({
+        description: "CommandPaletteController: label - run every automation command",
+        defaultMessage: "Run all automations",
+        id: "0ej2T+",
+      }),
+      group: automationsGroup,
+      keywords: ["automation", "script", "run", "all"],
+      icon: <PlayIcon className="h-4 w-4" />,
+      perform: automations.runAll,
+    });
+  }
+  const allCommands = automationCommands.length > 0 ? [...commands, ...automationCommands] : commands;
 
-  return { isOpen, commands, onClose: close };
+  useCommandPaletteShortcut();
+  useCommandShortcuts(allCommands);
+
+  return { isOpen, commands: allCommands, onClose: close };
 }
