@@ -5,6 +5,8 @@ import { Button, Chip, ToggleButton } from "@heroui/react";
 import { useBreakpoint } from "@package/react";
 import clsx from "clsx";
 import { useIntl } from "react-intl";
+import type { MyDayAutomationsProps } from "./MyDayAutomationsButton";
+import { MyDayAutomationsButton } from "./MyDayAutomationsButton";
 import { MyDayDisplayMenu } from "./MyDayDisplayMenu";
 import { getSmartViewLabel } from "./MyDayLabels";
 import type { MyDayDisplayProps } from "./MyDayTypes";
@@ -24,6 +26,8 @@ export interface MyDayHeaderProps {
   onOpenNotifications: () => void;
   display: MyDayDisplayProps;
   contextColor: string;
+  /** The Run button; absent unless automations are turned on in Settings. */
+  automations?: MyDayAutomationsProps;
 }
 
 /** The design's header buttons: flat, 36px tall, a faint fill whether or not they're pressed. */
@@ -43,6 +47,7 @@ export function MyDayHeader({
   onOpenNotifications,
   display,
   contextColor,
+  automations,
 }: MyDayHeaderProps): ReactElement {
   const intl = useIntl();
   const isDesktop = useBreakpoint("lg");
@@ -87,6 +92,7 @@ export function MyDayHeader({
       </div>
 
       <div className="flex gap-2">
+        {automations && <MyDayAutomationsButton automations={automations} className={HEADER_BUTTON} />}
         <Button
           isIconOnly
           variant="ghost"

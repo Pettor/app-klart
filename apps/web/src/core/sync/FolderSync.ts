@@ -2,6 +2,8 @@ import { z } from "zod";
 import { DATA_VERSION, isNewerDataVersion, NewerDataVersionError } from "./DataVersion";
 import type { FolderBackend, FolderFileInfo } from "./FolderBackend";
 import { LLMS_TXT } from "./LlmsTxt";
+import type { AutomationRequest } from "~/core/automations/Automations";
+import { requestPath } from "~/core/automations/Automations";
 import type { KlartContext } from "~/core/contexts/KlartContext";
 import { ALL_CONTEXTS, CONTEXT_COLORS } from "~/core/contexts/KlartContext";
 import { reconcileShoppingTasks } from "~/core/shopping/ShoppingData";
@@ -664,6 +666,14 @@ export class FolderSync {
     }
 
     return written;
+  }
+
+  /** Writes automation request files to `requests/`. Klart never reads them; whatever handles one deletes it. */
+  async writeRequests(requests: AutomationRequest[]): Promise<number> {
+    for (const request of requests) {
+      await this.write(requestPath(request), serialize(request));
+    }
+    return requests.length;
   }
 
   /** Records that this device is in use, so "the computer I used last" can decide who notifies. */

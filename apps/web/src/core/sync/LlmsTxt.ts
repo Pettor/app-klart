@@ -22,6 +22,10 @@ export const LLMS_TXT = `# Klart
 - inbox/: drop a .txt (one quick-add line per line) or a task .json here.
   A .json needs only "title"; "context", "tags", "due", "remindAt",
   "important", "notes" and "links" are optional.
+- requests/<time>-<name>.json: written when the user presses Run for a
+  "request file" automation, schema klart.request/v1 with "automation",
+  "requestedAt" and "device". The app never reads them: whatever handles
+  one (your script, a watcher, a GitHub Action) deletes it when done.
 - LLMS.txt: this file. The app rewrites it when it changes between versions.
 
 ## Common jobs

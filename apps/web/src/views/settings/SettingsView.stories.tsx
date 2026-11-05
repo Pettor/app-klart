@@ -56,6 +56,15 @@ const defaultArgs = {
     options: { writeViews: true, acceptInbox: true, keepLlmsTxt: true },
     onChange: fn(),
     llmsTxt: LLMS_TXT,
+    automations: {
+      showButton: false,
+      onShowButtonChange: fn(),
+      automations: [],
+      isDesktop: false,
+      onAdd: fn(),
+      onUpdate: fn(),
+      onRemove: fn(),
+    },
   },
   notifications: {
     settings: DEFAULT_NOTIFICATION_SETTINGS,
@@ -465,6 +474,46 @@ export const Suggestions: Story = {
       ...DEFAULT_SUGGESTION_SETTINGS,
       disabled: ["recently_added"],
     });
+  },
+};
+
+/** Automations are hidden until turned on. */
+export const AutomationsOff: Story = {
+  args: { ...defaultArgs, initialSection: "agents" },
+  play: async ({ args, canvas, userEvent }) => {
+    await expect(canvas.queryByTestId("settings__add-automation")).toBeNull();
+    await userEvent.click(within(canvas.getByTestId("settings__automations-toggle")).getByRole("switch"));
+    await expect(args.agents.automations.onShowButtonChange).toHaveBeenCalledWith(true);
+  },
+};
+
+/** One automation of each kind; shell commands say they're desktop-only in a browser. */
+export const Automations: Story = {
+  args: {
+    ...defaultArgs,
+    initialSection: "agents",
+    agents: {
+      ...defaultArgs.agents,
+      automations: {
+        ...defaultArgs.agents.automations,
+        showButton: true,
+        automations: [
+          { id: "a", name: "Collect work tasks", enabled: true, kind: "command", command: 'claude -p "/daily-todo"' },
+          { id: "b", name: "n8n morning flow", enabled: true, kind: "webhook", url: "https://n8n.example.com/hook" },
+          { id: "c", name: "Ask the GitHub Action", enabled: false, kind: "request" },
+        ],
+      },
+    },
+  },
+  play: async ({ args, canvas, userEvent }) => {
+    await expect(canvas.getByText("Desktop app only. Skipped here.")).toBeVisible();
+    const command = canvas.getByTestId("settings__automation-command");
+    await userEvent.clear(command);
+    await userEvent.type(command, "./collect.sh");
+    await userEvent.tab();
+    await expect(args.agents.automations.onUpdate).toHaveBeenCalledWith("a", { command: "./collect.sh" });
+    await userEvent.click(canvas.getByTestId("settings__add-automation"));
+    await expect(args.agents.automations.onAdd).toHaveBeenCalled();
   },
 };
 

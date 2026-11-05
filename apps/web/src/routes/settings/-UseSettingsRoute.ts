@@ -3,6 +3,7 @@ import { useAtom, useAtomValue } from "jotai";
 import { useIntl } from "react-intl";
 import { useTaskStyleSelector } from "~/components/actions/task-style-selector/UseTaskStyleSelector";
 import { useThemeSelector } from "~/components/actions/theme-selector/UseThemeSelector";
+import { useAutomations } from "~/core/automations/UseAutomations";
 import { useAppInfo } from "~/core/config/UseAppInfo";
 import { getContextNotifications } from "~/core/notifications/NotificationSettings";
 import { useNotifications } from "~/core/notifications/UseNotifications";
@@ -34,6 +35,7 @@ export function useSettingsRoute(section?: SettingsSectionId): SettingsViewProps
   const data = useAtomValue(klartDataAtom);
   const actions = useKlartActions();
   const sync = useFolderSync();
+  const automations = useAutomations();
   const notifications = useNotifications();
   const themeSelector = useThemeSelector();
   const taskStyleSelector = useTaskStyleSelector();
@@ -203,6 +205,41 @@ export function useSettingsRoute(section?: SettingsSectionId): SettingsViewProps
       options: sync.settings.agentFiles,
       onChange: sync.setAgentOption,
       llmsTxt: LLMS_TXT,
+      automations: {
+        showButton: automations.settings.showButton,
+        onShowButtonChange: (showButton) => automations.setSettings((current) => ({ ...current, showButton })),
+        automations: automations.settings.automations,
+        isDesktop: sync.isDesktop,
+        onAdd: () =>
+          automations.setSettings((current) => ({
+            ...current,
+            automations: [
+              ...current.automations,
+              {
+                id: crypto.randomUUID(),
+                name: intl.formatMessage({
+                  description: "SettingsAutomations - default name of a new automation",
+                  defaultMessage: "Collect today's tasks",
+                  id: "bM8RV/",
+                }),
+                enabled: true,
+                kind: sync.isDesktop ? "command" : "webhook",
+              },
+            ],
+          })),
+        onUpdate: (id, patch) =>
+          automations.setSettings((current) => ({
+            ...current,
+            automations: current.automations.map((automation) =>
+              automation.id === id ? { ...automation, ...patch } : automation
+            ),
+          })),
+        onRemove: (id) =>
+          automations.setSettings((current) => ({
+            ...current,
+            automations: current.automations.filter((automation) => automation.id !== id),
+          })),
+      },
     },
     notifications: {
       settings: notifications.settings,

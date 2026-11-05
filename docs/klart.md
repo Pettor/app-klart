@@ -55,6 +55,7 @@ Klart/
 ├── views/suggestions.json    # generated, read-only (optional)
 ├── views/shopping.json       # generated, read-only (optional): open lists, items left
 ├── inbox/                    # .txt (quick-add lines) or .json tasks; consumed and deleted
+├── requests/                 # automation request files; the handler deletes them, Klart never reads them
 ├── devices/<name>/device.json
 └── .conflicts/
 ```
@@ -98,6 +99,16 @@ To ship notes: bump the version and add an entry at the top of `RELEASE_NOTES` �
 Task links use `target="_blank"`, which the webview ignores, so `useDesktopExternalLinks()` sends those clicks to `open_url` (`system.rs`) and the default browser.
 
 `FolderSync` only talks to the `FolderBackend` interface, so both platforms share the sync logic.
+
+### Automations
+
+Settings → Agents & files → Automations is off by default. Turning it on shows a **Run** button in the My Day header. The button runs every enabled automation in parallel, then asks for a sync so whatever the automations wrote gets pulled in. With more than one automation, a chevron beside the button runs a single one. The model is in `core/automations/`, and `useAutomations()` runs them. There are three kinds:
+
+- **Shell command** (desktop app only; skipped in a browser): `run_command` (`automation.rs`) runs it in the user's login shell (`$SHELL -lc`, `cmd /C` on Windows), so a GUI app gets the user's PATH. It runs in the primary sync's folder when that sync is a desktop folder or Git clone. A non-zero exit code counts as a failure, and the last line of stderr shows in the toast.
+- **Webhook**: a `POST` with `{ source, automation, date, device }` as JSON, plus any headers the user set (e.g. a GitHub token for `workflow_dispatch`). In a browser the server must allow CORS.
+- **Request file**: queued in `pendingRequestsAtom` and written to `requests/` by the primary sync's next push (`FolderSync.writeRequests`), so with Git or GitHub it's committed along with that push. A watcher or GitHub Action reacts to the file and deletes it.
+
+Automations are stored per device in `localStorage` (`klart-automations`) and never synced, so a shared folder or repository can't plant commands that run on someone else's computer.
 
 ### Git sync
 

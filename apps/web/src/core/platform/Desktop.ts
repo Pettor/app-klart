@@ -26,6 +26,13 @@ export interface DesktopGitSyncResult {
   conflicts: number;
 }
 
+export interface DesktopCommandOutput {
+  /** Exit code; `null` when the process was killed by a signal. */
+  code: number | null;
+  stdout: string;
+  stderr: string;
+}
+
 /** Typed wrappers for the native commands in `apps/desktop/src-tauri`. Only call these when {@link isDesktop}. */
 export const desktop = {
   folderList: (root: string, dir: string, depth: number): Promise<DesktopFileInfo[]> =>
@@ -45,6 +52,9 @@ export const desktop = {
   deviceName: (): Promise<string | null> => invoke("device_name"),
   showNotification: (title: string, body: string): Promise<void> => invoke("show_notification", { title, body }),
   openUrl: (url: string): Promise<void> => invoke("open_url", { url }),
+  /** Runs a command in the user's login shell, in `cwd` when given. */
+  runCommand: (command: string, cwd: string | null): Promise<DesktopCommandOutput> =>
+    invoke("run_command", { command, cwd }),
 };
 
 /** Last path segment, e.g. `Klart` for `/Users/me/OneDrive/Klart`. */

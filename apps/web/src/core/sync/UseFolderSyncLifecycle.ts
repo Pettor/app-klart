@@ -34,6 +34,7 @@ import {
   settlePendingContexts,
   withoutKey,
 } from "./SyncTargets";
+import { pendingRequestsAtom } from "~/core/automations/AutomationAtoms";
 import { desktop, isDesktop } from "~/core/platform/Desktop";
 import { klartDataAtom, todayAtom } from "~/core/tasks/KlartAtoms";
 import type { KlartData } from "~/core/tasks/KlartData";
@@ -388,11 +389,18 @@ export function useSyncTargetLifecycle(target: SyncTarget): void {
     // Read right before writing: what the folder holds depends on its klart.json, and a file another device
     // changed since the last pull is merged (newest `updatedAt` wins) instead of overwritten.
     await pullNow(engine);
-    const written = await engine.push(store.get(klartDataAtom), {
+    const scope = getSyncScope(store.get(syncSetupAtom), targetId, store.get(syncListingsAtom));
+    let written = await engine.push(store.get(klartDataAtom), {
       today: store.get(todayAtom),
       options: store.get(syncSettingsAtom).agentFiles,
-      scope: getSyncScope(store.get(syncSetupAtom), targetId, store.get(syncListingsAtom)),
+      scope,
     });
+    // Automation requests go to the primary sync only, so a watcher sees each one once.
+    const requests = scope.isPrimary ? store.get(pendingRequestsAtom) : [];
+    if (requests.length > 0) {
+      written += await engine.writeRequests(requests);
+      store.set(pendingRequestsAtom, (pending) => pending.filter((request) => !requests.includes(request)));
+    }
     shareListing(engine);
     settleContexts(engine);
     updateStatus(() => ({ state: "synced", error: undefined, lastSyncedAt: toUtcTimestamp(new Date()) }));

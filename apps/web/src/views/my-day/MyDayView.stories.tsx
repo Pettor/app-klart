@@ -227,6 +227,43 @@ export const ShoppingPage: Story = {
   },
 };
 
+/** Automations turned on in Settings: Run runs them all, the chevron runs one. */
+export const WithAutomations: Story = {
+  args: {
+    ...buildArgs("work"),
+    // Closed so the suggestions sheet doesn't cover the header at narrow test viewports.
+    suggestions: { ...buildArgs("work").suggestions, isOpen: false },
+    automations: {
+      items: [
+        { id: "a", name: "Collect work tasks" },
+        { id: "b", name: "n8n morning flow" },
+      ],
+      isRunning: false,
+      onRunAll: fn(),
+      onRun: fn(),
+    },
+  },
+  play: async ({ args, canvas, userEvent }) => {
+    await userEvent.click(canvas.getByTestId("my-day__run-automations"));
+    await expect(args.automations?.onRunAll).toHaveBeenCalled();
+    await userEvent.click(canvas.getByTestId("my-day__automations-menu"));
+    await userEvent.click(await screen.findByRole("menuitem", { name: "n8n morning flow" }));
+    await expect(args.automations?.onRun).toHaveBeenCalledWith("b");
+  },
+};
+
+/** One automation: no menu. While it runs the button shows a spinner and is disabled. */
+export const RunningAutomation: Story = {
+  args: {
+    ...buildArgs("work"),
+    automations: { items: [{ id: "a", name: "Collect work tasks" }], isRunning: true, onRunAll: fn(), onRun: fn() },
+  },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByTestId("my-day__run-automations")).toBeDisabled();
+    await expect(canvas.queryByTestId("my-day__automations-menu")).toBeNull();
+  },
+};
+
 function withDisplay(context: string, options: Partial<DisplayOptions>): Props {
   const args = buildArgs(context);
   return { ...args, display: { ...args.display, options: { ...MINIMAL_DISPLAY_OPTIONS, ...options } } };

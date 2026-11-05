@@ -5,6 +5,7 @@ import { useBreakpoint } from "@package/react";
 import clsx from "clsx";
 import { useIntl } from "react-intl";
 import { MyDayAgentJson } from "./MyDayAgentJson";
+import type { MyDayAutomationsProps } from "./MyDayAutomationsButton";
 import { MyDayHeader } from "./MyDayHeader";
 import { MyDayMobileBar, MyDayTagChips } from "./MyDayMobileBar";
 import { MyDaySidebar } from "./MyDaySidebar";
@@ -43,6 +44,8 @@ export interface MyDayViewProps extends MyDaySidebarProps {
   sidebar: MyDaySidebarCollapseProps;
   onOpenSettings: () => void;
   onOpenNotifications: () => void;
+  /** The header's Run button for automations; absent unless turned on in Settings. */
+  automations?: MyDayAutomationsProps;
   /** Shown instead of My Day beside the sidebar, e.g. Shopping. The suggestions and editor go with My Day. */
   page?: ReactNode;
 }
@@ -68,6 +71,7 @@ export function MyDayView({
   onOpenSettings,
   onOpenNotifications,
   page,
+  automations,
 }: MyDayViewProps): ReactElement {
   const intl = useIntl();
   const isPhone = !useBreakpoint("sm");
@@ -162,6 +166,7 @@ export function MyDayView({
               onOpenNotifications={onOpenNotifications}
               display={display}
               contextColor={context.selectedColor}
+              automations={automations}
             />
 
             {options.tagFilter && (

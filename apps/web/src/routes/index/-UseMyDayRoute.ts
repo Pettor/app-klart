@@ -5,6 +5,7 @@ import { useIntl } from "react-intl";
 import type { ContextSwitcherOption } from "~/components/actions/context-switcher/ContextSwitcher";
 import type { SuggestionItem } from "~/components/display/suggestion-list/SuggestionList";
 import type { TaskEditorTask } from "~/components/input/task-editor/TaskEditor";
+import { useAutomations } from "~/core/automations/UseAutomations";
 import type { KlartContext } from "~/core/contexts/KlartContext";
 import { ALL_CONTEXTS, findContext } from "~/core/contexts/KlartContext";
 import { canUpdateApp, updateApp } from "~/core/pwa/UpdateApp";
@@ -97,6 +98,7 @@ export function useMyDayRoute(editingId: string | null, page: "day" | "shop" = "
   const editingTask = useTask(editingId);
   const { lists, tasks: allTasks } = useAtomValue(klartDataAtom);
   const shopping = useShopping();
+  const automations = useAutomations();
 
   const { contexts, currentContext, today, inTodayIds } = myDay;
   const selected = findContext(contexts, currentContext);
@@ -360,5 +362,14 @@ export function useMyDayRoute(editingId: string | null, page: "day" | "shop" = "
     },
     onOpenSettings: () => openSettings(),
     onOpenNotifications: () => openSettings("notifications"),
+    automations:
+      automations.settings.showButton && automations.runnable.length > 0
+        ? {
+            items: automations.runnable.map(({ id, name }) => ({ id, name })),
+            isRunning: automations.isRunning,
+            onRunAll: automations.runAll,
+            onRun: automations.run,
+          }
+        : undefined,
   };
 }

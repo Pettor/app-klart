@@ -1,3 +1,4 @@
+mod automation;
 mod folder;
 mod git;
 mod system;
@@ -24,6 +25,7 @@ pub fn run() {
             system::device_name,
             system::show_notification,
             system::open_url,
+            automation::run_command,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Klart");
