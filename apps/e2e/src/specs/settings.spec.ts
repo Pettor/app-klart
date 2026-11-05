@@ -140,10 +140,13 @@ test.describe("settings.suggestions", () => {
 test.describe("settings.agents", () => {
   test("toggles agent file options and shows LLMS.txt", async ({ page }) => {
     await page.goto("/#/settings?section=agents");
-    const switches = page.getByRole("switch");
-    await expect(switches).toHaveCount(3);
-    for (let index = 0; index < 3; index += 1) {
-      const toggle = switches.nth(index);
+    const fileOptions = [
+      /^Write views\/today\.json/,
+      /^Accept tasks dropped into inbox\//,
+      /^Keep LLMS\.txt up to date/,
+    ];
+    for (const name of fileOptions) {
+      const toggle = page.getByRole("switch", { name });
       const wasOn = await toggle.isChecked();
       await toggle.locator("xpath=ancestor::label[1]").click();
       await expect(toggle).toBeChecked({ checked: !wasOn });
