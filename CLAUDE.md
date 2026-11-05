@@ -448,16 +448,17 @@ Stories are discovered by Storybook from:
 
 Use these skills to follow established patterns when adding to the project:
 
-| Skill                 | Purpose                                                                                |
-| --------------------- | -------------------------------------------------------------------------------------- |
-| `/add-component`      | Add a new UI component with HeroUI v3, Tailwind, React, and Storybook story            |
-| `/add-e2e-test`       | Add Playwright E2E tests                                                               |
-| `/add-component-test` | Add component tests using Storybook play functions                                     |
-| `/add-release-notes`  | Write fun "What's new" release notes for a version                                     |
-| `/bump-version`       | Pick patch, minor or major from the unreleased changes and run the matching bump skill |
-| `/bump-patch`         | Bump `x.y.Z` via `scripts/bump-version.mjs`; release notes when user-visible           |
-| `/bump-minor`         | Bump `x.Y.0` via `scripts/bump-version.mjs` and write its release notes                |
-| `/bump-major`         | Bump `X.0.0` via `scripts/bump-version.mjs` and write its release notes                |
+| Skill                  | Purpose                                                                                           |
+| ---------------------- | ------------------------------------------------------------------------------------------------- |
+| `/add-component`       | Add a new UI component with HeroUI v3, Tailwind, React, and Storybook story                       |
+| `/add-e2e-test`        | Add Playwright E2E tests                                                                          |
+| `/add-component-test`  | Add component tests using Storybook play functions                                                |
+| `/add-release-notes`   | Write fun "What's new" release notes for a version                                                |
+| `/add-request-handler` | Schedule a job (launchd, systemd/cron, Task Scheduler, GitHub Actions) that handles request files |
+| `/bump-version`        | Pick patch, minor or major from the unreleased changes and run the matching bump skill            |
+| `/bump-patch`          | Bump `x.y.Z` via `scripts/bump-version.mjs`; release notes when user-visible                      |
+| `/bump-minor`          | Bump `x.Y.0` via `scripts/bump-version.mjs` and write its release notes                           |
+| `/bump-major`          | Bump `X.0.0` via `scripts/bump-version.mjs` and write its release notes                           |
 
 ## Important Notes
 

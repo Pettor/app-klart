@@ -106,7 +106,7 @@ Settings → Agents & files → Automations is off by default. Turning it on sho
 
 - **Shell command** (desktop app only; skipped in a browser): `run_command` (`automation.rs`) runs it in the user's login shell (`$SHELL -lc`, `cmd /C` on Windows), so a GUI app gets the user's PATH. It runs in the primary sync's folder when that sync is a desktop folder or Git clone. A non-zero exit code counts as a failure, and the last line of stderr shows in the toast.
 - **Webhook**: a `POST` with `{ source, automation, date, device }` as JSON, plus any headers the user set (e.g. a GitHub token for `workflow_dispatch`). In a browser the server must allow CORS.
-- **Request file**: queued in `pendingRequestsAtom` and written to `requests/` by the primary sync's next push (`FolderSync.writeRequests`), so with Git or GitHub it's committed along with that push. A watcher or GitHub Action reacts to the file and deletes it.
+- **Request file**: queued in `pendingRequestsAtom` and written to `requests/` by the primary sync's next push (`FolderSync.writeRequests`), so with Git or GitHub it's committed along with that push. A watcher or GitHub Action reacts to the file and deletes it. `/add-request-handler` sets one up for macOS, Linux, Windows or GitHub Actions.
 
 Automations are stored per device in `localStorage` (`klart-automations`) and never synced, so a shared folder or repository can't plant commands that run on someone else's computer.
 
