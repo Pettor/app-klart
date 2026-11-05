@@ -453,6 +453,15 @@ export const General: Story = {
     await userEvent.click(within(canvas.getByTestId("settings__start-context")).getByRole("button"));
     await userEvent.click(await screen.findByRole("option", { name: /Work/ }));
     await expect(args.general.onStartContextChange).toHaveBeenCalledWith("work");
+    await expect(canvas.queryByTestId("settings__dev-sample-data")).toBeNull();
+  },
+};
+
+export const GeneralDevDataSource: Story = {
+  args: { ...defaultArgs, general: { ...defaultArgs.general, dataSource: "sample", onDataSourceChange: fn() } },
+  play: async ({ args, canvas, userEvent }) => {
+    await userEvent.click(within(canvas.getByTestId("settings__dev-sample-data")).getByRole("switch"));
+    await expect(args.general.onDataSourceChange).toHaveBeenCalledWith("live");
   },
 };
 

@@ -1,5 +1,6 @@
 import type { DayFile, DayItemSource, SuggestionReason } from "./Day";
 import { DAY_SCHEMA } from "./Day";
+import { DEV_DATA_SOURCE } from "./DevDataSource";
 import type { KlartData } from "./KlartData";
 import { addDays, toLocalDate, toUtcTimestamp } from "./LocalDate";
 import type { Task } from "./Task";
@@ -11,8 +12,8 @@ import { createSampleShopping } from "~/core/shopping/ShoppingSampleData";
 /** Ids of sample tasks and contexts start with this, so they can be told apart from real ones. */
 export const SAMPLE_ID_PREFIX = "sample-";
 
-/** Dev builds only (`VITE_SAMPLE_DATA`): start with sample data instead of an empty list. */
-export const SAMPLE_DATA_ENABLED = import.meta.env.VITE_SAMPLE_DATA === "true";
+/** Dev builds only (Settings › General › Data, default `VITE_SAMPLE_DATA`): show sample data instead of real data. */
+export const SAMPLE_DATA_ENABLED = DEV_DATA_SOURCE === "sample";
 
 const SAMPLE_CONTEXTS: KlartContext[] = [
   ...DEFAULT_CONTEXTS,

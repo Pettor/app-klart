@@ -5,7 +5,7 @@ import { MINIMAL_DISPLAY_OPTIONS } from "./DisplayOptions";
 import type { KlartData } from "./KlartData";
 import { createEmptyData, normalizeData, withoutHiddenContexts } from "./KlartData";
 import { toLocalDate } from "./LocalDate";
-import { createSampleData, SAMPLE_DATA_ENABLED } from "./SampleData";
+import { createSampleData, hasSampleData, SAMPLE_DATA_ENABLED, withoutSampleData } from "./SampleData";
 import type { SuggestionSettings } from "./SuggestionSettings";
 import { DEFAULT_SUGGESTION_SETTINGS } from "./SuggestionSettings";
 import type { ContextSelection } from "~/core/contexts/KlartContext";
@@ -25,9 +25,12 @@ const klartDataStorage: typeof jsonStorage = {
       return stored;
     }
     // Dev builds: an empty list (tasks are never deleted) gets the sample data too, not just a fresh browser.
-    return SAMPLE_DATA_ENABLED && Object.keys(stored.tasks ?? {}).length === 0
-      ? createSampleData()
-      : normalizeData(stored);
+    if (SAMPLE_DATA_ENABLED && Object.keys(stored.tasks ?? {}).length === 0) {
+      return createSampleData();
+    }
+    const data = normalizeData(stored);
+    // Dev builds on live data: drop sample tasks left over from before the data source switch.
+    return import.meta.env.DEV && !SAMPLE_DATA_ENABLED && hasSampleData(data) ? withoutSampleData(data) : data;
   },
   // Other tabs may still run an older version.
   subscribe: (key, callback, initialValue) =>
@@ -40,7 +43,8 @@ const klartDataStorage: typeof jsonStorage = {
 
 /** Starts empty, or with sample data in dev builds until a task is stored. */
 export const klartDataAtom = atomWithStorage<KlartData>(
-  "klart-data",
+  // Sample data is kept apart, so switching to it in dev never touches the real data.
+  SAMPLE_DATA_ENABLED ? "klart-data-sample" : "klart-data",
   SAMPLE_DATA_ENABLED ? createSampleData() : createEmptyData(),
   klartDataStorage,
   { getOnInit: true }

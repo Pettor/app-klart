@@ -15,6 +15,7 @@ import { LLMS_TXT } from "~/core/sync/LlmsTxt";
 import { DEVICE_ONLY } from "~/core/sync/SyncTargets";
 import type { GitConnectResult, GitHubConnectResult, GitHubCredentials } from "~/core/sync/UseFolderSync";
 import { useFolderSync } from "~/core/sync/UseFolderSync";
+import { DEV_DATA_SOURCE, DEV_DATA_SOURCE_AVAILABLE, switchDevDataSource } from "~/core/tasks/DevDataSource";
 import {
   hiddenContextIdsAtom,
   klartDataAtom,
@@ -159,6 +160,7 @@ export function useSettingsRoute(section?: SettingsSectionId): SettingsViewProps
       startContext,
       contexts: visibleContexts.map(({ id, name, color }) => ({ id, name, color })),
       onStartContextChange: setStartContext,
+      ...(DEV_DATA_SOURCE_AVAILABLE && { dataSource: DEV_DATA_SOURCE, onDataSourceChange: switchDevDataSource }),
     },
     contexts: {
       contexts: data.contexts.map((context) => ({

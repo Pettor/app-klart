@@ -4,6 +4,7 @@ import { syncSetupAtom } from "./SyncAtoms";
 import type { SyncTarget } from "./SyncTargets";
 import { useFolderSyncLifecycle, useSyncTargetLifecycle } from "./UseFolderSyncLifecycle";
 import { useOutdatedSyncNotice } from "./UseOutdatedSyncNotice";
+import { SAMPLE_DATA_ENABLED } from "~/core/tasks/SampleData";
 import { useTodayTicker } from "~/core/tasks/UseToday";
 
 export interface FolderSyncLifecycleProps {
@@ -24,9 +25,8 @@ export function FolderSyncLifecycle({ children }: FolderSyncLifecycleProps): Rea
   const { targets } = useAtomValue(syncSetupAtom);
   return (
     <>
-      {targets.map((target) => (
-        <SyncTargetLifecycle key={target.id} target={target} />
-      ))}
+      {/* Dev sample data never syncs: it would replace the real data in the folder, or be replaced by it. */}
+      {!SAMPLE_DATA_ENABLED && targets.map((target) => <SyncTargetLifecycle key={target.id} target={target} />)}
       {children}
     </>
   );
