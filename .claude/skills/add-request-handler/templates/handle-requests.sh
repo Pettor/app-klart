@@ -8,6 +8,12 @@ KLART_DIR="__KLART_DIR__" # the sync folder, or a Git clone of the data reposito
 SYNC="__SYNC__"           # folder | git
 BRANCH="__BRANCH__"       # git only
 LOG="__LOG_FILE__"
+# When each job last succeeded, for the spam guard. ponytail: lost between GitHub Actions runs, so no guard there.
+STATE="$HOME/.klart/requests/__ID__/last-ok"
+
+# Schedulers start with a bare PATH, and a login shell doesn't read ~/.zshrc or ~/.bashrc,
+# so the directories of the commands below are spelled out.
+export PATH="__PATH__:$PATH"
 
 # One arm per automation name, exactly as named in Klart's Settings. Runs in $KLART_DIR.
 # Return 0 on success. Names not listed here are left alone for another handler (199).
@@ -34,7 +40,7 @@ fi
 echo $$ >"$LOCK/pid"
 trap 'rm -rf "$LOCK"' EXIT INT TERM
 
-mkdir -p "$(dirname "$LOG")"
+mkdir -p "$(dirname "$LOG")" "$(dirname "$STATE")"
 cd "$KLART_DIR" || {
   log "error: can't open $KLART_DIR"
   exit 1
@@ -59,6 +65,20 @@ echo "$names" | while IFS= read -r name; do
   [ -n "$name" ] || continue
   # Every pending request for this name, so pressing Run twice runs the job once.
   files=$(grep -F -l "\"automation\": \"$name\"" requests/*.json)
+  # Spam guard: a request made before this job last finished (Run pressed while it ran) is dropped.
+  done_at=$(awk -F'\t' -v n="$name" '$2 == n { t = $1 } END { print t }' "$STATE" 2>/dev/null)
+  if [ -n "$done_at" ]; then
+    stale=$(echo "$files" | while IFS= read -r file; do
+      at=$(sed -n 's/^ *"requestedAt": *"\(.*\)",\{0,1\}$/\1/p' "$file")
+      [ -n "$at" ] && awk -v a="$at" -v b="$done_at" 'BEGIN { exit !(a < b) }' && echo "$file"
+    done)
+    if [ -n "$stale" ]; then
+      echo "$stale" | while IFS= read -r file; do rm -f "$file"; done
+      log "skipped: $name: $(echo "$stale" | wc -l | tr -d ' ') request(s) made before its last run finished"
+      files=$(echo "$files" | grep -vxF "$stale")
+      [ -n "$files" ] || continue
+    fi
+  fi
   first=$(echo "$files" | head -n 1)
   export KLART_DIR KLART_AUTOMATION="$name" KLART_REQUEST="$KLART_DIR/$first"
   export KLART_DEVICE="$(sed -n 's/^ *"device": *"\(.*\)",\{0,1\}$/\1/p' "$first")"
@@ -69,6 +89,7 @@ echo "$names" | while IFS= read -r name; do
   fi
   if [ "$code" = 0 ]; then
     log "ok: $name"
+    printf '%s\t%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$name" >>"$STATE"
     echo "$files" | while IFS= read -r file; do rm -f "$file"; done
   else
     log "failed ($code): $name: $(echo "$output" | tail -n 1)"

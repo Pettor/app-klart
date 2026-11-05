@@ -56,15 +56,15 @@ const defaultArgs = {
     options: { writeViews: true, acceptInbox: true, keepLlmsTxt: true },
     onChange: fn(),
     llmsTxt: LLMS_TXT,
-    automations: {
-      showButton: false,
-      onShowButtonChange: fn(),
-      automations: [],
-      isDesktop: false,
-      onAdd: fn(),
-      onUpdate: fn(),
-      onRemove: fn(),
-    },
+  },
+  automations: {
+    showButton: false,
+    onShowButtonChange: fn(),
+    automations: [],
+    isDesktop: false,
+    onAdd: fn(),
+    onUpdate: fn(),
+    onRemove: fn(),
   },
   notifications: {
     settings: DEFAULT_NOTIFICATION_SETTINGS,
@@ -488,41 +488,76 @@ export const Suggestions: Story = {
 
 /** Automations are hidden until turned on. */
 export const AutomationsOff: Story = {
-  args: { ...defaultArgs, initialSection: "agents" },
+  args: { ...defaultArgs, initialSection: "automations" },
   play: async ({ args, canvas, userEvent }) => {
     await expect(canvas.queryByTestId("settings__add-automation")).toBeNull();
     await userEvent.click(within(canvas.getByTestId("settings__automations-toggle")).getByRole("switch"));
-    await expect(args.agents.automations.onShowButtonChange).toHaveBeenCalledWith(true);
+    await expect(args.automations.onShowButtonChange).toHaveBeenCalledWith(true);
   },
 };
 
-/** One automation of each kind; shell commands say they're desktop-only in a browser. */
-export const Automations: Story = {
-  args: {
-    ...defaultArgs,
-    initialSection: "agents",
-    agents: {
-      ...defaultArgs.agents,
-      automations: {
-        ...defaultArgs.agents.automations,
-        showButton: true,
-        automations: [
-          { id: "a", name: "Collect work tasks", enabled: true, kind: "command", command: 'claude -p "/daily-todo"' },
-          { id: "b", name: "n8n morning flow", enabled: true, kind: "webhook", url: "https://n8n.example.com/hook" },
-          { id: "c", name: "Ask the GitHub Action", enabled: false, kind: "request" },
-        ],
-      },
-    },
+const automationsArgs = {
+  ...defaultArgs,
+  initialSection: "automations",
+  automations: {
+    ...defaultArgs.automations,
+    showButton: true,
+    automations: [
+      { id: "a", name: "Collect work tasks", enabled: true, kind: "command", command: 'claude -p "/daily-todo"' },
+      { id: "b", name: "n8n morning flow", enabled: true, kind: "webhook", url: "https://n8n.example.com/hook" },
+      { id: "c", name: "Ask the GitHub Action", enabled: false, kind: "request" },
+    ],
   },
+} satisfies Props;
+
+/** Saved automations are read-only rows; changes go through Edit and only land on Save. */
+export const Automations: Story = {
+  args: automationsArgs,
   play: async ({ args, canvas, userEvent }) => {
+    await expect(canvas.queryByRole("textbox")).toBeNull();
+    const row = within(canvas.getByTestId("settings__automation-a"));
+    await expect(row.getByText("Collect work tasks")).toBeVisible();
+    await userEvent.click(row.getByTestId("settings__automation-edit"));
     await expect(canvas.getByText("Desktop app only. Skipped here.")).toBeVisible();
     const command = canvas.getByTestId("settings__automation-command");
     await userEvent.clear(command);
     await userEvent.type(command, "./collect.sh");
-    await userEvent.tab();
-    await expect(args.agents.automations.onUpdate).toHaveBeenCalledWith("a", { command: "./collect.sh" });
+    await expect(args.automations.onUpdate).not.toHaveBeenCalled();
+    await userEvent.click(canvas.getByTestId("settings__automation-save"));
+    await expect(args.automations.onUpdate).toHaveBeenCalledWith(
+      "a",
+      expect.objectContaining({ name: "Collect work tasks", command: "./collect.sh" })
+    );
+    await expect(canvas.queryByTestId("settings__automation-editor")).toBeNull();
+  },
+};
+
+/** Cancel drops the edit. */
+export const CancelAutomationEdit: Story = {
+  args: automationsArgs,
+  play: async ({ args, canvas, userEvent }) => {
+    await userEvent.click(
+      within(canvas.getByTestId("settings__automation-c")).getByTestId("settings__automation-edit")
+    );
+    await userEvent.type(canvas.getByTestId("settings__automation-name-input"), " renamed");
+    await userEvent.click(canvas.getByTestId("settings__automation-cancel"));
+    await expect(args.automations.onUpdate).not.toHaveBeenCalled();
+    await expect(canvas.getByText("Ask the GitHub Action")).toBeVisible();
+  },
+};
+
+/** A new automation needs a name, and is only added on Save. */
+export const AddAutomation: Story = {
+  args: { ...automationsArgs, automations: { ...automationsArgs.automations, automations: [] } },
+  play: async ({ args, canvas, userEvent }) => {
     await userEvent.click(canvas.getByTestId("settings__add-automation"));
-    await expect(args.agents.automations.onAdd).toHaveBeenCalled();
+    const save = canvas.getByTestId("settings__automation-save");
+    await expect(save).toBeDisabled();
+    await userEvent.type(canvas.getByTestId("settings__automation-name-input"), "  Daily todo ");
+    await userEvent.click(save);
+    await expect(args.automations.onAdd).toHaveBeenCalledWith(
+      expect.objectContaining({ name: "Daily todo", enabled: true, kind: "webhook" })
+    );
   },
 };
 

@@ -3,6 +3,7 @@ import { ChevronLeftIcon } from "@heroicons/react/20/solid";
 import {
   AdjustmentsHorizontalIcon,
   BellIcon,
+  BoltIcon,
   CloudIcon,
   CodeBracketIcon,
   InformationCircleIcon,
@@ -19,6 +20,8 @@ import type { SettingsAgentsSectionProps } from "./SettingsAgentsSection";
 import { SettingsAgentsSection } from "./SettingsAgentsSection";
 import type { SettingsAppearanceSectionProps } from "./SettingsAppearanceSection";
 import { SettingsAppearanceSection } from "./SettingsAppearanceSection";
+import type { SettingsAutomationsSectionProps } from "./SettingsAutomationsSection";
+import { SettingsAutomationsSection } from "./SettingsAutomationsSection";
 import type { SettingsContextsSectionProps } from "./SettingsContextsSection";
 import { SettingsContextsSection } from "./SettingsContextsSection";
 import type { SettingsGeneralSectionProps } from "./SettingsGeneralSection";
@@ -41,6 +44,7 @@ export interface SettingsViewProps {
   sync: SettingsSyncSectionProps;
   notifications: SettingsNotificationsSectionProps;
   suggestions: Omit<SettingsSuggestionsSectionProps, "title">;
+  automations: Omit<SettingsAutomationsSectionProps, "title">;
   agents: SettingsAgentsSectionProps;
   about: SettingsAboutSectionProps;
 }
@@ -52,6 +56,7 @@ const SECTION_ICONS: Record<SettingsSectionId, ReactElement> = {
   sync: <CloudIcon className="size-[18px]" />,
   notifications: <BellIcon className="size-[18px]" />,
   suggestions: <LightBulbIcon className="size-[18px]" />,
+  automations: <BoltIcon className="size-[18px]" />,
   agents: <CodeBracketIcon className="size-[18px]" />,
   about: <InformationCircleIcon className="size-[18px]" />,
 };
@@ -66,6 +71,7 @@ export function SettingsView({
   sync,
   notifications,
   suggestions,
+  automations,
   agents,
   about,
 }: SettingsViewProps): ReactElement {
@@ -102,6 +108,11 @@ export function SettingsView({
       defaultMessage: "Suggestions",
       id: "wc0Wrh",
     }),
+    automations: intl.formatMessage({
+      description: "SettingsView - nav item",
+      defaultMessage: "Automations",
+      id: "ecN+uE",
+    }),
     agents: intl.formatMessage({
       description: "SettingsView - nav item",
       defaultMessage: "Agents & files",
@@ -117,6 +128,7 @@ export function SettingsView({
     sync: () => <SettingsSyncSection {...sync} />,
     notifications: () => <SettingsNotificationsSection {...notifications} />,
     suggestions: () => <SettingsSuggestionsSection title={labels.suggestions} {...suggestions} />,
+    automations: () => <SettingsAutomationsSection title={labels.automations} {...automations} />,
     agents: () => <SettingsAgentsSection {...agents} />,
     about: () => <SettingsAboutSection {...about} />,
   };

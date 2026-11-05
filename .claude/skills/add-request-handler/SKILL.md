@@ -5,7 +5,7 @@ description: Set up the scheduled job that handles Klart "Request file" automati
 
 # Add a request-file handler
 
-Klart's **Request file** automation (Settings → Agents & files → Automations) doesn't run anything itself. Pressing Run queues `requests/<time>-<name>.json` and the primary sync's next push writes it (with Git or GitHub, committed with that push):
+Klart's **Request file** automation (Settings → Automations) doesn't run anything itself. Pressing Run queues `requests/<time>-<name>.json` and the primary sync's next push writes it (with Git or GitHub, committed with that push):
 
 ```json
 {
@@ -51,7 +51,7 @@ $ARGUMENTS
    | Windows        | `%USERPROFILE%\.klart\requests\<id>\handle-requests.ps1` | `%USERPROFILE%\.klart\requests\<id>\requests.log` |
    | GitHub Actions | `.github/klart/handle-requests-<id>.sh` in the data repo | `/dev/stdout` (the run's log)                     |
 
-   Placeholders: `__ID__`, `__KLART_DIR__` (absolute path; `$GITHUB_WORKSPACE` for Actions), `__SYNC__`, `__BRANCH__`, `__LOG_FILE__`, and `__HANDLERS__`, one entry per automation:
+   Placeholders: `__ID__`, `__KLART_DIR__` (absolute path; `$GITHUB_WORKSPACE` for Actions), `__SYNC__`, `__BRANCH__`, `__LOG_FILE__`, `__PATH__`, and `__HANDLERS__`, one entry per automation:
 
    ```sh
        "Collect work tasks") ./scripts/collect-work-tasks.sh ;;
@@ -64,7 +64,9 @@ $ARGUMENTS
 
    Commands run in the data folder with `KLART_DIR`, `KLART_AUTOMATION`, `KLART_REQUEST` and `KLART_DEVICE` set. The usual job adds tasks the way any agent does (see `LLMS.txt` in the data folder): a `.txt` file in `inbox/` with one quick-add line per task, e.g. `#work #jira fix the login bug`. If the user's command doesn't exist yet, offer to write it next to the handler.
 
-   What the handler does: takes a lock so runs never overlap; in `git` mode fast-forwards to `origin/<branch>` first; groups requests by name so pressing Run twice runs the job once; leaves names it doesn't know for another handler; deletes the requests of a job that succeeded and moves those of a failed one to `requests/failed/` (no retry loop, the user presses Run again); in `git` mode commits everything (`klart: handled requests`) and pushes, rebasing up to 3 times. It exits non-zero when a job failed.
+   What the handler does: takes a lock so runs never overlap; in `git` mode fast-forwards to `origin/<branch>` first; groups requests by name so pressing Run twice runs the job once; drops requests made before that job last finished (Run pressed while it was running; the finish times are kept in `~/.klart/requests/<id>/last-ok`, so there's no such guard on GitHub Actions) and logs `skipped: <name>`; leaves names it doesn't know for another handler; deletes the requests of a job that succeeded and moves those of a failed one to `requests/failed/` (no retry loop, the user presses Run again); in `git` mode commits everything (`klart: handled requests`) and pushes, rebasing up to 3 times. It exits non-zero when a job failed.
+
+   `__PATH__` (macOS, Linux): schedulers start with a bare PATH, and the login shell doesn't read `~/.zshrc`/`~/.bashrc`, where tools like `claude` (`~/.local/bin`) usually get added; without it a job fails with `command not found` (exit 127). Take the directory of every program the commands call, plus every program those call, from `command -v <cmd>` in the user's shell, and join them with `:`, plus `/opt/homebrew/bin:/usr/local/bin` on macOS. Use stable paths: replace `$HOME` with the real path, and skip per-session directories (`fnm_multishells`, `nvm` shims of the current terminal); for fnm, use `~/.local/share/fnm/aliases/default/bin`. If a wrapper script runs other tools, put the same `export PATH=...` in it too. For GitHub Actions, delete the `export PATH` line.
 
 5. **Write the scheduler config.** Installing changes the user's system, so show what will be installed and confirm before running the install commands. If the target platform isn't this computer, write the files and give the commands instead.
 
@@ -113,6 +115,7 @@ $ARGUMENTS
    **GitHub Actions**: `templates/github-workflow.yml` → `.github/workflows/klart-requests-<id>.yml` in the data repository, next to the script from step 4. The push of a request file starts it. Replace `# __SCHEDULE__` with `schedule: [{ cron: "*/15 * * * *" }]` only if the user wants a fallback (GitHub runs it at most every 5 minutes, often later); otherwise delete it. Put tokens the commands need in `env` as `${{ secrets.NAME }}`, never inline (replacing `# __ENV__`, or deleting it), and give the user the `gh secret set NAME --repo <owner>/<repo>` commands to run. `ubuntu-latest` has `git`, `node`, `python3`, `jq` and `gh`; add setup steps for anything else. Runs on private repositories use the account's Actions minutes.
 
 6. **Test.**
+   - **Every platform except Actions, first**: check the commands resolve with the scheduler's bare environment, not your shell's: `env -i HOME="$HOME" /bin/zsh -lc 'export PATH="<__PATH__>:$PATH"; command -v <every command>'` (`/bin/bash` on Linux). Fix `__PATH__` if one is missing. This runs nothing, so it needs no OK.
    - **`folder` mode**: with the user's OK (it runs the real command), write a request like the one above to `<KLART_DIR>/requests/<UTC time without : and .>-test.json` with the automation's exact name, run the scheduler's "run now" command, then check that the file is gone and the log says `ok: <name>`.
    - **`git` mode and GitHub Actions**: don't run the handler or push yourself: it commits and pushes to the user's data repository. Leave the files for the user to commit (Actions) and ask them to press Run in Klart, then read the log or `gh run list --repo <owner>/<repo> --workflow klart-requests-<id>.yml`.
 

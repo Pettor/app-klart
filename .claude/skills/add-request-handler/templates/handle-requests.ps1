@@ -7,6 +7,7 @@ $KlartDir = "__KLART_DIR__" # the sync folder, or a Git clone of the data reposi
 $Sync = "__SYNC__"          # folder | git
 $Branch = "__BRANCH__"      # git only
 $Log = "__LOG_FILE__"
+$State = "$HOME\.klart\requests\__ID__\last-ok" # when each job last succeeded, for the spam guard
 
 # One entry per automation name, exactly as named in Klart's Settings. Runs in $KlartDir.
 # Throw, or leave $LASTEXITCODE non-zero, to fail. Names not listed here are left alone for another handler.
@@ -38,13 +39,31 @@ try {
 
   # Every pending request per name, so pressing Run twice runs the job once.
   $groups = $requests | ForEach-Object {
-    $request = Get-Content -Raw $_.FullName | ConvertFrom-Json
-    [pscustomobject]@{ File = $_; Name = $request.automation; Device = $request.device }
+    $raw = Get-Content -Raw $_.FullName
+    $request = $raw | ConvertFrom-Json
+    # The raw string: ConvertFrom-Json may turn it into a local DateTime.
+    $at = if ($raw -match '"requestedAt":\s*"([^"]+)"') { $Matches[1] } else { "" }
+    [pscustomobject]@{ File = $_; Name = $request.automation; Device = $request.device; At = $at }
   } | Group-Object Name
 
   foreach ($group in $groups) {
     if (-not $Handlers.ContainsKey($group.Name)) { continue }
-    $first = $group.Group[0]
+    # Spam guard: a request made before this job last finished (Run pressed while it ran) is dropped.
+    $doneAt = Get-Content $State -ErrorAction SilentlyContinue | ForEach-Object {
+      $t, $n = $_ -split "`t", 2
+      if ($n -eq $group.Name) { $t }
+    } | Select-Object -Last 1
+    $pending = @($group.Group)
+    if ($doneAt) {
+      $stale = @($pending | Where-Object { $_.At -and [string]::CompareOrdinal($_.At, $doneAt) -lt 0 })
+      if ($stale.Count -gt 0) {
+        $stale | ForEach-Object { Remove-Item $_.File.FullName }
+        Write-Log "skipped: $($group.Name): $($stale.Count) request(s) made before its last run finished"
+        $pending = @($pending | Where-Object { $stale -notcontains $_ })
+        if ($pending.Count -eq 0) { continue }
+      }
+    }
+    $first = $pending[0]
     $env:KLART_DIR = $KlartDir
     $env:KLART_AUTOMATION = $group.Name
     $env:KLART_REQUEST = $first.File.FullName
@@ -54,12 +73,14 @@ try {
       $output = & $Handlers[$group.Name] 2>&1 | Out-String
       if ($LASTEXITCODE -ne 0) { throw "exit code $LASTEXITCODE`n$output" }
       Write-Log "ok: $($group.Name)"
-      $group.Group | ForEach-Object { Remove-Item $_.File.FullName }
+      New-Item -ItemType Directory -Force -Path (Split-Path $State) | Out-Null
+      Add-Content -Path $State -Value "$((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ssZ'))`t$($group.Name)"
+      $pending | ForEach-Object { Remove-Item $_.File.FullName }
     } catch {
       $lastLine = ("$_".Trim() -split "`n")[-1]
       Write-Log "failed: $($group.Name): $lastLine"
       New-Item -ItemType Directory -Force -Path "requests/failed" | Out-Null
-      $group.Group | ForEach-Object { Move-Item $_.File.FullName "requests/failed/" -Force }
+      $pending | ForEach-Object { Move-Item $_.File.FullName "requests/failed/" -Force }
     }
   }
 

@@ -7,7 +7,7 @@
   <string>com.klart.requests.__ID__</string>
   <key>ProgramArguments</key>
   <array>
-    <!-- A login shell, so the commands get the same PATH as in Terminal. -->
+    <!-- A login shell; the script sets PATH itself, since ~/.zshrc is not read. -->
     <string>/bin/zsh</string>
     <string>-lc</string>
     <string>'__SCRIPT__'</string>

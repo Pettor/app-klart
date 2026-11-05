@@ -33,6 +33,7 @@ test.describe("settings.sections", () => {
       ["sync", "Sync"],
       ["notifications", "Notifications"],
       ["suggestions", "Suggestions"],
+      ["automations", "Automations"],
       ["agents", "Agents & files"],
       ["about", "About"],
       ["general", "General"],

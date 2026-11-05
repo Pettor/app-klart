@@ -4,5 +4,5 @@ Description=Klart request handler (__ID__)
 
 [Service]
 Type=oneshot
-# A login shell, so the commands get the same PATH as in a terminal.
+# A login shell; the script sets PATH itself, since ~/.bashrc is not read.
 ExecStart=/bin/bash -lc '__SCRIPT__'

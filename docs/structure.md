@@ -182,7 +182,7 @@ views/
 │   └── ShoppingTypes.ts / ShoppingLabels.ts
 └── settings/
     ├── SettingsView.tsx
-    └── Settings*Section.tsx     # Contexts, Sync, Agents & files, Notifications
+    └── Settings*Section.tsx     # Contexts, Sync, Automations, Agents & files, Notifications
 ```
 
 Each view is a **pure presentational component** that receives every value it needs via props. Views never call hooks from `core/` or `@package/api` directly — that is the route hook's job.

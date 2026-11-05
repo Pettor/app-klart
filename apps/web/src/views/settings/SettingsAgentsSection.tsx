@@ -1,8 +1,6 @@
 import type { ReactElement, ReactNode } from "react";
 import { Button, Disclosure } from "@heroui/react";
 import { useIntl } from "react-intl";
-import type { SettingsAutomationsPanelProps } from "./SettingsAutomationsPanel";
-import { SettingsAutomationsPanel } from "./SettingsAutomationsPanel";
 import { SettingsPanel, SettingsSectionShell } from "./SettingsSectionShell";
 import { SettingsSwitchRow } from "./SettingsSwitchRow";
 import type { AgentFileOptions } from "~/core/sync/FolderSync";
@@ -11,7 +9,6 @@ export interface SettingsAgentsSectionProps {
   options: AgentFileOptions;
   onChange: (key: keyof AgentFileOptions, value: boolean) => void;
   llmsTxt: string;
-  automations: SettingsAutomationsPanelProps;
 }
 
 const SYNTAX: { token: string; id: string }[] = [
@@ -40,12 +37,7 @@ function code(chunks: ReactNode[]): ReactElement {
   return <code className="font-mono">{chunks}</code>;
 }
 
-export function SettingsAgentsSection({
-  options,
-  onChange,
-  llmsTxt,
-  automations,
-}: SettingsAgentsSectionProps): ReactElement {
+export function SettingsAgentsSection({ options, onChange, llmsTxt }: SettingsAgentsSectionProps): ReactElement {
   const intl = useIntl();
 
   const syntaxText: Record<string, string> = {
@@ -173,8 +165,6 @@ export function SettingsAgentsSection({
           {FOLDER_TREE}
         </pre>
       </div>
-
-      <SettingsAutomationsPanel {...automations} />
 
       <Disclosure>
         <Disclosure.Heading>

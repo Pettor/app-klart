@@ -207,41 +207,29 @@ export function useSettingsRoute(section?: SettingsSectionId): SettingsViewProps
       options: sync.settings.agentFiles,
       onChange: sync.setAgentOption,
       llmsTxt: LLMS_TXT,
-      automations: {
-        showButton: automations.settings.showButton,
-        onShowButtonChange: (showButton) => automations.setSettings((current) => ({ ...current, showButton })),
-        automations: automations.settings.automations,
-        isDesktop: sync.isDesktop,
-        onAdd: () =>
-          automations.setSettings((current) => ({
-            ...current,
-            automations: [
-              ...current.automations,
-              {
-                id: crypto.randomUUID(),
-                name: intl.formatMessage({
-                  description: "SettingsAutomations - default name of a new automation",
-                  defaultMessage: "Collect today's tasks",
-                  id: "bM8RV/",
-                }),
-                enabled: true,
-                kind: sync.isDesktop ? "command" : "webhook",
-              },
-            ],
-          })),
-        onUpdate: (id, patch) =>
-          automations.setSettings((current) => ({
-            ...current,
-            automations: current.automations.map((automation) =>
-              automation.id === id ? { ...automation, ...patch } : automation
-            ),
-          })),
-        onRemove: (id) =>
-          automations.setSettings((current) => ({
-            ...current,
-            automations: current.automations.filter((automation) => automation.id !== id),
-          })),
-      },
+    },
+    automations: {
+      showButton: automations.settings.showButton,
+      onShowButtonChange: (showButton) => automations.setSettings((current) => ({ ...current, showButton })),
+      automations: automations.settings.automations,
+      isDesktop: sync.isDesktop,
+      onAdd: (automation) =>
+        automations.setSettings((current) => ({
+          ...current,
+          automations: [...current.automations, { ...automation, id: crypto.randomUUID() }],
+        })),
+      onUpdate: (id, patch) =>
+        automations.setSettings((current) => ({
+          ...current,
+          automations: current.automations.map((automation) =>
+            automation.id === id ? { ...automation, ...patch } : automation
+          ),
+        })),
+      onRemove: (id) =>
+        automations.setSettings((current) => ({
+          ...current,
+          automations: current.automations.filter((automation) => automation.id !== id),
+        })),
     },
     notifications: {
       settings: notifications.settings,

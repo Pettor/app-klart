@@ -8,6 +8,7 @@ export const SETTINGS_SECTION_IDS = [
   "sync",
   "notifications",
   "suggestions",
+  "automations",
   "agents",
   "about",
 ] as const;
