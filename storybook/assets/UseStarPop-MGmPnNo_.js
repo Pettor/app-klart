@@ -1,0 +1,1 @@
+import{n as e}from"./rolldown-runtime-DkW27tQK.js";import{t}from"./react-Q1GcV6wX.js";function n(e,t,n){let[i,a]=(0,r.useState)(0);return{pops:i,toggle:()=>{t||a(i+1),n(e)}}}var r;function i(){return(i=e((()=>{r=t()})))()}export{n,i as t};
