@@ -1,0 +1,8 @@
+{
+  "default": "klart-icon.svg",
+  "bg_color": "#10b981",
+  "android_bg": "klart-icon-android-bg.svg",
+  "android_fg": "klart-icon-android-fg.svg",
+  "android_fg_scale": 100,
+  "android_monochrome": "klart-icon-android-mono.svg"
+}

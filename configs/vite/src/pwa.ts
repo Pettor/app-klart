@@ -33,6 +33,7 @@ export function createPWAConfig(options: PWAViteConfigOptions = {}): UserConfig 
       "pwa-192x192.png",
       "pwa-512x512.png",
       "maskable-icon-512x512.png",
+      "monochrome-icon.svg",
       "badge-96x96.png",
       "sw-notifications.js",
       "screenshot-desktop.png",
@@ -61,6 +62,13 @@ export function createPWAConfig(options: PWAViteConfigOptions = {}): UserConfig 
           sizes: "512x512",
           type: "image/png",
           purpose: "maskable",
+        },
+        // White mark on transparent; the system tints it for themed icons.
+        {
+          src: "monochrome-icon.svg",
+          sizes: "any",
+          type: "image/svg+xml",
+          purpose: "monochrome",
         },
       ],
       screenshots: [

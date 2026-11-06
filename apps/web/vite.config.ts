@@ -34,8 +34,8 @@ export default defineConfig(({ command }) => {
     createPWAConfig({
       manifest: {
         description: "Plan today from what's due.",
-        themeColor: "#1b1b1d",
-        backgroundColor: "#1b1b1d",
+        themeColor: "#10b981",
+        backgroundColor: "#0c0c0f",
       },
     }),
     {

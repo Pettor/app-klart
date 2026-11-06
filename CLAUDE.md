@@ -101,7 +101,7 @@ root/
 - **Tests**: `pnpm --filter @app/desktop test` (cargo test, includes a real two-clone Git sync test)
 - **Build**: `tauri build`, then `scripts/collect-artifacts.mjs` copies the app and installers to `output/build/` (macOS `.app` + `.dmg`, Windows `.exe`/`.msi`/setup, Linux binary/AppImage/deb/rpm)
 - **Prerequisites**: Rust toolchain plus the platform's Tauri prerequisites (Xcode CLT on macOS, WebView2 + MSVC on Windows, WebKitGTK on Linux)
-- **Icons**: `src-tauri/icons/`, generated with `pnpm --filter @app/desktop tauri icon ../web/src/assets/branding/klart-icon.svg -o src-tauri/icons`
+- **Icons**: `src-tauri/icons/` (desktop, `ios/`, `android/`), generated with `pnpm --filter @app/desktop icons` from the sources in `apps/web/src/assets/branding/` (`tauri-icon.json` names the tile master and the Android adaptive layers). PWA icons come from `pnpm --filter @app/web generate:assets`
 - **Dev**: `pnpm dev:desktop` starts the web dev server over plain HTTP on port 1420 (the webview rejects the self-signed cert)
 - **Not cached by Turbo**: Cargo does its own incremental builds in `src-tauri/target/`
 

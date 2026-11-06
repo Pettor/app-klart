@@ -4,7 +4,7 @@ import { useIntl } from "react-intl";
 export interface KlartMarkProps {
   /** Rendered width and height in px. */
   size?: number;
-  /** Adds a hairline border so the white tile stands out on light backgrounds. */
+  /** Adds a hairline border around the tile, for backgrounds close to its green. */
   outlined?: boolean;
   /** When set, the mark is announced to screen readers; otherwise it's decorative. */
   labelled?: boolean;
@@ -43,8 +43,8 @@ export function KlartMark({ size = 28, outlined = false, labelled = false, class
         width="96"
         height="96"
         rx="22"
-        fill="#ffffff"
-        stroke={outlined ? "#dfe2e6" : "none"}
+        fill="#10b981"
+        stroke={outlined ? "#0d9467" : "none"}
         strokeWidth="3"
       />
       <circle
@@ -52,14 +52,21 @@ export function KlartMark({ size = 28, outlined = false, labelled = false, class
         cy="52"
         r="30"
         fill="none"
-        stroke={size >= 48 ? "#a6e9d5" : "#7fdcc0"}
+        stroke="#ffffff"
+        strokeOpacity={0.4}
         strokeWidth={ring}
         strokeLinecap="round"
         strokeDasharray="150 39"
         transform="rotate(-20 50 52)"
       />
-      <path d="M35 53 L46 64" stroke="#0b7285" strokeWidth={stroke} strokeLinecap="round" fill="none" />
-      <path d="M46 64 L74 32" stroke="#12b886" strokeWidth={stroke} strokeLinecap="round" fill="none" />
+      <path
+        d="M35 53 L46 64 L74 32"
+        stroke="#ffffff"
+        strokeWidth={stroke}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        fill="none"
+      />
     </svg>
   );
 }
