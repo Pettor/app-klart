@@ -15,6 +15,31 @@ export interface ReleaseNote {
   fixes: ReleaseNoteItem[];
 }
 
+const v0170 = defineMessages({
+  iconTitle: {
+    description: "ReleaseNotes 0.17.0 - highlight title: new emerald app icon",
+    defaultMessage: "A fresh coat of green",
+    id: "YPsyZ3",
+  },
+  iconDescription: {
+    description: "ReleaseNotes 0.17.0 - highlight text: new emerald app icon",
+    defaultMessage:
+      "Klart has a new icon: a white check breaking out of the day ring on an emerald tile. It fits your phone's icon shape and follows themed icons on Android.",
+    id: "JsDKeK",
+  },
+  automationsTitle: {
+    description: "ReleaseNotes 0.17.0 - highlight title: automations get their own settings section",
+    defaultMessage: "Automations get a home of their own",
+    id: "xoW7vX",
+  },
+  automationsDescription: {
+    description: "ReleaseNotes 0.17.0 - highlight text: automations get their own settings section",
+    defaultMessage:
+      "Automations moved to their own section in Settings, and you can now edit one instead of removing it and adding it again.",
+    id: "VRYGYI",
+  },
+});
+
 const v0160 = defineMessages({
   runTitle: {
     description: "ReleaseNotes 0.16.0 - highlight title: Run button in My Day runs automations",
@@ -858,6 +883,14 @@ const v010 = defineMessages({
  * entry here; people who update see every entry newer than the last one they saw.
  */
 export const RELEASE_NOTES: ReleaseNote[] = [
+  {
+    version: "0.17.0",
+    highlights: [
+      { emoji: "💚", title: v0170.iconTitle, description: v0170.iconDescription },
+      { emoji: "⚡", title: v0170.automationsTitle, description: v0170.automationsDescription },
+    ],
+    fixes: [],
+  },
   {
     version: "0.16.0",
     highlights: [
