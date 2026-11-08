@@ -15,6 +15,20 @@ export interface ReleaseNote {
   fixes: ReleaseNoteItem[];
 }
 
+const v0171 = defineMessages({
+  keyboardFixTitle: {
+    description: "ReleaseNotes 0.17.1 - fix title: adding tasks with the phone keyboard up",
+    defaultMessage: "Type and still see your day",
+    id: "kI6TSM",
+  },
+  keyboardFixDescription: {
+    description: "ReleaseNotes 0.17.1 - fix text: adding tasks with the phone keyboard up",
+    defaultMessage:
+      "On phones, My Day opens on your tasks instead of the keyboard, and while you type the add field sits right under your list, above the keyboard.",
+    id: "iISdi+",
+  },
+});
+
 const v0170 = defineMessages({
   iconTitle: {
     description: "ReleaseNotes 0.17.0 - highlight title: new emerald app icon",
@@ -883,6 +897,11 @@ const v010 = defineMessages({
  * entry here; people who update see every entry newer than the last one they saw.
  */
 export const RELEASE_NOTES: ReleaseNote[] = [
+  {
+    version: "0.17.1",
+    highlights: [],
+    fixes: [{ emoji: "⌨️", title: v0171.keyboardFixTitle, description: v0171.keyboardFixDescription }],
+  },
   {
     version: "0.17.0",
     highlights: [
