@@ -25,6 +25,7 @@ import type {
 } from "./MyDayTypes";
 import { useMyDayArrivals } from "./UseMyDayArrivals";
 import { useMyDayPaneWidth } from "./UseMyDayPaneWidth";
+import { useMyDayQuickAddDock } from "./UseMyDayQuickAddDock";
 import { useMyDaySidebarMotion } from "./UseMyDaySidebarMotion";
 import { QuickAddInput } from "~/components/input/quick-add/QuickAddInput";
 
@@ -77,6 +78,7 @@ export function MyDayView({
   const isPhone = !useBreakpoint("sm");
   const isWide = useBreakpoint("xl");
   const pane = useMyDayPaneWidth();
+  const dock = useMyDayQuickAddDock(isPhone);
   const slideSidebarIn = useMyDaySidebarMotion(sidebar.isCollapsed);
   const { arrivingIds, suggestions } = useMyDayArrivals(
     tasks.map((task) => task.id),
@@ -192,10 +194,13 @@ export function MyDayView({
               arrivingIds={arrivingIds}
             />
 
-            {/* On phones it floats above the list, clear of the screen's bottom edge. */}
+            {/* On phones it floats at the bottom; while typing it sits right under the list, above the keyboard. */}
             <div
+              onFocus={dock.onFocus}
+              onBlur={dock.onBlur}
               className={clsx(
-                "sticky mt-auto flex flex-col gap-2",
+                "sticky flex flex-col gap-2",
+                !dock.isTyping && "mt-auto",
                 "max-sm:bg-surface/85 max-sm:bottom-[calc(env(safe-area-inset-bottom)+12px)] max-sm:rounded-3xl max-sm:p-2 max-sm:shadow-lg max-sm:backdrop-blur-md",
                 "sm:bottom-0 sm:bg-(--ctx-backdrop) sm:pt-2 sm:pb-[calc(env(safe-area-inset-bottom)+16px)]"
               )}
@@ -203,7 +208,7 @@ export function MyDayView({
               <Button
                 variant="secondary"
                 onPress={suggestions.onToggle}
-                className="h-11 self-start rounded-full sm:hidden"
+                className={clsx("h-11 self-start rounded-full sm:hidden", dock.isTyping && "hidden")}
                 data-testid="my-day__open-suggestions"
               >
                 <LightBulbIcon className="size-[18px]" aria-hidden />
@@ -223,6 +228,7 @@ export function MyDayView({
                 preview={quickAdd.preview}
                 today={today}
                 compact={isPhone}
+                inputRef={dock.inputRef}
               />
             </div>
           </main>
