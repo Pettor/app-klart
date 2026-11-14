@@ -15,6 +15,42 @@ export interface ReleaseNote {
   fixes: ReleaseNoteItem[];
 }
 
+const v0180 = defineMessages({
+  repeatTitle: {
+    description: "ReleaseNotes 0.18.0 - highlight title: recurring tasks",
+    defaultMessage: "Tasks that come back",
+    id: "5tgimk",
+  },
+  repeatDescription: {
+    description: "ReleaseNotes 0.18.0 - highlight text: recurring tasks",
+    defaultMessage:
+      "Pick Repeat in the task editor to make a task daily, weekly, monthly or on the weekdays you choose. Check it off and the next one is waiting on its next date, reminder included.",
+    id: "CkFozA",
+  },
+  quickAddTitle: {
+    description: "ReleaseNotes 0.18.0 - highlight title: repeat syntax in quick add",
+    defaultMessage: "Repeat as you type",
+    id: "7lV5hz",
+  },
+  quickAddDescription: {
+    description: "ReleaseNotes 0.18.0 - highlight text: repeat syntax in quick add",
+    defaultMessage:
+      "Add *weekly, *2w or *mon,thu when you add a task and it repeats right away. Agents can send recurring tasks to your inbox too.",
+    id: "v/bAZR",
+  },
+  notifyTitle: {
+    description: "ReleaseNotes 0.18.0 - highlight title: recurring task notifications",
+    defaultMessage: "A nudge each time",
+    id: "jNi2/b",
+  },
+  notifyDescription: {
+    description: "ReleaseNotes 0.18.0 - highlight text: recurring task notifications",
+    defaultMessage:
+      "Klart now reminds you each time a recurring task is due, at its reminder or at a time you pick under Recurring tasks in Settings → Notifications.",
+    id: "D6iv8q",
+  },
+});
+
 const v0171 = defineMessages({
   keyboardFixTitle: {
     description: "ReleaseNotes 0.17.1 - fix title: adding tasks with the phone keyboard up",
@@ -897,6 +933,15 @@ const v010 = defineMessages({
  * entry here; people who update see every entry newer than the last one they saw.
  */
 export const RELEASE_NOTES: ReleaseNote[] = [
+  {
+    version: "0.18.0",
+    highlights: [
+      { emoji: "🔁", title: v0180.repeatTitle, description: v0180.repeatDescription },
+      { emoji: "⌨️", title: v0180.quickAddTitle, description: v0180.quickAddDescription },
+      { emoji: "🔔", title: v0180.notifyTitle, description: v0180.notifyDescription },
+    ],
+    fixes: [],
+  },
   {
     version: "0.17.1",
     highlights: [],
