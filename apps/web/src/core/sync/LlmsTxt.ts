@@ -21,7 +21,7 @@ export const LLMS_TXT = `# Klart
   starred first, and whether each is in My Day. Read-only.
 - inbox/: drop a .txt (one quick-add line per line) or a task .json here.
   A .json needs only "title"; "context", "tags", "due", "remindAt",
-  "important", "notes" and "links" are optional.
+  "important", "notes", "links" and "repeat" are optional.
 - requests/<time>-<name>.json: written when the user presses Run for a
   "request file" automation, schema klart.request/v1 with "automation",
   "requestedAt" and "device". The app never reads them: whatever handles
@@ -41,6 +41,18 @@ export const LLMS_TXT = `# Klart
   array. http:// and https:// URLs are kept; a www. address gets https://
   added (www.fz.se becomes https://www.fz.se). Anything else is dropped.
 - Add details: put free text in the task's "notes".
+- Make a task recurring: set "repeat" to { "every": 1, "unit": "week",
+  "weekdays": [1, 4], "from": "YYYY-MM-DD" }. "unit" is "day", "week",
+  "month" or "year"; "weekdays" (0 = Sunday … 6 = Saturday) is for weeks
+  only, empty means the weekday of "from"; "from" is the first occurrence,
+  and later ones are counted from it (monthly on the 31st falls on the last
+  day of shorter months). Remove "repeat" to stop it. A recurring task is
+  due on an occurrence. Completing it the usual way is enough: the app then
+  creates the next occurrence as a new task (with the same title, tags,
+  notes and repeat, due on the next date after "due", never before the day
+  it was completed) and sets "nextId" on the completed one. Don't create
+  the next one yourself. Each occurrence gets its own notification on its
+  due date, at its "remindAt" when set.
 - Shopping: see "Shopping lists" below.
 
 ## Shopping lists
@@ -100,6 +112,9 @@ views/shopping.json for what's left to buy; write the list files.
 - #tag adds a tag. A tag naming a context (#work, #club) also picks the context.
 - @YYYY-MM-DD, @today, @tomorrow, @mon..@sun, @+Nd set the due date.
 - ^HH:MM, ^fri-HH:MM, ^YYYY-MM-DDTHH:MM set a reminder (remindAt).
+- *daily, *weekly, *monthly, *yearly, *weekdays, *Nd/*Nw/*Nm/*Ny (every N
+  days, weeks, months, years), *mon,thu make the task recurring ("repeat"),
+  counted from its due date, or else from today.
 - ! marks important.
 - https://… or www.… adds a link (to "links"). All other words are the title.
 - Tasks have no lists (group and filter with tags); lists/ is for shopping.

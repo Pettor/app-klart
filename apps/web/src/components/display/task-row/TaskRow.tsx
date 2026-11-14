@@ -1,5 +1,6 @@
 import type { CSSProperties, ReactElement } from "react";
 import {
+  ArrowPathIcon,
   ArrowTopRightOnSquareIcon,
   Bars3BottomLeftIcon,
   BellIcon,
@@ -22,7 +23,9 @@ import { useTaskCompletion } from "./UseTaskCompletion";
 import type { TaskRowReorder } from "./UseTaskReorder";
 import { REORDER_HANDLE_ATTRIBUTE, REORDER_ID_ATTRIBUTE } from "./UseTaskReorder";
 import type { ContextColor } from "~/core/contexts/KlartContext";
+import { formatRepeat } from "~/core/tasks/FormatRepeat";
 import { formatTaskLink } from "~/core/tasks/TaskLink";
+import type { TaskRepeat } from "~/core/tasks/TaskRepeat";
 
 /** Display-ready task. Built by the route hook from a domain `Task`. */
 export interface TaskRowTask {
@@ -32,6 +35,8 @@ export interface TaskRowTask {
   important: boolean;
   due: string | null;
   remindAt: string | null;
+  /** Set on a recurring task; shows how often it repeats. */
+  repeat?: TaskRepeat;
   /** Tags to show, without the context's own routing tag. */
   tags: string[];
   /** `http(s)://` links to the task's source; each opens in a new tab. */
@@ -128,8 +133,8 @@ export function TaskRow({
       !!task.shopping ||
       (showLinks && task.links.length > 0) ||
       hasNoteMarker ||
-      (showMeta && (!!task.due || !!task.remindAt))
-    : hasNoteMarker || !!task.shopping || (showMeta && (showContext || !!task.due || !!task.remindAt));
+      (showMeta && (!!task.due || !!task.remindAt || !!task.repeat))
+    : hasNoteMarker || !!task.shopping || (showMeta && (showContext || !!task.due || !!task.remindAt || !!task.repeat));
 
   return (
     // Collapses to nothing while a completed card sinks away, so the list closes the gap.
@@ -299,6 +304,16 @@ export function TaskRow({
                     <span className={clsx(META_CHIP, "hero:bg-surface-tertiary hero:text-foreground/85 gap-1")}>
                       <BellIcon className="size-3" aria-hidden />
                       {formatReminder(intl, task.remindAt, today)}
+                    </span>
+                  )}
+                  {showMeta && task.repeat && (
+                    <span
+                      className={clsx(META_CHIP, "hero:bg-surface-tertiary hero:text-foreground/85 gap-1")}
+                      title={formatRepeat(intl, task.repeat)}
+                      data-testid="task-row__repeat"
+                    >
+                      <ArrowPathIcon className="size-3" aria-hidden />
+                      {formatRepeat(intl, task.repeat, "short")}
                     </span>
                   )}
                   {hasNoteMarker && (

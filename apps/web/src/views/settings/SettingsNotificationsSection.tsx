@@ -13,7 +13,7 @@ import type {
   TimedNotificationSetting,
 } from "~/core/notifications/NotificationSettings";
 
-type TimedKey = "planDay" | "dueToday" | "overdue" | "wrapUp";
+type TimedKey = "planDay" | "recurring" | "dueToday" | "overdue" | "wrapUp";
 
 export interface SettingsNotificationContext {
   id: string;
@@ -150,6 +150,12 @@ export function SettingsNotificationsSection({
     },
   ];
 
+  const recurringLabel = intl.formatMessage({
+    description: "SettingsNotifications - recurring tasks toggle",
+    defaultMessage: "Recurring tasks",
+    id: "Gv6ChN",
+  });
+
   function updateTimed(key: TimedKey, patch: Partial<TimedNotificationSetting>): void {
     onChange({ [key]: { ...settings[key], ...patch } });
   }
@@ -249,6 +255,22 @@ export function SettingsNotificationsSection({
           isSelected={settings.reminders.enabled}
           onChange={(enabled) => onChange({ reminders: { enabled } })}
         />
+        <SettingsSwitchRow
+          label={recurringLabel}
+          description={intl.formatMessage({
+            description: "SettingsNotifications - recurring tasks toggle help",
+            defaultMessage: "Each time one is due: at its reminder, or else at this time",
+            id: "IoZE+l",
+          })}
+          isSelected={settings.recurring.enabled}
+          onChange={(enabled) => updateTimed("recurring", { enabled })}
+        >
+          <TimeInput
+            value={settings.recurring.time}
+            label={recurringLabel}
+            onChange={(time) => updateTimed("recurring", { time })}
+          />
+        </SettingsSwitchRow>
         {timed.slice(1).map((row) => (
           <SettingsSwitchRow
             key={row.key}

@@ -54,6 +54,8 @@ export interface MyDayTaskActions {
 export interface MyDayTaskEditorProps {
   /** The task being edited, or `null` when the editor is closed. */
   task: TaskEditorTask | null;
+  /** Today's local date, where a task without a due date starts repeating. */
+  today: string;
   contexts: TaskEditorContextOption[];
   onChange: (patch: TaskEditorPatch) => void;
   onToggleDone: () => void;

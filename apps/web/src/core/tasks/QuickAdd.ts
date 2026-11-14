@@ -1,5 +1,7 @@
 import { addDays, isLocalDate, weekdayOf } from "./LocalDate";
 import { toTaskLink } from "./TaskLink";
+import type { RepeatUnit, TaskRepeat } from "./TaskRepeat";
+import { createRepeat, occurrenceOnOrAfter } from "./TaskRepeat";
 import type { KlartContext } from "~/core/contexts/KlartContext";
 import { ALL_CONTEXTS, findContextByTag, getDefaultContextId } from "~/core/contexts/KlartContext";
 
@@ -9,6 +11,7 @@ import { ALL_CONTEXTS, findContextByTag, getDefaultContextId } from "~/core/cont
  * - `#tag` adds a tag. A tag naming a context (`#work`) also routes the task there.
  * - `@2026-07-08`, `@today`, `@tomorrow`, `@fri`, `@+3d` set the due date.
  * - `^09:00`, `^fri-09:00`, `^2026-11-02T09:00` set a reminder.
+ * - `*daily`, `*weekly`, `*monthly`, `*yearly`, `*weekdays`, `*2w` (every 2 weeks), `*mon,thu` make it recurring.
  * - `!` marks the task important.
  * - `https://…` or `www.…` adds a link to the task's source (`www.` links get `https://`).
  * - Every other word is the title, in order.
@@ -21,6 +24,7 @@ export interface ParsedQuickAdd {
   remindAt: string | null;
   important: boolean;
   links: string[];
+  repeat: TaskRepeat | null;
   raw: string;
 }
 
@@ -60,6 +64,50 @@ export function parseDateToken(token: string, today: string): string | null {
   return null;
 }
 
+const REPEAT_WORDS: Record<string, RepeatUnit> = {
+  daily: "day",
+  day: "day",
+  weekly: "week",
+  week: "week",
+  monthly: "month",
+  month: "month",
+  yearly: "year",
+  year: "year",
+};
+
+const REPEAT_UNITS: Record<string, RepeatUnit> = { d: "day", w: "week", m: "month", y: "year" };
+
+function parseWeekday(value: string): number | null {
+  if (value.length < 2) {
+    return null;
+  }
+  const weekday = WEEKDAYS.findIndex((name) => name.startsWith(value));
+  return weekday >= 0 ? weekday : null;
+}
+
+/**
+ * Resolves a repeat token (without `*`), counted from the due date, or else from today. A rule on given weekdays
+ * without a due date starts on the first of them.
+ */
+export function parseRepeatToken(token: string, due: string | null, today: string): TaskRepeat | null {
+  const value = token.toLowerCase();
+  const from = due ?? today;
+  const word = REPEAT_WORDS[value];
+  if (word) {
+    return createRepeat(word, from);
+  }
+  const interval = value.match(/^(\d{1,3})([dwmy])$/);
+  if (interval && Number(interval[1]) > 0) {
+    return createRepeat(REPEAT_UNITS[interval[2]!]!, from, Number(interval[1]));
+  }
+  const weekdays = value === "weekdays" ? [1, 2, 3, 4, 5] : value.split(",").map(parseWeekday);
+  if (weekdays.length === 0 || weekdays.some((day) => day === null)) {
+    return null;
+  }
+  const repeat: TaskRepeat = { every: 1, unit: "week", weekdays: [...new Set(weekdays as number[])].sort(), from };
+  return due ? repeat : { ...repeat, from: occurrenceOnOrAfter(repeat, today) };
+}
+
 /** Resolves a reminder token (without `^`). A bare time uses the due date, else today. */
 export function parseRemindToken(token: string, due: string | null, today: string): string | null {
   const match = token.match(/^(?:(.+)[-T])?(\d{1,2}):(\d{2})$/i);
@@ -88,6 +136,7 @@ export function parseQuickAdd(text: string, { today, contexts, currentContext }:
   const links: string[] = [];
   let due: string | null = null;
   let remindToken: string | null = null;
+  let repeatToken: string | null = null;
   let important = false;
 
   for (const token of text.split(/\s+/)) {
@@ -108,6 +157,11 @@ export function parseQuickAdd(text: string, { today, contexts, currentContext }:
         continue;
       }
     }
+    // Checked here so a word like "*bold" keeps its place in the title.
+    if (token.length > 1 && token.startsWith("*") && parseRepeatToken(token.slice(1), null, today)) {
+      repeatToken = token.slice(1);
+      continue;
+    }
     if (token.length > 1 && token.startsWith("^")) {
       remindToken = token.slice(1);
       continue;
@@ -125,6 +179,10 @@ export function parseQuickAdd(text: string, { today, contexts, currentContext }:
     }
     words.push(token);
   }
+
+  const repeat = repeatToken ? parseRepeatToken(repeatToken, due, today) : null;
+  // A recurring task is always due, on its first occurrence.
+  due = repeat ? repeat.from : due;
 
   const remindAt = remindToken ? parseRemindToken(remindToken, due, today) : null;
   if (remindToken && !remindAt) {
@@ -145,6 +203,7 @@ export function parseQuickAdd(text: string, { today, contexts, currentContext }:
     remindAt,
     important,
     links,
+    repeat,
     raw: text.trim(),
   };
 }

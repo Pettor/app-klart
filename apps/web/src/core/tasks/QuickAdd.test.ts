@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseDateToken, parseQuickAdd, parseRemindToken } from "./QuickAdd";
+import { parseDateToken, parseQuickAdd, parseRemindToken, parseRepeatToken } from "./QuickAdd";
 import type { KlartContext } from "~/core/contexts/KlartContext";
 
 // Wednesday
@@ -67,6 +67,7 @@ describe("parseQuickAdd", () => {
       remindAt: null,
       important: false,
       links: [],
+      repeat: null,
       raw: "#work #acme @2026-07-08 #team find more tasks to create",
     });
   });
@@ -128,5 +129,44 @@ describe("parseQuickAdd", () => {
 
   it("returns an empty title for tokens only", () => {
     expect(parse("#work @today").title).toBe("");
+  });
+});
+
+describe("parseRepeatToken", () => {
+  it.each([
+    ["daily", { every: 1, unit: "day", weekdays: [], from: TODAY }],
+    ["weekly", { every: 1, unit: "week", weekdays: [3], from: TODAY }],
+    ["monthly", { every: 1, unit: "month", weekdays: [], from: TODAY }],
+    ["yearly", { every: 1, unit: "year", weekdays: [], from: TODAY }],
+    ["2w", { every: 2, unit: "week", weekdays: [3], from: TODAY }],
+    ["10d", { every: 10, unit: "day", weekdays: [], from: TODAY }],
+    // Starts on the first of the weekdays
+    ["mon,thu", { every: 1, unit: "week", weekdays: [1, 4], from: "2026-10-22" }],
+    ["weekdays", { every: 1, unit: "week", weekdays: [1, 2, 3, 4, 5], from: TODAY }],
+  ])("resolves *%s", (token, expected) => {
+    expect(parseRepeatToken(token, null, TODAY)).toEqual(expected);
+  });
+
+  it.each(["0d", "often", "m"])("rejects *%s", (token) => {
+    expect(parseRepeatToken(token, null, TODAY)).toBeNull();
+  });
+
+  it("counts from the due date", () => {
+    expect(parseRepeatToken("monthly", "2026-10-31", TODAY)).toMatchObject({ from: "2026-10-31" });
+  });
+});
+
+describe("parseQuickAdd with a repeat", () => {
+  it("makes the task recurring and due on its first occurrence", () => {
+    expect(parse("*fri water plants")).toMatchObject({
+      title: "Water plants",
+      due: "2026-10-23",
+      repeat: { every: 1, unit: "week", weekdays: [5], from: "2026-10-23" },
+    });
+    expect(parse("*daily stretch")).toMatchObject({ due: TODAY });
+  });
+
+  it("keeps an unknown repeat token in the title", () => {
+    expect(parse("read *bold text")).toMatchObject({ title: "Read *bold text", repeat: null });
   });
 });

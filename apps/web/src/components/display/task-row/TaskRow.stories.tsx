@@ -96,6 +96,16 @@ export const TagsShown: Story = {
   ],
 };
 
+export const Recurring: Story = {
+  args: {
+    ...defaultArgs,
+    task: { ...defaultArgs.task, repeat: { every: 2, unit: "week", weekdays: [1, 4], from: "2026-10-19" } },
+  },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByTestId("task-row__repeat")).toHaveTextContent("Every 2 weeks");
+  },
+};
+
 export const WithNote: Story = {
   args: { ...defaultArgs, task: { ...defaultArgs.task, hasNotes: true } },
 };

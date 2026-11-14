@@ -23,6 +23,7 @@ const defaultArgs = {
     important: false,
     due: "2026-10-21",
     remindAt: "2026-10-21T14:00",
+    repeat: null,
     tags: ["acme", "review"],
     links: ["https://github.com/acme/gateway-client/pull/412"],
     notes: "",
@@ -31,6 +32,7 @@ const defaultArgs = {
     isInMyDay: true,
     file: "tasks/work/w1.json",
   },
+  today: "2026-10-21",
   contexts: DEFAULT_CONTEXTS.map((context) => ({ id: context.id, name: context.name, color: context.color })),
   onChange: fn(),
   onToggleDone: fn(),
@@ -54,6 +56,17 @@ export const Completed: Story = {
 
 export const NotInMyDay: Story = {
   args: { ...defaultArgs, task: { ...defaultArgs.task, isInMyDay: false, due: null, remindAt: null, links: [] } },
+};
+
+export const Recurring: Story = {
+  args: {
+    ...defaultArgs,
+    task: { ...defaultArgs.task, repeat: { every: 1, unit: "week", weekdays: [1, 3], from: "2026-10-21" } },
+  },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByTestId("task-repeat__summary")).toHaveTextContent("Every week on Mon and Wed");
+    await expect(canvas.getByTestId("task-repeat__custom")).toBeVisible();
+  },
 };
 
 export const EditTitle: Story = {

@@ -1,5 +1,6 @@
 import type { ReactElement } from "react";
 import {
+  ArrowPathIcon,
   ArrowTopRightOnSquareIcon,
   Bars3BottomLeftIcon,
   BellIcon,
@@ -12,6 +13,7 @@ import clsx from "clsx";
 import { useIntl } from "react-intl";
 import { DUE_TONE_CLASS, formatDue, formatReminder, getDueTone } from "./TaskDateFormat";
 import type { TaskRowTask } from "./TaskRow";
+import { formatRepeat } from "~/core/tasks/FormatRepeat";
 import { formatTaskLink } from "~/core/tasks/TaskLink";
 
 export interface TaskCheckProps {
@@ -161,6 +163,12 @@ export function TaskRowLeanMeta({
         <span className="inline-flex items-center gap-1">
           <BellIcon className="size-3" aria-hidden />
           {formatReminder(intl, task.remindAt, today)}
+        </span>
+      )}
+      {showDates && task.repeat && (
+        <span className="inline-flex items-center gap-1" title={formatRepeat(intl, task.repeat)}>
+          <ArrowPathIcon className="size-3" aria-hidden />
+          {formatRepeat(intl, task.repeat, "short")}
         </span>
       )}
       {showLinks && task.links.length > 0 && (

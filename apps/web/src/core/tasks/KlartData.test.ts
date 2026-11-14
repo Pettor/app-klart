@@ -8,6 +8,7 @@ import {
   moveDayItem,
   moveDayItemNextTo,
   normalizeData,
+  reconcileRecurringTasks,
   removeContext,
   removeFromDay,
   setTaskDone,
@@ -180,5 +181,86 @@ describe("normalizeData", () => {
     const data = setup();
     const stored = { ...data, tasks: { ...data.tasks, broken: { title: 42 } } } as unknown as typeof data;
     expect(Object.keys(normalizeData(stored).tasks)).toEqual(["T1"]);
+  });
+});
+
+describe("recurring tasks", () => {
+  // Wednesday morning, local time.
+  const DONE_AT = new Date(2026, 9, 21, 9, 30);
+
+  function recurring(): ReturnType<typeof createEmptyData> {
+    const data = createEmptyData();
+    const parsed = parseQuickAdd("#home water the plants *weekly @today ^today-18:00", {
+      today: TODAY,
+      contexts: data.contexts,
+      currentContext: "all",
+    });
+    const task = createTask(parsed, CREATED, "R1");
+    return { ...data, tasks: { [task.id]: task } };
+  }
+
+  it("creates the next occurrence when completed, due on the schedule's next date", () => {
+    const next = setTaskDone(recurring(), "R1", true, DONE_AT);
+    const done = next.tasks.R1!;
+    expect(done.status).toBe("done");
+    expect(done.nextId).toBeDefined();
+    expect(next.tasks[done.nextId!]).toMatchObject({
+      title: "Water the plants",
+      status: "open",
+      due: "2026-10-28",
+      remindAt: "2026-10-28T18:00",
+      tags: ["home"],
+      repeat: { every: 1, unit: "week", weekdays: [3], from: "2026-10-21" },
+      completedAt: null,
+    });
+    expect(next.tasks[done.nextId!]!.nextId).toBeUndefined();
+  });
+
+  it("derives the same id for the next occurrence on every device", () => {
+    const a = setTaskDone(recurring(), "R1", true, DONE_AT);
+    const b = setTaskDone(recurring(), "R1", true, new Date(2026, 9, 21, 11, 0));
+    expect(a.tasks.R1!.nextId).toBe(b.tasks.R1!.nextId);
+  });
+
+  it("takes the next occurrence back when the completion is undone, and brings it back when redone", () => {
+    const done = setTaskDone(recurring(), "R1", true, DONE_AT);
+    const nextId = done.tasks.R1!.nextId!;
+    const undone = setTaskDone(done, "R1", false, DONE_AT);
+    expect(undone.tasks.R1!.nextId).toBeUndefined();
+    expect(undone.tasks[nextId]!.status).toBe("archived");
+
+    const redone = setTaskDone(undone, "R1", true, DONE_AT);
+    expect(redone.tasks.R1!.nextId).toBe(nextId);
+    expect(redone.tasks[nextId]!.status).toBe("open");
+    expect(Object.keys(redone.tasks)).toHaveLength(2);
+  });
+
+  it("keeps an occurrence someone already changed when a completion is undone", () => {
+    const done = setTaskDone(recurring(), "R1", true, DONE_AT);
+    const nextId = done.tasks.R1!.nextId!;
+    const edited = updateTask(done, nextId, { title: "Water the plants and the herbs" }, LATER);
+    expect(setTaskDone(edited, "R1", false, LATER).tasks[nextId]!.status).toBe("open");
+  });
+
+  it("moves the schedule with the due date", () => {
+    const next = updateTask(recurring(), "R1", { due: "2026-10-23" }, LATER);
+    expect(next.tasks.R1!.repeat).toMatchObject({ from: "2026-10-23" });
+  });
+
+  it("stops repeating when repeat is cleared", () => {
+    const next = updateTask(recurring(), "R1", { repeat: null }, LATER);
+    expect(next.tasks.R1!.repeat).toBeUndefined();
+    expect(Object.keys(setTaskDone(next, "R1", true, DONE_AT).tasks)).toEqual(["R1"]);
+  });
+
+  it("creates the next occurrence of a task completed outside the app, once", () => {
+    const data = recurring();
+    const completed = {
+      ...data,
+      tasks: { R1: { ...data.tasks.R1!, status: "done" as const, completedAt: "2026-10-21T08:00:00Z" } },
+    };
+    const reconciled = reconcileRecurringTasks(completed, LATER);
+    expect(Object.keys(reconciled.tasks)).toHaveLength(2);
+    expect(reconcileRecurringTasks(reconciled, LATER)).toBe(reconciled);
   });
 });

@@ -13,7 +13,7 @@ import { buildShoppingView, buildSuggestionsView, buildTodayView } from "~/core/
 import type { DayFile } from "~/core/tasks/Day";
 import { DayFileSchema } from "~/core/tasks/Day";
 import type { KlartData } from "~/core/tasks/KlartData";
-import { createTask } from "~/core/tasks/KlartData";
+import { createTask, reconcileRecurringTasks } from "~/core/tasks/KlartData";
 import { toUtcTimestamp } from "~/core/tasks/LocalDate";
 import { parseQuickAdd } from "~/core/tasks/QuickAdd";
 import type { Task } from "~/core/tasks/Task";
@@ -488,9 +488,9 @@ export class FolderSync {
     }
     this.read = true;
 
-    // A task completed in another app or by an agent marks its shopping item bought.
+    // A task completed in another app or by an agent marks its shopping item bought, or brings a recurring one back.
     if (changed) {
-      data = reconcileShoppingTasks(data);
+      data = reconcileRecurringTasks(reconcileShoppingTasks(data), new Date());
     }
 
     let inboxCount = 0;
@@ -541,6 +541,7 @@ export class FolderSync {
           continue;
         }
         const entry = parsed.data;
+        const repeat = entry.repeat ? { ...entry.repeat, from: entry.repeat.from ?? entry.due ?? today } : null;
         const tags = (entry.tags ?? []).map((tag) => tag.toLowerCase().replace(/^#/, ""));
         const routed = parseQuickAdd(tags.map((tag) => `#${tag}`).join(" "), {
           today,
@@ -552,10 +553,11 @@ export class FolderSync {
             title: entry.title,
             context: routed.context,
             tags,
-            due: entry.due ?? null,
+            due: entry.due ?? repeat?.from ?? null,
             remindAt: entry.remindAt ?? null,
             important: entry.important ?? false,
             links: toTaskLinks(entry.links ?? []),
+            repeat,
             raw: "",
           },
           now

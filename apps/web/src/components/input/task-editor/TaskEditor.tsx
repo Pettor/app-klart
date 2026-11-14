@@ -15,9 +15,11 @@ import {
 } from "@heroui/react";
 import clsx from "clsx";
 import { useIntl } from "react-intl";
+import { TaskRepeatField } from "./TaskRepeatField";
 import { useTaskEditor } from "./UseTaskEditor";
 import type { ContextColor } from "~/core/contexts/KlartContext";
 import { formatTaskLink } from "~/core/tasks/TaskLink";
+import type { TaskRepeat } from "~/core/tasks/TaskRepeat";
 
 /** Everything the editor shows and edits. Built by the route hook from a domain `Task`. */
 export interface TaskEditorTask {
@@ -29,6 +31,8 @@ export interface TaskEditorTask {
   due: string | null;
   /** Local date-time `YYYY-MM-DDTHH:MM`. */
   remindAt: string | null;
+  /** How often the task comes back, or `null` for a one-off. */
+  repeat: TaskRepeat | null;
   /** Tags without the context's own routing tag. */
   tags: string[];
   links: string[];
@@ -47,11 +51,13 @@ export interface TaskEditorContextOption {
 }
 
 export type TaskEditorPatch = Partial<
-  Pick<TaskEditorTask, "title" | "due" | "remindAt" | "tags" | "links" | "notes" | "contextId">
+  Pick<TaskEditorTask, "title" | "due" | "remindAt" | "repeat" | "tags" | "links" | "notes" | "contextId">
 >;
 
 export interface TaskEditorProps {
   task: TaskEditorTask;
+  /** Today's local date, where a task without a due date starts repeating. */
+  today: string;
   contexts: TaskEditorContextOption[];
   onChange: (patch: TaskEditorPatch) => void;
   onToggleDone: () => void;
@@ -75,6 +81,7 @@ function blurOnEnter(event: KeyboardEvent<HTMLInputElement | HTMLTextAreaElement
 /** Edits one task in place. Toggles and pickers save at once; text fields save on blur or Enter. */
 export function TaskEditor({
   task,
+  today,
   contexts,
   onChange,
   onToggleDone,
@@ -268,6 +275,8 @@ export function TaskEditor({
         </Label>
         <Input type="datetime-local" data-testid="task-editor__reminder" />
       </TextField>
+
+      <TaskRepeatField repeat={task.repeat} due={task.due} today={today} onChange={onChange} />
 
       <TextField value={drafts.tags} onChange={drafts.setTags} className="flex flex-col gap-1">
         <Label className={FIELD_LABEL_CLASS}>

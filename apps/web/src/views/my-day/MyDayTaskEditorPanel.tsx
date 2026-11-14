@@ -28,6 +28,7 @@ export function MyDayTaskEditorPanel({ editor, pane }: MyDayTaskEditorPanelProps
         // Remounts per task so unsaved drafts never carry over to another task.
         key={task.id}
         task={task}
+        today={editor.today}
         contexts={editor.contexts}
         onChange={editor.onChange}
         onToggleDone={editor.onToggleDone}

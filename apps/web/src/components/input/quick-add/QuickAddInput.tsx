@@ -5,7 +5,9 @@ import clsx from "clsx";
 import { useIntl } from "react-intl";
 import { formatReminder, formatRelativeDate } from "~/components/display/task-row/TaskDateFormat";
 import type { ContextColor } from "~/core/contexts/KlartContext";
+import { formatRepeat } from "~/core/tasks/FormatRepeat";
 import { formatTaskLink } from "~/core/tasks/TaskLink";
+import type { TaskRepeat } from "~/core/tasks/TaskRepeat";
 
 /** What the typed line will become, shown live under the input. */
 export interface QuickAddPreview {
@@ -14,6 +16,7 @@ export interface QuickAddPreview {
   contextColor: ContextColor;
   due: string | null;
   remindAt: string | null;
+  repeat: TaskRepeat | null;
   important: boolean;
   /** Tags other than the context's routing tag. */
   tags: string[];
@@ -92,6 +95,11 @@ export function QuickAddInput({
                 },
                 { when: formatReminder(intl, preview.remindAt, today) }
               )}
+            </Chip>
+          )}
+          {preview.repeat && (
+            <Chip size="sm" variant="soft" data-testid="quick-add__repeat">
+              {formatRepeat(intl, preview.repeat)}
             </Chip>
           )}
           {preview.important && (

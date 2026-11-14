@@ -1,5 +1,7 @@
 import { z } from "zod";
 import { toTaskLinks } from "./TaskLink";
+import type { TaskRepeat } from "./TaskRepeat";
+import { TaskRepeatSchema } from "./TaskRepeat";
 
 export const TASK_SCHEMA = "klart.task/v1";
 
@@ -35,6 +37,10 @@ export interface Task {
   raw: string;
   /** Set on tasks made from a shopping list or item. Absent on other tasks. */
   shopping?: TaskShoppingLink;
+  /** Makes the task recurring: completing it creates the next occurrence, due on the schedule's next date. */
+  repeat?: TaskRepeat;
+  /** On a completed recurring task: the id of the occurrence its completion created. */
+  nextId?: string;
 }
 
 const nullableString = z.string().nullable().catch(null);
@@ -63,6 +69,8 @@ export const TaskFileSchema = z.object({
     .object({ listId: z.string().min(1), itemId: z.string().min(1).nullable().catch(null) })
     .optional()
     .catch(undefined),
+  repeat: TaskRepeatSchema.optional().catch(undefined),
+  nextId: z.string().min(1).optional().catch(undefined),
 });
 
 /** What an agent may drop into `inbox/` as JSON. Only `title` is required. */
@@ -75,6 +83,8 @@ export const InboxTaskSchema = z.object({
   important: z.boolean().optional(),
   notes: z.string().optional(),
   links: z.array(z.string()).optional(),
+  /** `from` defaults to `due`, or today. */
+  repeat: TaskRepeatSchema.extend({ from: TaskRepeatSchema.shape.from.optional() }).optional(),
 });
 
 export type InboxTask = z.infer<typeof InboxTaskSchema>;

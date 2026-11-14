@@ -10,6 +10,7 @@ import type { NotificationContent } from "./ShowNotification";
 import { showSystemNotification } from "./ShowNotification";
 import { toDeviceId } from "~/core/sync/FolderSync";
 import { syncDevicesAtom, syncSettingsAtom } from "~/core/sync/SyncAtoms";
+import { formatRepeat } from "~/core/tasks/FormatRepeat";
 import { visibleKlartDataAtom } from "~/core/tasks/KlartAtoms";
 
 const CHECK_INTERVAL_MS = 20_000;
@@ -34,6 +35,23 @@ export function describeNotification(intl: IntlShape, notification: PlannedNotif
             id: "v5qaLP",
           },
           { title: notification.task.title, tags: notification.task.tags.map((name) => `#${name}`).join(" ") || "none" }
+        ),
+      };
+    case "recurring":
+      return {
+        tag,
+        title: intl.formatMessage({
+          description: "Notification - title of the reminder sent for each occurrence of a recurring task",
+          defaultMessage: "Recurring task",
+          id: "fPSePZ",
+        }),
+        body: intl.formatMessage(
+          {
+            description: "Notification - recurring task body: the task title, then how often it repeats on a new line",
+            defaultMessage: "{title}\n{repeat}",
+            id: "xdqmlt",
+          },
+          { title: notification.task.title, repeat: formatRepeat(intl, notification.task.repeat!) }
         ),
       };
     case "plan-day":

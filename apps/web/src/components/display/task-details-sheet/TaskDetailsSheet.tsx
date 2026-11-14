@@ -1,5 +1,5 @@
 import { useState, type ReactElement } from "react";
-import { BellIcon, StarIcon } from "@heroicons/react/20/solid";
+import { ArrowPathIcon, BellIcon, StarIcon } from "@heroicons/react/20/solid";
 import { StarIcon as StarOutlineIcon } from "@heroicons/react/24/outline";
 import { Button, Drawer, ToggleButton } from "@heroui/react";
 import clsx from "clsx";
@@ -10,6 +10,7 @@ import type { TaskRowTask } from "~/components/display/task-row/TaskRow";
 import { TaskCheck, TaskLinkItem } from "~/components/display/task-row/TaskRowParts";
 import { useStarPop } from "~/components/display/task-row/UseStarPop";
 import { useTaskCompletion } from "~/components/display/task-row/UseTaskCompletion";
+import { formatRepeat } from "~/core/tasks/FormatRepeat";
 
 export interface TaskDetailsTask extends TaskRowTask {
   notes: string;
@@ -170,6 +171,12 @@ function TaskDetailsBody({
           <span className={clsx(PILL, "bg-surface-tertiary text-foreground/85")}>
             <BellIcon className="size-3" aria-hidden />
             {formatReminder(intl, task.remindAt, today)}
+          </span>
+        )}
+        {task.repeat && (
+          <span className={clsx(PILL, "bg-surface-tertiary text-foreground/85")} data-testid="task-details__repeat">
+            <ArrowPathIcon className="size-3" aria-hidden />
+            {formatRepeat(intl, task.repeat)}
           </span>
         )}
         {task.tags.map((tag) => (

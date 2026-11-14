@@ -1,10 +1,12 @@
 import type { DayFile, DayItemSource, SuggestionReason } from "./Day";
 import { createDay, dayHasTask } from "./Day";
-import { toUtcTimestamp } from "./LocalDate";
+import { addDays, daysBetween, parseLocalDate, toLocalDate, toUtcTimestamp } from "./LocalDate";
 import type { ParsedQuickAdd } from "./QuickAdd";
 import type { Task } from "./Task";
 import { TASK_SCHEMA, TaskFileSchema } from "./Task";
-import { createTaskId } from "./TaskId";
+import { createDerivedTaskId, createTaskId } from "./TaskId";
+import type { TaskRepeat } from "./TaskRepeat";
+import { nextOccurrence } from "./TaskRepeat";
 import type { KlartContext } from "~/core/contexts/KlartContext";
 import { DEFAULT_CONTEXTS, getDefaultContextId } from "~/core/contexts/KlartContext";
 import type { ShoppingList } from "~/core/shopping/ShoppingList";
@@ -21,7 +23,10 @@ export interface KlartData {
 
 export type TaskPatch = Partial<
   Pick<Task, "title" | "context" | "tags" | "due" | "remindAt" | "important" | "notes" | "links">
->;
+> & {
+  /** `null` stops the task repeating. */
+  repeat?: TaskRepeat | null;
+};
 
 export function createEmptyData(): KlartData {
   return { contexts: DEFAULT_CONTEXTS, tasks: {}, days: {}, lists: {} };
@@ -72,6 +77,7 @@ export function createTask(parsed: ParsedQuickAdd, now: Date, id: string = creat
     updatedAt: timestamp,
     completedAt: null,
     raw: parsed.raw,
+    ...(parsed.repeat ? { repeat: parsed.repeat } : {}),
   };
 }
 
@@ -88,14 +94,111 @@ function changeTask(data: KlartData, id: string, now: Date, change: (task: Task)
 }
 
 export function updateTask(data: KlartData, id: string, patch: TaskPatch, now: Date): KlartData {
-  return changeTask(data, id, now, () => patch);
+  return changeTask(data, id, now, (task) => {
+    const { repeat, ...rest } = patch;
+    if (repeat === null) {
+      return { ...rest, repeat: undefined };
+    }
+    if (repeat) {
+      return { ...rest, repeat };
+    }
+    // Moving a recurring task's due date moves its schedule with it.
+    if (task.repeat && patch.due && patch.due !== task.due) {
+      return { ...rest, repeat: { ...task.repeat, from: patch.due } };
+    }
+    return rest;
+  });
+}
+
+/**
+ * The task that follows a completed recurring one: a copy due on the schedule's next date, with its reminder
+ * moved along. Its id is derived from the completed task and the new date, so devices agree on it.
+ */
+export function createNextOccurrence(task: Task, now: Date): Task | null {
+  if (!task.repeat) {
+    return null;
+  }
+  const completedOn = task.completedAt ? toLocalDate(new Date(task.completedAt)) : toLocalDate(now);
+  const due = nextOccurrence(task.repeat, task.due ?? task.repeat.from, completedOn);
+  let remindAt: string | null = null;
+  if (task.remindAt) {
+    const offset = task.due ? daysBetween(task.due, task.remindAt.slice(0, 10)) : 0;
+    remindAt = `${addDays(due, offset)}T${task.remindAt.slice(11, 16)}`;
+  }
+  const timestamp = toUtcTimestamp(now);
+  return {
+    schema: TASK_SCHEMA,
+    id: createDerivedTaskId(`${task.id}:${due}`, parseLocalDate(due).getTime()),
+    title: task.title,
+    context: task.context,
+    tags: task.tags,
+    due,
+    remindAt,
+    important: task.important,
+    status: "open",
+    notes: task.notes,
+    links: task.links,
+    createdAt: timestamp,
+    updatedAt: timestamp,
+    completedAt: null,
+    raw: task.raw,
+    repeat: task.repeat,
+  };
+}
+
+/** Creates the next occurrence of a completed recurring task, or reopens it when a completion was undone. */
+function spawnNextOccurrence(data: KlartData, task: Task, now: Date): KlartData {
+  const next = createNextOccurrence(task, now);
+  if (!next) {
+    return data;
+  }
+  const existing = data.tasks[next.id];
+  let result = data;
+  if (!existing) {
+    result = upsertTask(result, next);
+  } else if (existing.status === "archived") {
+    result = upsertTask(result, { ...existing, status: "open", updatedAt: toUtcTimestamp(now) });
+  }
+  return upsertTask(result, { ...task, nextId: next.id, updatedAt: toUtcTimestamp(now) });
 }
 
 export function setTaskDone(data: KlartData, id: string, done: boolean, now: Date): KlartData {
-  return changeTask(data, id, now, () => ({
+  const before = data.tasks[id];
+  const result = changeTask(data, id, now, () => ({
     status: done ? "done" : "open",
     completedAt: done ? toUtcTimestamp(now) : null,
   }));
+  const task = result.tasks[id];
+  if (!before || !task?.repeat) {
+    return result;
+  }
+  if (done && before.status !== "done") {
+    return spawnNextOccurrence(result, task, now);
+  }
+  if (!done && before.status === "done" && task.nextId) {
+    // Undoing a completion takes back the occurrence it created, unless someone already worked on it.
+    const next = result.tasks[task.nextId];
+    let undone = upsertTask(result, { ...task, nextId: undefined });
+    if (next && next.status === "open" && next.updatedAt === next.createdAt) {
+      undone = upsertTask(undone, { ...next, status: "archived", updatedAt: toUtcTimestamp(now) });
+    }
+    return undone;
+  }
+  return result;
+}
+
+/**
+ * Creates the next occurrence of recurring tasks completed outside the app (by an agent, or by hand in the data
+ * folder), which have no `nextId` yet. Run after a sync pull.
+ */
+export function reconcileRecurringTasks(data: KlartData, now: Date): KlartData {
+  let result = data;
+  for (const task of Object.values(data.tasks)) {
+    if (task.repeat && task.status === "done" && !task.nextId) {
+      result = spawnNextOccurrence(result, task, now);
+    }
+  }
+  return result;
 }
 
 /** Tasks are never deleted, only archived, so other devices and agents see the change. */

@@ -119,3 +119,46 @@ describe("planNotifications", () => {
     expect(due[0]?.kind === "due-today" && due[0].tasks.map((t) => t.id)).toEqual(["a"]);
   });
 });
+
+describe("recurring notifications", () => {
+  const weekly = { every: 1, unit: "week" as const, weekdays: [3], from: "2026-10-21" };
+
+  function recurringKeys(...args: Parameters<typeof kinds>): string[] {
+    return kinds(...args).filter((key) => key.startsWith("recurring:"));
+  }
+
+  it("sends one per occurrence at the daily time on its due date", () => {
+    const recurring = task("w", { due: "2026-10-21", repeat: weekly });
+    expect(recurringKeys(at(8, 59), data([recurring]))).toEqual([]);
+    expect(recurringKeys(at(9, 0), data([recurring]))).toEqual(["recurring:w:2026-10-21"]);
+    expect(
+      recurringKeys(at(9, 0), data([recurring]), DEFAULT_NOTIFICATION_SETTINGS, ["recurring:w:2026-10-21"])
+    ).toEqual([]);
+    expect(recurringKeys(at(9, 0), data([{ ...recurring, due: "2026-10-28" }]))).toEqual([]);
+  });
+
+  it("rings at the occurrence's reminder instead of as a plain reminder", () => {
+    const recurring = task("w", { due: "2026-10-21", remindAt: "2026-10-21T14:00", repeat: weekly });
+    expect(recurringKeys(at(9, 0), data([recurring]))).toEqual([]);
+    expect(recurringKeys(at(14, 0), data([recurring]))).toEqual(["recurring:w:2026-10-21"]);
+  });
+
+  it("leaves recurring tasks out of the due-today summary", () => {
+    const plain = task("p", { due: "2026-10-21" });
+    const recurring = task("w", { due: "2026-10-21", repeat: weekly });
+    expect(kinds(at(13, 0), data([plain, recurring]))).toEqual(["due-today:2026-10-21"]);
+    const due = planNotifications({
+      now: at(13, 0),
+      data: data([plain, recurring]),
+      settings: DEFAULT_NOTIFICATION_SETTINGS,
+      sent: new Set(),
+    });
+    expect(due.find((n) => n.kind === "due-today")).toMatchObject({ tasks: [plain] });
+  });
+
+  it("can be turned off", () => {
+    const recurring = task("w", { due: "2026-10-21", repeat: weekly });
+    const settings = { ...DEFAULT_NOTIFICATION_SETTINGS, recurring: { enabled: false, time: "09:00" } };
+    expect(recurringKeys(at(9, 0), data([recurring]), settings)).toEqual([]);
+  });
+});

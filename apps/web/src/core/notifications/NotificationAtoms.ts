@@ -4,11 +4,19 @@ import type { NotificationSettings } from "./NotificationSettings";
 import { DEFAULT_NOTIFICATION_SETTINGS } from "./NotificationSettings";
 import { isDesktop } from "~/core/platform/Desktop";
 
-export const notificationSettingsAtom = atomWithStorage<NotificationSettings>(
+const storedNotificationSettingsAtom = atomWithStorage<NotificationSettings>(
   "klart-notifications",
   DEFAULT_NOTIFICATION_SETTINGS,
   undefined,
   { getOnInit: true }
+);
+
+/** The stored settings, with defaults for settings added since they were saved (e.g. `recurring`). */
+export const notificationSettingsAtom = atom(
+  (get): NotificationSettings => ({ ...DEFAULT_NOTIFICATION_SETTINGS, ...get(storedNotificationSettingsAtom) }),
+  (get, set, update: NotificationSettings | ((current: NotificationSettings) => NotificationSettings)) => {
+    set(storedNotificationSettingsAtom, typeof update === "function" ? update(get(notificationSettingsAtom)) : update);
+  }
 );
 
 /** Keys of notifications already shown on this device, with the time they were sent. */

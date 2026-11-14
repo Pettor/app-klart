@@ -50,6 +50,7 @@ function toMyDayTask(
     important: task.important,
     due: task.due,
     remindAt: task.remindAt,
+    repeat: task.repeat,
     tags: task.tags.filter((tag) => tag !== context?.tag),
     links: task.links,
     hasNotes: !!task.notes.trim(),
@@ -70,6 +71,7 @@ function toEditorTask(task: Task, contexts: KlartContext[], inTodayIds: Set<stri
     important: task.important,
     due: task.due,
     remindAt: task.remindAt,
+    repeat: task.repeat ?? null,
     tags: task.tags.filter((tag) => tag !== context?.tag),
     links: task.links,
     notes: task.notes,
@@ -186,6 +188,7 @@ export function useMyDayRoute(editingId: string | null, page: "day" | "shop" = "
 
   const editor: MyDayTaskEditorProps = {
     task: editingTask ? toEditorTask(editingTask, contexts, inTodayIds) : null,
+    today,
     contexts: contexts.map((context) => ({ id: context.id, name: context.name, color: context.color })),
     onChange: ({ contextId, ...rest }) => {
       if (!editingTask) {
@@ -316,6 +319,7 @@ export function useMyDayRoute(editingId: string | null, page: "day" | "shop" = "
             contextColor: parsedContext?.color ?? "blue",
             due: parsed.due,
             remindAt: parsed.remindAt,
+            repeat: parsed.repeat,
             important: parsed.important,
             tags: parsed.tags.filter((tag) => tag !== parsedContext?.tag),
             links: parsed.links,

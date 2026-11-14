@@ -18,6 +18,8 @@ export type NotifyDevicePolicy = "last-used" | "always" | "never";
 export interface NotificationSettings {
   planDay: TimedNotificationSetting;
   reminders: { enabled: boolean };
+  /** Each occurrence of a recurring task, on its due date: at its reminder, or else at `time`. */
+  recurring: TimedNotificationSetting;
   dueToday: TimedNotificationSetting;
   overdue: TimedNotificationSetting;
   wrapUp: TimedNotificationSetting;
@@ -35,6 +37,7 @@ export const DEFAULT_CONTEXT_NOTIFICATIONS: ContextNotificationSetting = {
 export const DEFAULT_NOTIFICATION_SETTINGS: NotificationSettings = {
   planDay: { enabled: true, time: "08:00" },
   reminders: { enabled: true },
+  recurring: { enabled: true, time: "09:00" },
   dueToday: { enabled: true, time: "13:00" },
   overdue: { enabled: true, time: "10:00" },
   wrapUp: { enabled: true, time: "17:00" },

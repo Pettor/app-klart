@@ -27,6 +27,7 @@ function QuickAddInputWrapper({ initialValue = "", compact, onSubmit }: WrapperP
         contextColor: context.color,
         due: parsed.due,
         remindAt: parsed.remindAt,
+        repeat: parsed.repeat,
         important: parsed.important,
         tags: parsed.tags.filter((tag) => tag !== context.tag),
         links: parsed.links,
@@ -73,6 +74,13 @@ export const WithLink: Story = {
     const preview = canvas.getByTestId("quick-add__preview");
     await expect(preview).toHaveTextContent("Review gateway PR");
     await expect(preview).toHaveTextContent("github.com");
+  },
+};
+
+export const Recurring: Story = {
+  args: { initialValue: "#home *weekly @fri water the plants" },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByTestId("quick-add__repeat")).toHaveTextContent("Every week on Fri");
   },
 };
 
