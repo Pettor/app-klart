@@ -7,6 +7,7 @@ import { useIntl } from "react-intl";
 import type { SuggestionItem } from "./SuggestionList";
 import { SuggestionImportantIcon, SuggestionOpenOverlay } from "./SuggestionRow";
 import { getWhyText, WHY_TONE_CLASS } from "./SuggestionWhy";
+import { TaskCheck } from "~/components/display/task-row/TaskRowParts";
 
 export interface SuggestionTopPickProps {
   item: SuggestionItem;
@@ -15,10 +16,22 @@ export interface SuggestionTopPickProps {
   onAdd: () => void;
   onSnooze: () => void;
   onOpen?: () => void;
+  /** Completed and on its way out: the checkbox is checked. */
+  isCompleting?: boolean;
+  /** Shows a checkbox that completes the task without adding it to My Day. */
+  onComplete?: () => void;
 }
 
 /** The one suggestion most worth pulling in, with its reason and its two choices spelled out. */
-export function SuggestionTopPick({ item, isLeaving, onAdd, onSnooze, onOpen }: SuggestionTopPickProps): ReactElement {
+export function SuggestionTopPick({
+  item,
+  isLeaving,
+  onAdd,
+  onSnooze,
+  onOpen,
+  isCompleting = false,
+  onComplete,
+}: SuggestionTopPickProps): ReactElement {
   const intl = useIntl();
   const label = intl.formatMessage({
     description: "SuggestionTopPick - label of the card with the best suggestion",
@@ -47,9 +60,20 @@ export function SuggestionTopPick({ item, isLeaving, onAdd, onSnooze, onOpen }: 
           {getWhyText(intl, item.why)}
         </span>
       </div>
-      <div className="relative">
-        {onOpen && <SuggestionOpenOverlay title={item.title} onOpen={onOpen} />}
-        <span className="line-clamp-2 text-[17px] leading-snug font-semibold">{item.title}</span>
+      <div className="flex items-start gap-1.5">
+        {onComplete && (
+          <TaskCheck
+            done={false}
+            isChecking={isCompleting}
+            onPress={onComplete}
+            testId="suggestion-list__top-pick-complete"
+            className="-my-1.5 -ml-2 size-9"
+          />
+        )}
+        <div className="relative min-w-0 flex-1">
+          {onOpen && <SuggestionOpenOverlay title={item.title} onOpen={onOpen} />}
+          <span className="line-clamp-2 text-[17px] leading-snug font-semibold">{item.title}</span>
+        </div>
       </div>
       <div className="text-muted flex items-center gap-2 text-xs">
         <span className="inline-flex items-center gap-1.5">
@@ -64,7 +88,7 @@ export function SuggestionTopPick({ item, isLeaving, onAdd, onSnooze, onOpen }: 
           className="text-background h-[38px] flex-1 rounded-[10px] bg-(--ctx) text-sm font-semibold"
           data-testid="suggestion-list__top-pick-add"
         >
-          {isLeaving ? (
+          {isLeaving && !isCompleting ? (
             <CheckIcon className="slab-pop size-4" aria-hidden />
           ) : (
             <PlusIcon className="size-4" aria-hidden />

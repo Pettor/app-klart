@@ -352,8 +352,10 @@ export function useMyDayRoute(editingId: string | null, page: "day" | "shop" = "
       urgentCount: myDay.rankedSuggestions.filter(isUrgentSuggestion).length,
       dueCount: dueSuggestions.length,
       snoozedCount: myDay.snoozedCount,
+      // Planned already lists what's coming up, so suggesting the same tasks for today is noise there.
+      isAvailable: myDay.smartView !== "planned",
       // On wide screens the editor replaces the panel, so the toggle closes the editor and brings suggestions back.
-      isOpen: isWide ? showSuggestions && !editor.task : isSheetOpen,
+      isOpen: myDay.smartView !== "planned" && (isWide ? showSuggestions && !editor.task : isSheetOpen),
       onToggle: () => {
         if (!isWide) {
           setIsSheetOpen(!isSheetOpen);
@@ -372,6 +374,7 @@ export function useMyDayRoute(editingId: string | null, page: "day" | "shop" = "
         setSnoozes(Object.fromEntries(kept.map((id) => [id, today])));
       },
       onUndoSnooze: () => setSnoozes({}),
+      onComplete: (taskId) => actions.setDone(taskId, true),
     },
     editor,
     agentJson: displayOptions.agentJson ? JSON.stringify(myDay.todayView, null, 2) : "",

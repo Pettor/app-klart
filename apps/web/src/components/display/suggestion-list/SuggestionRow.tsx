@@ -6,6 +6,7 @@ import clsx from "clsx";
 import { useIntl } from "react-intl";
 import type { SuggestionItem } from "./SuggestionList";
 import { getWhyText, WHY_TONE_CLASS } from "./SuggestionWhy";
+import { TaskCheck } from "~/components/display/task-row/TaskRowParts";
 
 export interface SuggestionOpenOverlayProps {
   title: string;
@@ -60,15 +61,43 @@ export interface SuggestionRowProps {
   onAdd: () => void;
   onSnooze: () => void;
   onOpen?: () => void;
+  /** Completed and on its way out: the checkbox is checked. */
+  isCompleting?: boolean;
+  /** Shows a checkbox that completes the task without adding it to My Day. */
+  onComplete?: () => void;
 }
 
 /** One "Next up" suggestion. "Not today" stays out of the way until the row is hovered. */
-export function SuggestionRow({ item, isLeaving, onAdd, onSnooze, onOpen }: SuggestionRowProps): ReactElement {
+export function SuggestionRow({
+  item,
+  isLeaving,
+  onAdd,
+  onSnooze,
+  onOpen,
+  isCompleting = false,
+  onComplete,
+}: SuggestionRowProps): ReactElement {
   const intl = useIntl();
 
   return (
-    <div className={clsx(`ctx-${item.contextColor}`, "suggestion-row flex items-center gap-2.5 py-2 pr-1.5 pl-2.5")}>
-      <span className="size-1.5 shrink-0 rounded-full bg-(--ctx)" aria-hidden />
+    <div
+      className={clsx(
+        `ctx-${item.contextColor}`,
+        "suggestion-row flex items-center gap-2.5 py-2 pr-1.5",
+        onComplete ? "pl-1" : "pl-2.5"
+      )}
+    >
+      {onComplete ? (
+        <TaskCheck
+          done={false}
+          isChecking={isCompleting}
+          onPress={onComplete}
+          testId="suggestion-list__complete"
+          className="-my-1 size-8"
+        />
+      ) : (
+        <span className="size-1.5 shrink-0 rounded-full bg-(--ctx)" aria-hidden />
+      )}
       <div className="relative flex min-w-0 flex-1 flex-col gap-0.5">
         {onOpen && <SuggestionOpenOverlay title={item.title} onOpen={onOpen} />}
         <span className="truncate text-sm">{item.title}</span>
@@ -109,9 +138,9 @@ export function SuggestionRow({ item, isLeaving, onAdd, onSnooze, onOpen }: Sugg
           { title: item.title }
         )}
         onPress={onAdd}
-        className={clsx("size-8 shrink-0 rounded-lg", isLeaving && "text-(--ctx)")}
+        className={clsx("size-8 shrink-0 rounded-lg", isLeaving && !isCompleting && "text-(--ctx)")}
       >
-        {isLeaving ? <CheckIcon className="slab-pop size-4" /> : <PlusIcon className="size-4" />}
+        {isLeaving && !isCompleting ? <CheckIcon className="slab-pop size-4" /> : <PlusIcon className="size-4" />}
       </Button>
     </div>
   );

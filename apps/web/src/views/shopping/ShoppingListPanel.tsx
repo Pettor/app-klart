@@ -6,12 +6,14 @@ import { useIntl } from "react-intl";
 import { ShoppingCompleteDialog } from "./ShoppingCompleteDialog";
 import { ShoppingDeleteDialog } from "./ShoppingDeleteDialog";
 import { ShoppingItemInput } from "./ShoppingItemInput";
-import { getShoppingCategoryLabel } from "./ShoppingLabels";
+import { getItemSortLabel, getShoppingCategoryLabel } from "./ShoppingLabels";
+import { ShoppingSortMenu } from "./ShoppingSortMenu";
 import type {
   ShoppingDraftProps,
   ShoppingListActions,
   ShoppingMoveTarget,
   ShoppingSelectedList,
+  ShoppingSortProps,
 } from "./ShoppingTypes";
 import { useShoppingListPanel } from "./UseShoppingListPanel";
 import { ShoppingItemRow } from "~/components/display/shopping-item-row/ShoppingItemRow";
@@ -21,6 +23,7 @@ import {
   ShoppingKindIcon,
 } from "~/components/display/shopping-list-card/ShoppingKind";
 import { formatShortDate } from "~/components/display/task-row/TaskDateFormat";
+import type { ShoppingItemSort } from "~/core/shopping/ShoppingSort";
 import { toLocalDate } from "~/core/tasks/LocalDate";
 
 export interface ShoppingListPanelProps {
@@ -30,6 +33,8 @@ export interface ShoppingListPanelProps {
   actions: ShoppingListActions;
   /** The item open in the editor, marked on its row. */
   editingItemId: string | null;
+  /** How the items left to buy are ordered. */
+  itemSort: ShoppingSortProps<ShoppingItemSort>;
 }
 
 /** The selected list: header with Complete and a rename/delete menu, the add-item field, items to buy, and the cart. */
@@ -39,6 +44,7 @@ export function ShoppingListPanel({
   moveTargets,
   actions,
   editingItemId,
+  itemSort,
 }: ShoppingListPanelProps): ReactElement {
   const intl = useIntl();
   const panel = useShoppingListPanel(list, moveTargets, actions);
@@ -168,6 +174,19 @@ export function ShoppingListPanel({
                 id: "1P2DOj",
               })}
             </Button>
+          )}
+          {!list.isCompleted && (
+            <ShoppingSortMenu
+              sort={itemSort}
+              getLabel={(sort) => getItemSortLabel(intl, sort)}
+              ariaLabel={intl.formatMessage({
+                description: "ShoppingListPanel - aria-label of the menu choosing how the items are sorted",
+                defaultMessage: "Sort items",
+                id: "nMfVzv",
+              })}
+              testId="shopping__sort-items"
+              className="size-[38px]"
+            />
           )}
           <Dropdown>
             <Button

@@ -164,7 +164,7 @@ export function MyDayView({
               onClearTag={() => tags.onSelect(null)}
               suggestionCount={suggestions.urgentCount}
               isSuggestionsOpen={suggestions.isOpen}
-              onToggleSuggestions={suggestions.onToggle}
+              onToggleSuggestions={suggestions.isAvailable ? suggestions.onToggle : undefined}
               onOpenNotifications={onOpenNotifications}
               display={display}
               contextColor={context.selectedColor}
@@ -208,7 +208,10 @@ export function MyDayView({
               <Button
                 variant="secondary"
                 onPress={suggestions.onToggle}
-                className={clsx("h-11 self-start rounded-full sm:hidden", dock.isTyping && "hidden")}
+                className={clsx(
+                  "h-11 self-start rounded-full sm:hidden",
+                  (dock.isTyping || !suggestions.isAvailable) && "hidden"
+                )}
                 data-testid="my-day__open-suggestions"
               >
                 <LightBulbIcon className="size-[18px]" aria-hidden />
@@ -236,7 +239,7 @@ export function MyDayView({
 
           {/* On wide screens the editor takes the suggestions panel's place. */}
           <MyDayTaskEditorPanel editor={editor} pane={pane} />
-          {!(isWide && editor.task) && (
+          {suggestions.isAvailable && !(isWide && editor.task) && (
             <MyDaySuggestionsPanel
               contextColor={context.selectedColor}
               suggestions={suggestions}

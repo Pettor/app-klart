@@ -43,6 +43,8 @@ export interface SuggestionListProps {
   hideHeading?: boolean;
   /** Makes each title pressable, e.g. to open the task editor. */
   onOpen?: (taskId: string) => void;
+  /** Gives each suggestion a checkbox that completes the task. */
+  onComplete?: (taskId: string) => void;
 }
 
 const LINK_BUTTON =
@@ -97,9 +99,10 @@ export function SuggestionList({
   onUndoSnooze,
   hideHeading = false,
   onOpen,
+  onComplete,
 }: SuggestionListProps): ReactElement {
   const intl = useIntl();
-  const leave = useSuggestionLeave(items, onAdd, onAddAllDue);
+  const leave = useSuggestionLeave(items, onAdd, onAddAllDue, onComplete);
   const view = useSuggestionFilter(items);
   const { topPick } = view;
   const hasFreshOverdue = items.some((item) => item.why.type === "overdue");
@@ -242,7 +245,12 @@ export function SuggestionList({
       {topPick && (
         <div
           key={topPick.id}
-          className={clsx("slab-leave slab-leave-side", leave.leavingIds.has(topPick.id) && "slab-leaving")}
+          className={clsx(
+            "slab-leave",
+            // Added ones slide toward My Day; completed ones just drop away.
+            !leave.completingIds.has(topPick.id) && "slab-leave-side",
+            leave.leavingIds.has(topPick.id) && "slab-leaving"
+          )}
         >
           <div className="slab-leave-in">
             <SuggestionTopPick
@@ -251,6 +259,8 @@ export function SuggestionList({
               onAdd={() => leave.add(topPick.id, topPick.reason)}
               onSnooze={() => onSnooze(topPick.id)}
               onOpen={onOpen && (() => onOpen(topPick.id))}
+              isCompleting={leave.completingIds.has(topPick.id)}
+              onComplete={onComplete && (() => leave.complete(topPick.id))}
             />
           </div>
         </div>
@@ -262,9 +272,13 @@ export function SuggestionList({
           <ul className="flex flex-col gap-0.5 [--slab-gap:--spacing(0.5)]">
             {view.rest.map((item) => {
               const isLeaving = leave.leavingIds.has(item.id);
+              const isCompleting = leave.completingIds.has(item.id);
               return (
-                // Slides out toward My Day and collapses once added.
-                <li key={item.id} className={clsx("slab-leave slab-leave-side", isLeaving && "slab-leaving")}>
+                // Slides out toward My Day and collapses once added; a completed one just drops away.
+                <li
+                  key={item.id}
+                  className={clsx("slab-leave", !isCompleting && "slab-leave-side", isLeaving && "slab-leaving")}
+                >
                   <div className="slab-leave-in">
                     <SuggestionRow
                       item={item}
@@ -272,6 +286,8 @@ export function SuggestionList({
                       onAdd={() => leave.add(item.id, item.reason)}
                       onSnooze={() => onSnooze(item.id)}
                       onOpen={onOpen && (() => onOpen(item.id))}
+                      isCompleting={isCompleting}
+                      onComplete={onComplete && (() => leave.complete(item.id))}
                     />
                   </div>
                 </li>

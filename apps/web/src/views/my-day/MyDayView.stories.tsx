@@ -137,12 +137,14 @@ function buildArgs(contextId: string): Props {
       urgentCount: ranked.filter(isUrgentSuggestion).length,
       dueCount: selectDueSuggestions(groups).length,
       snoozedCount: 0,
+      isAvailable: true,
       isOpen: true,
       onToggle: fn(),
       onAdd: fn(),
       onAddAllDue: fn(),
       onSnooze: fn(),
       onUndoSnooze: fn(),
+      onComplete: fn(),
     },
     editor: {
       task: null,
@@ -196,7 +198,13 @@ export const Planned: Story = (() => {
     .sort((a, b) => a.due!.localeCompare(b.due!))
     .map(toRow);
   return {
-    args: { ...base, smartViews: { ...base.smartViews, active: "planned" }, tasks: planned, doneTasks: [] },
+    args: {
+      ...base,
+      smartViews: { ...base.smartViews, active: "planned" },
+      tasks: planned,
+      doneTasks: [],
+      suggestions: { ...base.suggestions, isAvailable: false, isOpen: false },
+    },
     play: async ({ canvasElement }) => {
       const tasks = within(canvasElement).getByTestId("my-day__tasks");
       const sections = within(tasks).getAllByRole("region");
@@ -209,6 +217,9 @@ export const Planned: Story = (() => {
       ]);
       await expect(within(sections[0]!).getByRole("heading")).toHaveTextContent("Overdue");
       await expect(within(sections[0]!).getByText("Find more tasks to create")).toBeVisible();
+      // Planned already shows what's coming up, so there's no suggestions panel or toggle.
+      await expect(within(canvasElement).queryByTestId("my-day__toggle-suggestions")).toBeNull();
+      await expect(within(canvasElement).queryByTestId("suggestion-list")).toBeNull();
     },
   };
 })();
@@ -221,8 +232,10 @@ export const ShoppingPage: Story = {
     page: (
       <ShoppingView
         today={DEMO_TODAY}
-        openLists={[]}
+        openGroups={[]}
         doneLists={[]}
+        listSort={{ value: "newest", options: ["newest", "name", "kind"], onChange: fn() }}
+        itemSort={{ value: "category", options: ["category", "name", "added"], onChange: fn() }}
         selected={null}
         isListShownOnPhone={false}
         onSelectList={fn()}

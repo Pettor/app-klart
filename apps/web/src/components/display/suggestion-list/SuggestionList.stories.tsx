@@ -120,6 +120,22 @@ export const AddSuggestion: Story = {
   },
 };
 
+export const CompleteSuggestion: Story = {
+  args: { ...defaultArgs, onComplete: fn() },
+  play: async ({ args, canvas, userEvent }) => {
+    const check = canvas.getByTestId("suggestion-list__top-pick-complete");
+    await userEvent.click(check);
+    // The card drops away before the task is completed, and is not added to My Day.
+    await expect(check.closest(".slab-leave")).toHaveClass("slab-leaving");
+    await expect(check.closest(".slab-leave")).not.toHaveClass("slab-leave-side");
+    await waitFor(() => expect(args.onComplete).toHaveBeenCalledWith("p4"));
+    await expect(args.onAdd).not.toHaveBeenCalled();
+
+    await userEvent.click(canvas.getAllByTestId("suggestion-list__complete")[0]!);
+    await waitFor(() => expect(args.onComplete).toHaveBeenCalledWith("p5"));
+  },
+};
+
 export const SnoozeSuggestion: Story = {
   args: defaultArgs,
   play: async ({ args, canvas, userEvent }) => {

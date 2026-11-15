@@ -37,6 +37,7 @@ export function MyDaySuggestionsPanel({
         onUndoSnooze={suggestions.onUndoSnooze}
         hideHeading={hideHeading}
         onOpen={onOpenTask}
+        onComplete={suggestions.onComplete}
       />
     );
   }

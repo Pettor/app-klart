@@ -8,6 +8,8 @@ export interface UseResizableWidthOptions {
   minWidth: number;
   /** Upper bound as a fraction of the viewport width. */
   maxViewportFraction?: number;
+  /** Upper bound in pixels, on top of the viewport fraction. */
+  maxWidth?: number;
 }
 
 export interface UseResizableWidthResult {
@@ -28,10 +30,11 @@ export function useResizableWidth({
   defaultWidth,
   minWidth,
   maxViewportFraction = 0.6,
+  maxWidth: maxWidthOption = Infinity,
 }: UseResizableWidthOptions): UseResizableWidthResult {
   const [storedWidth, setStoredWidth] = useLocalStorage(storageKey, defaultWidth);
   const [draftWidth, setDraftWidth] = useState<number | null>(null);
-  const maxWidth = Math.max(minWidth, Math.round(window.innerWidth * maxViewportFraction));
+  const maxWidth = Math.max(minWidth, Math.min(maxWidthOption, Math.round(window.innerWidth * maxViewportFraction)));
 
   function clamp(width: number): number {
     return Math.min(maxWidth, Math.max(minWidth, Math.round(width)));

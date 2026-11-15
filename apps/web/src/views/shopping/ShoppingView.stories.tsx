@@ -1,8 +1,9 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, fn, screen, userEvent, waitFor } from "storybook/test";
-import type { ShoppingItemGroup, ShoppingSelectedList } from "./ShoppingTypes";
+import type { ShoppingItemGroup, ShoppingListGroup, ShoppingSelectedList } from "./ShoppingTypes";
 import { ShoppingView as Component } from "./ShoppingView";
 import type { ShoppingViewProps as Props } from "./ShoppingView";
+import type { ShoppingListCardList } from "~/components/display/shopping-list-card/ShoppingListCard";
 import { SHOPPING_CATEGORIES } from "~/core/shopping/ShoppingCategory";
 import type { ShoppingItem, ShoppingList } from "~/core/shopping/ShoppingList";
 import { itemTotal, SHOPPING_KIND_COLORS } from "~/core/shopping/ShoppingList";
@@ -22,11 +23,11 @@ const lists = Object.values(DEMO_SHOPPING.lists);
 const inToday = new Set(Object.keys(DEMO_SHOPPING.tasks));
 
 /** Under "All contexts" each list shows its context; the demo splits them between Personal and Work. */
-function demoContext(list: ShoppingList): Props["openLists"][number]["context"] {
+function demoContext(list: ShoppingList): ShoppingListCardList["context"] {
   return list.kind === "home" ? { name: "Work", color: "orange" } : { name: "Personal", color: "blue" };
 }
 
-function toCard(list: ShoppingList, isAllContexts = false): Props["openLists"][number] {
+function toCard(list: ShoppingList, isAllContexts = false): ShoppingListCardList {
   return {
     id: list.id,
     name: list.name,
@@ -76,8 +77,21 @@ function toSelected(list: ShoppingList, isAllContexts = false): ShoppingSelected
 function buildArgs(listIndex: number, isAllContexts = false): Props {
   return {
     today: DEMO_TODAY,
-    openLists: lists.filter((list) => !list.completedAt).map((list) => toCard(list, isAllContexts)),
+    openGroups: [
+      {
+        id: null,
+        label: null,
+        color: null,
+        lists: lists.filter((list) => !list.completedAt).map((list) => toCard(list, isAllContexts)),
+      },
+    ],
     doneLists: lists.filter((list) => list.completedAt).map((list) => toCard(list, isAllContexts)),
+    listSort: { value: "newest", options: ["newest", "name", "context", "kind"], onChange: fn() },
+    itemSort: {
+      value: lists[listIndex]!.kind === "grocery" ? "category" : "added",
+      options: ["category", "name", "added"],
+      onChange: fn(),
+    },
     selected: toSelected(lists[listIndex]!, isAllContexts),
     isListShownOnPhone: true,
     onSelectList: fn(),
@@ -211,5 +225,44 @@ export const CompletedList: Story = {
 };
 
 export const Empty: Story = {
-  args: { ...buildArgs(0), openLists: [], doneLists: [], selected: null },
+  args: { ...buildArgs(0), openGroups: [], doneLists: [], selected: null },
+};
+
+export const GroupedByContext: Story = {
+  args: {
+    ...buildArgs(0),
+    listSort: { value: "context", options: ["newest", "name", "context", "kind"], onChange: fn() },
+    openGroups: (
+      [
+        {
+          id: "personal",
+          label: "Personal",
+          color: "blue",
+          lists: lists.filter((list) => !list.completedAt && list.kind !== "home").map((list) => toCard(list)),
+        },
+        {
+          id: "work",
+          label: "Work",
+          color: "orange",
+          lists: lists.filter((list) => !list.completedAt && list.kind === "home").map((list) => toCard(list)),
+        },
+      ] satisfies ShoppingListGroup[]
+    ).filter((group) => group.lists.length > 0),
+  },
+  play: async ({ canvas }) => {
+    await expect(canvas.getAllByTestId("shopping__list-group")[0]).toHaveTextContent("Personal");
+  },
+};
+
+export const SortListsAndItems: Story = {
+  args: buildArgs(0),
+  play: async ({ args, canvas }) => {
+    await userEvent.click(canvas.getByTestId("shopping__sort-lists"));
+    await userEvent.click(await screen.findByTestId("shopping__sort-lists-context"));
+    await expect(args.listSort.onChange).toHaveBeenCalledWith("context");
+
+    await userEvent.click(canvas.getByTestId("shopping__sort-items"));
+    await userEvent.click(await screen.findByTestId("shopping__sort-items-name"));
+    await expect(args.itemSort.onChange).toHaveBeenCalledWith("name");
+  },
 };

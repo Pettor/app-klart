@@ -22,7 +22,8 @@ export interface MyDayHeaderProps {
   /** Suggestions that need attention today; none hides the count. */
   suggestionCount: number;
   isSuggestionsOpen: boolean;
-  onToggleSuggestions: () => void;
+  /** Leaving it out hides the suggestions toggle. */
+  onToggleSuggestions?: () => void;
   onOpenNotifications: () => void;
   display: MyDayDisplayProps;
   contextColor: string;
@@ -112,20 +113,22 @@ export function MyDayHeader({
           contextColor={contextColor}
           className={isDesktop ? HEADER_BUTTON : undefined}
         />
-        <ToggleButton
-          isSelected={isSuggestionsOpen}
-          onChange={onToggleSuggestions}
-          className={clsx(HEADER_BUTTON, "max-sm:hidden")}
-          data-testid="my-day__toggle-suggestions"
-        >
-          <LightBulbIcon className="size-4" aria-hidden />
-          {intl.formatMessage({
-            description: "MyDayHeader - toggles the suggestions panel",
-            defaultMessage: "Suggestions",
-            id: "nKIanK",
-          })}
-          {suggestionCount > 0 && <span className="font-semibold text-(--ctx)">{suggestionCount}</span>}
-        </ToggleButton>
+        {onToggleSuggestions && (
+          <ToggleButton
+            isSelected={isSuggestionsOpen}
+            onChange={onToggleSuggestions}
+            className={clsx(HEADER_BUTTON, "max-sm:hidden")}
+            data-testid="my-day__toggle-suggestions"
+          >
+            <LightBulbIcon className="size-4" aria-hidden />
+            {intl.formatMessage({
+              description: "MyDayHeader - toggles the suggestions panel",
+              defaultMessage: "Suggestions",
+              id: "nKIanK",
+            })}
+            {suggestionCount > 0 && <span className="font-semibold text-(--ctx)">{suggestionCount}</span>}
+          </ToggleButton>
+        )}
       </div>
     </header>
   );

@@ -1,5 +1,6 @@
 import type { IntlShape } from "react-intl";
 import type { ShoppingCategory } from "~/core/shopping/ShoppingCategory";
+import type { ShoppingItemSort, ShoppingListSort } from "~/core/shopping/ShoppingSort";
 
 export function getShoppingCategoryLabel(intl: IntlShape, category: ShoppingCategory): string {
   switch (category) {
@@ -73,4 +74,56 @@ export function getItemTaskTitle(intl: IntlShape, name: string, qty: number | nu
         },
         { name }
       );
+}
+
+export function getListSortLabel(intl: IntlShape, sort: ShoppingListSort): string {
+  switch (sort) {
+    case "newest":
+      return intl.formatMessage({
+        description: "Shopping - sort choice for the lists: newest first",
+        defaultMessage: "Newest first",
+        id: "ZLD+O3",
+      });
+    case "name":
+      return intl.formatMessage({
+        description: "Shopping - sort choice for the lists: alphabetical by name",
+        defaultMessage: "A–Z",
+        id: "iHz3d8",
+      });
+    case "context":
+      return intl.formatMessage({
+        description: "Shopping - sort choice for the lists: grouped by context",
+        defaultMessage: "By context",
+        id: "lBWhzR",
+      });
+    case "kind":
+      return intl.formatMessage({
+        description: "Shopping - sort choice for the lists: grouped by kind (groceries, gifts, home, other)",
+        defaultMessage: "By kind",
+        id: "BChPLy",
+      });
+  }
+}
+
+export function getItemSortLabel(intl: IntlShape, sort: ShoppingItemSort): string {
+  switch (sort) {
+    case "category":
+      return intl.formatMessage({
+        description: "Shopping - sort choice for a list's items: grouped by store section",
+        defaultMessage: "By category",
+        id: "oTVEPH",
+      });
+    case "name":
+      return intl.formatMessage({
+        description: "Shopping - sort choice for a list's items: alphabetical by name",
+        defaultMessage: "A–Z",
+        id: "2ZToy/",
+      });
+    case "added":
+      return intl.formatMessage({
+        description: "Shopping - sort choice for a list's items: in the order they were added",
+        defaultMessage: "Order added",
+        id: "r9iFOZ",
+      });
+  }
 }

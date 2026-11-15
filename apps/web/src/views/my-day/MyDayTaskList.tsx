@@ -141,7 +141,7 @@ export function MyDayTaskList({
                   className="compact:gap-2 flex flex-col gap-3"
                   data-testid={`my-day__planned-${group.id}`}
                 >
-                  <h3
+                  <h2
                     className={clsx(
                       "flex items-baseline gap-2 px-1 pt-1 text-[13px] font-semibold",
                       group.id === "overdue" ? "text-danger" : "text-foreground/80"
@@ -149,7 +149,7 @@ export function MyDayTaskList({
                   >
                     {label}
                     <span className="text-xs font-normal opacity-75">{group.tasks.length}</span>
-                  </h3>
+                  </h2>
                   {group.tasks.map(renderRow)}
                 </section>
               );

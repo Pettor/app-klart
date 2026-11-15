@@ -79,12 +79,16 @@ export interface MyDaySuggestionsProps {
   urgentCount: number;
   dueCount: number;
   snoozedCount: number;
+  /** Off in views where pulling tasks into today doesn't fit, e.g. Planned; hides the panel and its toggles. */
+  isAvailable: boolean;
   isOpen: boolean;
   onToggle: () => void;
   onAdd: (taskId: string, reason: SuggestionReason) => void;
   onAddAllDue: () => void;
   onSnooze: (taskId: string) => void;
   onUndoSnooze: () => void;
+  /** Completes the task right from the suggestions, without adding it to My Day. */
+  onComplete: (taskId: string) => void;
 }
 
 export interface MyDaySidebarProps {

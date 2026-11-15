@@ -1,7 +1,10 @@
 import { useState } from "react";
 import { useBreakpoint } from "@package/react";
+import { useAtom } from "jotai";
+import type { IntlShape } from "react-intl";
 import { useIntl } from "react-intl";
 import type { ShoppingItemRowItem } from "~/components/display/shopping-item-row/ShoppingItemRow";
+import { getShoppingKindLabel } from "~/components/display/shopping-list-card/ShoppingKind";
 import type {
   ShoppingListCardList,
   ShoppingListContext,
@@ -9,15 +12,27 @@ import type {
 import type { KlartContext } from "~/core/contexts/KlartContext";
 import { findContext } from "~/core/contexts/KlartContext";
 import { useHierarchyNavigation } from "~/core/routes/UseHierarchyNavigation";
-import { SHOPPING_CATEGORIES } from "~/core/shopping/ShoppingCategory";
+import { shoppingItemSortsAtom, shoppingListSortAtom } from "~/core/shopping/ShoppingAtoms";
 import { parseShoppingItem } from "~/core/shopping/ShoppingItemParse";
 import type { ShoppingItem, ShoppingList } from "~/core/shopping/ShoppingList";
 import { getListContext, itemTotal, SHOPPING_KIND_COLORS } from "~/core/shopping/ShoppingList";
+import type { ShoppingItemSort, ShoppingListBucket, ShoppingListSort } from "~/core/shopping/ShoppingSort";
+import {
+  SHOPPING_ITEM_SORTS,
+  SHOPPING_LIST_SORTS,
+  sortShoppingItems,
+  sortShoppingLists,
+} from "~/core/shopping/ShoppingSort";
 import { useShopping } from "~/core/shopping/UseShopping";
 import { useShoppingActions } from "~/core/shopping/UseShoppingActions";
 import { formatTaskLink } from "~/core/tasks/TaskLink";
 import { getItemTaskTitle } from "~/views/shopping/ShoppingLabels";
-import type { ShoppingEditorItem, ShoppingItemGroup, ShoppingSelectedList } from "~/views/shopping/ShoppingTypes";
+import type {
+  ShoppingEditorItem,
+  ShoppingItemGroup,
+  ShoppingListGroup,
+  ShoppingSelectedList,
+} from "~/views/shopping/ShoppingTypes";
 import type { ShoppingViewProps } from "~/views/shopping/ShoppingView";
 
 /** The list's context, or `null` when one context is selected and every list shown is in it. */
@@ -77,22 +92,35 @@ function toEditorItem(item: ShoppingItem, inTodayIds: Set<string>): ShoppingEdit
   };
 }
 
-/** Items to buy, starred first. Grocery lists split them by store section, in walking order. */
-function toGroups(list: ShoppingList, inTodayIds: Set<string>): ShoppingItemGroup[] {
-  const left = list.items.filter((item) => !item.bought);
-  const ordered = [...left.filter((item) => item.important), ...left.filter((item) => !item.important)];
-  if (list.kind !== "grocery") {
-    return ordered.length ? [{ category: null, items: ordered.map((item) => toRow(item, inTodayIds)) }] : [];
+/** Items to buy, starred first, in the chosen order; by category splits them by store section. */
+function toGroups(list: ShoppingList, sort: ShoppingItemSort, inTodayIds: Set<string>): ShoppingItemGroup[] {
+  return sortShoppingItems(
+    list.items.filter((item) => !item.bought),
+    sort
+  ).map((bucket) => ({ category: bucket.category, items: bucket.items.map((item) => toRow(item, inTodayIds)) }));
+}
+
+/** A heading over the lists of one context or kind. */
+function toListGroupHeading(
+  intl: IntlShape,
+  bucket: ShoppingListBucket,
+  sort: ShoppingListSort,
+  contexts: KlartContext[]
+): Pick<ShoppingListGroup, "label" | "color"> {
+  if (bucket.key === null) {
+    return { label: null, color: null };
   }
-  return SHOPPING_CATEGORIES.map((category) => ({
-    category,
-    items: ordered.filter((item) => item.category === category).map((item) => toRow(item, inTodayIds)),
-  })).filter((group) => group.items.length > 0);
+  if (sort === "kind") {
+    return { label: getShoppingKindLabel(intl, bucket.key as ShoppingList["kind"]), color: null };
+  }
+  const context = findContext(contexts, bucket.key);
+  return { label: context?.name ?? bucket.key, color: context?.color ?? "blue" };
 }
 
 function toSelected(
   list: ShoppingList,
   context: ShoppingListContext | null,
+  sort: ShoppingItemSort,
   inTodayIds: Set<string>
 ): ShoppingSelectedList {
   const totals = list.items.map(itemTotal).filter((total) => total !== null);
@@ -100,7 +128,7 @@ function toSelected(
     ...toCard(list, context),
     completedAt: list.completedAt,
     sum: totals.length ? totals.reduce((sum, total) => sum + total, 0) : null,
-    groups: toGroups(list, inTodayIds),
+    groups: toGroups(list, sort, inTodayIds),
     boughtItems: list.items.filter((item) => item.bought).map((item) => toRow(item, inTodayIds)),
   };
 }
@@ -114,17 +142,34 @@ export function useShoppingRoute(listId: string | null): ShoppingViewProps {
   const actions = useShoppingActions();
   const [draft, setDraft] = useState("");
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
+  const [storedListSort, setListSort] = useAtom(shoppingListSortAtom);
+  const [getItemSort, setItemSort] = useAtom(shoppingItemSortsAtom);
 
   const { openLists, doneLists, inTodayIds, contexts, isAllContexts } = shopping;
-  // Wide screens always show a list: the one in the URL, or the newest open one.
+  // By context only means something while lists from every context show.
+  const listSort = storedListSort === "context" && !isAllContexts ? "newest" : storedListSort;
+  const listBuckets = sortShoppingLists(openLists, listSort, contexts);
+  const sortedOpenLists = listBuckets.flatMap((bucket) => bucket.lists);
+  // Wide screens always show a list: the one in the URL, or the first open one.
   const list =
-    [...openLists, ...doneLists].find((candidate) => candidate.id === listId) ?? openLists[0] ?? doneLists[0] ?? null;
+    [...openLists, ...doneLists].find((candidate) => candidate.id === listId) ??
+    sortedOpenLists[0] ??
+    doneLists[0] ??
+    null;
+  const itemSort = list ? getItemSort(list.kind) : "added";
+  // Groceries, and any list grouped by store section, show an item's section and let the editor change it.
+  const showsCategory = list?.kind === "grocery" || itemSort === "category";
   const parsed = draft.trim() ? parseShoppingItem(draft) : null;
   // Gone from the list (removed, moved, or another list picked) closes the editor.
   const editingItem = list?.items.find((item) => item.id === editingItemId) ?? null;
 
   function card(other: ShoppingList): ShoppingListCardList {
     return toCard(other, toListContext(other, contexts, isAllContexts));
+  }
+
+  function groupedCard(other: ShoppingList): ShoppingListCardList {
+    // Under a context's heading the card doesn't repeat it.
+    return listSort === "context" ? toCard(other, null) : card(other);
   }
 
   function selectList(id: string): void {
@@ -142,9 +187,23 @@ export function useShoppingRoute(listId: string | null): ShoppingViewProps {
 
   return {
     today: shopping.today,
-    openLists: openLists.map(card),
+    openGroups: listBuckets.map((bucket) => ({
+      id: bucket.key,
+      ...toListGroupHeading(intl, bucket, listSort, contexts),
+      lists: bucket.lists.map(groupedCard),
+    })),
     doneLists: doneLists.map(card),
-    selected: list ? toSelected(list, toListContext(list, contexts, isAllContexts), inTodayIds) : null,
+    listSort: {
+      value: listSort,
+      options: SHOPPING_LIST_SORTS.filter((sort) => sort !== "context" || isAllContexts),
+      onChange: setListSort,
+    },
+    itemSort: {
+      value: itemSort,
+      options: SHOPPING_ITEM_SORTS,
+      onChange: (sort) => list && setItemSort(list.kind, sort),
+    },
+    selected: list ? toSelected(list, toListContext(list, contexts, isAllContexts), itemSort, inTodayIds) : null,
     isListShownOnPhone: !!listId,
     onSelectList: selectList,
     onBackToLists: () => {
@@ -168,7 +227,7 @@ export function useShoppingRoute(listId: string | null): ShoppingViewProps {
             qty: parsed.qty,
             price: parsed.price,
             linkHost: parsed.link ? formatTaskLink(parsed.link) : null,
-            category: list?.kind === "grocery" ? parsed.category : null,
+            category: showsCategory ? parsed.category : null,
           }
         : null,
     },
@@ -180,7 +239,7 @@ export function useShoppingRoute(listId: string | null): ShoppingViewProps {
     itemEditor: {
       item: editingItem && toEditorItem(editingItem, inTodayIds),
       color: list ? SHOPPING_KIND_COLORS[list.kind] : "blue",
-      showCategory: list?.kind === "grocery",
+      showCategory: showsCategory,
       onChange: (patch) => {
         if (list && editingItem) {
           const qty = patch.qty !== undefined ? patch.qty : editingItem.qty;

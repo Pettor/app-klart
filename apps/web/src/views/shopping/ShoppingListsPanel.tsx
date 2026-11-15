@@ -5,33 +5,42 @@ import { PlusIcon } from "@heroicons/react/24/outline";
 import { Button } from "@heroui/react";
 import clsx from "clsx";
 import { useIntl } from "react-intl";
+import { getListSortLabel } from "./ShoppingLabels";
 import { ShoppingNewListForm } from "./ShoppingNewListForm";
-import type { ShoppingNewListProps } from "./ShoppingTypes";
+import { ShoppingSortMenu } from "./ShoppingSortMenu";
+import type { ShoppingListGroup, ShoppingNewListProps, ShoppingSortProps } from "./ShoppingTypes";
 import type { ShoppingListCardList } from "~/components/display/shopping-list-card/ShoppingListCard";
 import { ShoppingListCard } from "~/components/display/shopping-list-card/ShoppingListCard";
+import type { ShoppingListSort } from "~/core/shopping/ShoppingSort";
 
 export interface ShoppingListsPanelProps {
   today: string;
-  openLists: ShoppingListCardList[];
+  /** The open lists, under headings when sorted by context or kind. */
+  openGroups: ShoppingListGroup[];
   doneLists: ShoppingListCardList[];
   selectedId: string | null;
   onSelect: (listId: string) => void;
   newList: ShoppingNewListProps;
+  listSort: ShoppingSortProps<ShoppingListSort>;
   className?: string;
 }
 
-/** The lists column: the heading with a new-list button, the open lists, and the completed ones folded away. */
+/**
+ * The lists column: the heading with sort and new-list buttons, the open lists, and the completed ones folded
+ * away.
+ */
 export function ShoppingListsPanel({
   today,
-  openLists,
+  openGroups,
   doneLists,
   selectedId,
   onSelect,
   newList,
+  listSort,
   className,
 }: ShoppingListsPanelProps): ReactElement {
   const intl = useIntl();
-  const [isCreating, setIsCreating] = useState(openLists.length === 0 && doneLists.length === 0);
+  const [isCreating, setIsCreating] = useState(openGroups.length === 0 && doneLists.length === 0);
   const [showDone, setShowDone] = useState(false);
 
   return (
@@ -51,6 +60,17 @@ export function ShoppingListsPanel({
             id: "lNIDVV",
           })}
         </h1>
+        <ShoppingSortMenu
+          sort={listSort}
+          getLabel={(sort) => getListSortLabel(intl, sort)}
+          ariaLabel={intl.formatMessage({
+            description: "ShoppingListsPanel - aria-label of the menu choosing how the lists are sorted",
+            defaultMessage: "Sort lists",
+            id: "fPF2gO",
+          })}
+          testId="shopping__sort-lists"
+          className="size-9"
+        />
         <Button
           isIconOnly
           variant="secondary"
@@ -76,16 +96,33 @@ export function ShoppingListsPanel({
           defaultMessage: "Open lists",
           id: "/NrgeO",
         })}
-        className="flex flex-col gap-1"
+        className="flex flex-col gap-3"
       >
-        {openLists.map((list) => (
-          <ShoppingListCard
-            key={list.id}
-            list={list}
-            today={today}
-            isSelected={list.id === selectedId}
-            onPress={onSelect}
-          />
+        {openGroups.map((group) => (
+          <section
+            key={group.id ?? "all"}
+            aria-label={group.label ?? undefined}
+            className={clsx(group.color && `ctx-${group.color}`, "flex flex-col gap-1")}
+          >
+            {group.label && (
+              <h2
+                className="text-muted flex items-center gap-1.5 px-2 pt-1 text-xs font-semibold tracking-[0.06em] uppercase"
+                data-testid="shopping__list-group"
+              >
+                {group.color && <span className="size-1.5 shrink-0 rounded-full bg-(--ctx)" aria-hidden />}
+                <span className="truncate">{group.label}</span>
+              </h2>
+            )}
+            {group.lists.map((list) => (
+              <ShoppingListCard
+                key={list.id}
+                list={list}
+                today={today}
+                isSelected={list.id === selectedId}
+                onPress={onSelect}
+              />
+            ))}
+          </section>
         ))}
       </nav>
 

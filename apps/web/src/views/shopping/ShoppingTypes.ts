@@ -5,6 +5,23 @@ import type { ShoppingCategory } from "~/core/shopping/ShoppingCategory";
 import type { ShoppingItemPatch } from "~/core/shopping/ShoppingData";
 import type { ShoppingListKind } from "~/core/shopping/ShoppingList";
 
+/** Open lists under one heading: a context or a kind, or one plain group when `label` is `null`. */
+export interface ShoppingListGroup {
+  /** The context id or kind; `null` for the one plain group. */
+  id: string | null;
+  label: string | null;
+  /** The heading's dot, for a context. */
+  color: ContextColor | null;
+  lists: ShoppingListCardList[];
+}
+
+/** A sort menu's choice, what it offers, and how to change it. */
+export interface ShoppingSortProps<T extends string> {
+  value: T;
+  options: readonly T[];
+  onChange: (value: T) => void;
+}
+
 /** Items not bought yet under one heading: a store section on grocery lists, or `null` for one plain group. */
 export interface ShoppingItemGroup {
   category: ShoppingCategory | null;

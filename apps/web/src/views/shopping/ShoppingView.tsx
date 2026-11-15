@@ -1,4 +1,4 @@
-import type { ReactElement } from "react";
+import type { CSSProperties, ReactElement } from "react";
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
 import { Button } from "@heroui/react";
 import clsx from "clsx";
@@ -10,16 +10,24 @@ import type {
   ShoppingDraftProps,
   ShoppingItemEditorState,
   ShoppingListActions,
+  ShoppingListGroup,
   ShoppingMoveTarget,
   ShoppingNewListProps,
   ShoppingSelectedList,
+  ShoppingSortProps,
 } from "./ShoppingTypes";
+import { useShoppingListsWidth } from "./UseShoppingListsWidth";
 import type { ShoppingListCardList } from "~/components/display/shopping-list-card/ShoppingListCard";
+import type { ShoppingItemSort, ShoppingListSort } from "~/core/shopping/ShoppingSort";
 
 export interface ShoppingViewProps {
   today: string;
-  openLists: ShoppingListCardList[];
+  /** The open lists, under headings when sorted by context or kind. */
+  openGroups: ShoppingListGroup[];
   doneLists: ShoppingListCardList[];
+  listSort: ShoppingSortProps<ShoppingListSort>;
+  /** How the selected list orders its items. */
+  itemSort: ShoppingSortProps<ShoppingItemSort>;
   /** The list shown on the right; `null` when there are no lists. */
   selected: ShoppingSelectedList | null;
   /** On phones the screen shows either the lists or one list; this picks the list. */
@@ -37,8 +45,10 @@ export interface ShoppingViewProps {
 /** The Shopping page: the lists, the one picked, and the item being edited. My Day's sidebar stays beside it. */
 export function ShoppingView({
   today,
-  openLists,
+  openGroups,
   doneLists,
+  listSort,
+  itemSort,
   selected,
   isListShownOnPhone,
   onSelectList,
@@ -51,6 +61,7 @@ export function ShoppingView({
 }: ShoppingViewProps): ReactElement {
   const intl = useIntl();
   const showList = isListShownOnPhone && !!selected;
+  const listsWidth = useShoppingListsWidth();
 
   return (
     <main
@@ -61,18 +72,26 @@ export function ShoppingView({
       })}
       className="flex min-w-0 flex-1"
     >
-      <ShoppingListsPanel
-        today={today}
-        openLists={openLists}
-        doneLists={doneLists}
-        selectedId={selected?.id ?? null}
-        onSelect={onSelectList}
-        newList={newList}
+      {/* Wide screens: a column pinned to the screen's height, which the handle on its right edge widens. */}
+      <div
         className={clsx(
-          "lg:bg-surface/40 lg:border-separator w-full lg:sticky lg:top-0 lg:flex lg:h-dvh lg:w-[300px] lg:shrink-0 lg:overflow-y-auto lg:border-r",
-          showList ? "hidden" : "flex"
+          "relative w-full lg:sticky lg:top-0 lg:block lg:h-dvh lg:w-(--shopping-lists-width) lg:shrink-0",
+          showList && "hidden"
         )}
-      />
+        style={{ "--shopping-lists-width": `${listsWidth.width}px` } as CSSProperties}
+      >
+        <ShoppingListsPanel
+          today={today}
+          openGroups={openGroups}
+          doneLists={doneLists}
+          selectedId={selected?.id ?? null}
+          onSelect={onSelectList}
+          newList={newList}
+          listSort={listSort}
+          className="lg:bg-surface/40 lg:border-separator flex w-full lg:h-full lg:overflow-y-auto lg:border-r"
+        />
+        <div className="hidden lg:contents">{listsWidth.handle}</div>
+      </div>
 
       <section
         className={clsx(
@@ -101,6 +120,7 @@ export function ShoppingView({
             moveTargets={moveTargets}
             actions={listActions}
             editingItemId={itemEditor.item?.id ?? null}
+            itemSort={itemSort}
           />
         ) : (
           <p className="text-muted max-w-[760px] p-8 text-center">
