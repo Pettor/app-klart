@@ -32,6 +32,8 @@ export interface QuickAddInputProps {
   today: string;
   /** Shorter placeholder for narrow screens. */
   compact?: boolean;
+  /** The placeholder shows the repeat syntax instead of dates and reminders, for the Planned view. */
+  isPlanned?: boolean;
   inputRef?: Ref<HTMLInputElement>;
 }
 
@@ -42,9 +44,37 @@ export function QuickAddInput({
   preview,
   today,
   compact = false,
+  isPlanned = false,
   inputRef,
 }: QuickAddInputProps): ReactElement {
   const intl = useIntl();
+
+  function getPlaceholder(): string {
+    if (isPlanned) {
+      return compact
+        ? intl.formatMessage({
+            description: "QuickAddInput - short placeholder in Planned on phones, showing the repeat syntax",
+            defaultMessage: "Add a task  *weekly *mon,thu",
+            id: "940lsF",
+          })
+        : intl.formatMessage({
+            description: "QuickAddInput - placeholder in Planned, showing the repeat syntax",
+            defaultMessage: "Add a task  ·  *daily  *weekly  *mon,thu  *2w  *monthly",
+            id: "tjAMxf",
+          });
+    }
+    return compact
+      ? intl.formatMessage({
+          description: "QuickAddInput - short placeholder showing the syntax on phones",
+          defaultMessage: "Add a task  #tag @fri ^09:00",
+          id: "xKmpPA",
+        })
+      : intl.formatMessage({
+          description: "QuickAddInput - placeholder showing the quick-add syntax",
+          defaultMessage: "Add a task  ·  #work #acme  @fri  ^09:00  !",
+          id: "mPCg6n",
+        });
+  }
 
   function handleKeyDown(event: KeyboardEvent<HTMLInputElement>): void {
     if (event.key === "Enter" && !event.nativeEvent.isComposing) {
@@ -144,19 +174,7 @@ export function QuickAddInput({
             onKeyDown={handleKeyDown}
             autoComplete="off"
             enterKeyHint="done"
-            placeholder={
-              compact
-                ? intl.formatMessage({
-                    description: "QuickAddInput - short placeholder showing the syntax on phones",
-                    defaultMessage: "Add a task  #tag @fri ^09:00",
-                    id: "xKmpPA",
-                  })
-                : intl.formatMessage({
-                    description: "QuickAddInput - placeholder showing the quick-add syntax",
-                    defaultMessage: "Add a task  ·  #work #acme  @fri  ^09:00  !",
-                    id: "mPCg6n",
-                  })
-            }
+            placeholder={getPlaceholder()}
           />
           {!compact && (
             <InputGroupSuffix>

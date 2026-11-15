@@ -228,6 +228,7 @@ export function MyDayView({
                 preview={quickAdd.preview}
                 today={today}
                 compact={isPhone}
+                isPlanned={smartViews.active === "planned"}
                 inputRef={dock.inputRef}
               />
             </div>

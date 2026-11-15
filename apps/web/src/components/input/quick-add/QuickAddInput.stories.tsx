@@ -12,11 +12,12 @@ const TODAY = "2026-10-21";
 interface WrapperProps {
   initialValue?: string;
   compact?: boolean;
+  isPlanned?: boolean;
   onSubmit: (value: string) => void;
 }
 
 /** Runs the real parser so the preview reacts to typing. */
-function QuickAddInputWrapper({ initialValue = "", compact, onSubmit }: WrapperProps): ReactElement {
+function QuickAddInputWrapper({ initialValue = "", compact, isPlanned, onSubmit }: WrapperProps): ReactElement {
   const [value, setValue] = useState(initialValue);
   const parsed = parseQuickAdd(value, { today: TODAY, contexts: DEFAULT_CONTEXTS, currentContext: "personal" });
   const context = findContext(DEFAULT_CONTEXTS, parsed.context)!;
@@ -46,6 +47,7 @@ function QuickAddInputWrapper({ initialValue = "", compact, onSubmit }: WrapperP
         preview={preview}
         today={TODAY}
         compact={compact}
+        isPlanned={isPlanned}
       />
     </div>
   );
@@ -86,6 +88,21 @@ export const Recurring: Story = {
 
 export const Compact: Story = {
   args: { compact: true },
+};
+
+/** In Planned the placeholder shows the repeat syntax. */
+export const Planned: Story = {
+  args: { isPlanned: true },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByTestId("quick-add__input")).toHaveAttribute(
+      "placeholder",
+      "Add a task  ·  *daily  *weekly  *mon,thu  *2w  *monthly"
+    );
+  },
+};
+
+export const PlannedCompact: Story = {
+  args: { isPlanned: true, compact: true },
 };
 
 export const TypeAndSubmit: Story = {
