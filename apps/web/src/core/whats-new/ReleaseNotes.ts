@@ -15,6 +15,52 @@ export interface ReleaseNote {
   fixes: ReleaseNoteItem[];
 }
 
+const v0200 = defineMessages({
+  completeTitle: {
+    description: "ReleaseNotes 0.20.0 - highlight title: complete tasks straight from Suggestions",
+    defaultMessage: "Done without the detour",
+    id: "PHf5LD",
+  },
+  completeDescription: {
+    description: "ReleaseNotes 0.20.0 - highlight text: complete tasks straight from Suggestions",
+    defaultMessage:
+      "Already did it? Tick the circle on a suggestion and it's done, no need to pull it into My Day first.",
+    id: "Vj4T/r",
+  },
+  sortTitle: {
+    description: "ReleaseNotes 0.20.0 - highlight title: sort shopping lists and items",
+    defaultMessage: "Shop your way",
+    id: "vaYyPe",
+  },
+  sortDescription: {
+    description: "ReleaseNotes 0.20.0 - highlight text: sort shopping lists and items",
+    defaultMessage:
+      "Sort your lists A–Z, by kind or by context, and a list's items by store section, A–Z or the order you added them. Each kind of list remembers its own order.",
+    id: "Pksspg",
+  },
+  widthTitle: {
+    description: "ReleaseNotes 0.20.0 - highlight title: resizable shopping lists column on desktop",
+    defaultMessage: "Room for long names",
+    id: "RdVKXt",
+  },
+  widthDescription: {
+    description: "ReleaseNotes 0.20.0 - highlight text: resizable shopping lists column on desktop",
+    defaultMessage:
+      "On wide screens, drag the edge of the Shopping lists column to make it wider. Double-click it to reset.",
+    id: "ES9792",
+  },
+  plannedFixTitle: {
+    description: "ReleaseNotes 0.20.0 - fix title: no Suggestions panel in Planned",
+    defaultMessage: "A calmer Planned",
+    id: "JufFfy",
+  },
+  plannedFixDescription: {
+    description: "ReleaseNotes 0.20.0 - fix text: no Suggestions panel in Planned",
+    defaultMessage: "Planned already shows what's coming up, so it no longer opens Suggestions beside it.",
+    id: "3Wp1WR",
+  },
+});
+
 const v0190 = defineMessages({
   plannedTitle: {
     description: "ReleaseNotes 0.19.0 - highlight title: Planned grouped into sections by due date",
@@ -969,6 +1015,15 @@ const v010 = defineMessages({
  * entry here; people who update see every entry newer than the last one they saw.
  */
 export const RELEASE_NOTES: ReleaseNote[] = [
+  {
+    version: "0.20.0",
+    highlights: [
+      { emoji: "✅", title: v0200.completeTitle, description: v0200.completeDescription },
+      { emoji: "🛒", title: v0200.sortTitle, description: v0200.sortDescription },
+      { emoji: "↔️", title: v0200.widthTitle, description: v0200.widthDescription },
+    ],
+    fixes: [{ emoji: "🗓️", title: v0200.plannedFixTitle, description: v0200.plannedFixDescription }],
+  },
   {
     version: "0.19.0",
     highlights: [
