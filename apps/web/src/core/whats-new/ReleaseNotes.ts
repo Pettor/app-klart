@@ -15,6 +15,42 @@ export interface ReleaseNote {
   fixes: ReleaseNoteItem[];
 }
 
+const v0190 = defineMessages({
+  plannedTitle: {
+    description: "ReleaseNotes 0.19.0 - highlight title: Planned grouped into sections by due date",
+    defaultMessage: "See what's coming up",
+    id: "QIb9bU",
+  },
+  plannedDescription: {
+    description: "ReleaseNotes 0.19.0 - highlight text: Planned grouped into sections by due date",
+    defaultMessage:
+      "Planned now sorts your dated tasks into Overdue, Today, Tomorrow, Next 7 days and Later, so anything you've fallen behind on stands out in red. Press the sun on a task to pull it into My Day.",
+    id: "waMWQd",
+  },
+  recurringTitle: {
+    description: "ReleaseNotes 0.19.0 - highlight title: recurring tasks wait in Planned until they're due",
+    defaultMessage: "My Day stays about today",
+    id: "4LGIQf",
+  },
+  recurringDescription: {
+    description: "ReleaseNotes 0.19.0 - highlight text: recurring tasks wait in Planned until they're due",
+    defaultMessage:
+      "A recurring task that starts later waits in Planned instead of crowding My Day, and turns up in Suggestions on the day it's due.",
+    id: "cXwUUa",
+  },
+  addTitle: {
+    description: "ReleaseNotes 0.19.0 - highlight title: adding a task lands it in the view you're in",
+    defaultMessage: "Add right where you are",
+    id: "OS8sSo",
+  },
+  addDescription: {
+    description: "ReleaseNotes 0.19.0 - highlight text: adding a task lands it in the view you're in",
+    defaultMessage:
+      "A task added in Planned is due today, one added in Important gets a star, and only My Day puts it in My Day. In Planned the add field suggests repeats like *weekly or *mon,thu.",
+    id: "vJvKvK",
+  },
+});
+
 const v0180 = defineMessages({
   repeatTitle: {
     description: "ReleaseNotes 0.18.0 - highlight title: recurring tasks",
@@ -933,6 +969,15 @@ const v010 = defineMessages({
  * entry here; people who update see every entry newer than the last one they saw.
  */
 export const RELEASE_NOTES: ReleaseNote[] = [
+  {
+    version: "0.19.0",
+    highlights: [
+      { emoji: "🗓️", title: v0190.plannedTitle, description: v0190.plannedDescription },
+      { emoji: "☀️", title: v0190.recurringTitle, description: v0190.recurringDescription },
+      { emoji: "🎯", title: v0190.addTitle, description: v0190.addDescription },
+    ],
+    fixes: [],
+  },
   {
     version: "0.18.0",
     highlights: [
