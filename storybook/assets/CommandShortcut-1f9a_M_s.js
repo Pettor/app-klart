@@ -1,0 +1,1 @@
+import{n as e}from"./rolldown-runtime-DkW27tQK.js";function t(){if(typeof navigator>`u`)return!1;let e=navigator.platform??``,t=navigator.userAgent??``;return/Mac|iPhone|iPad|iPod/.test(e)||/Mac|iPhone|iPad|iPod/.test(t)}function n(){return(n=e((()=>{})))()}export{t as n,n as t};
