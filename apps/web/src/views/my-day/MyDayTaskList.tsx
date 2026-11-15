@@ -5,6 +5,8 @@ import { Button } from "@heroui/react";
 import { useBreakpoint } from "@package/react";
 import clsx from "clsx";
 import { useIntl } from "react-intl";
+import { getPlannedGroupLabel } from "./MyDayLabels";
+import { groupPlannedTasks } from "./MyDayPlannedGroups";
 import { keepStarredFirst } from "./MyDayTaskOrder";
 import type { MyDayTask, MyDayTaskActions } from "./MyDayTypes";
 import { useCompletedBump } from "./UseCompletedBump";
@@ -129,7 +131,30 @@ export function MyDayTaskList({
                 })}
           </div>
         )}
-        {tasks.map(renderRow)}
+        {smartView === "planned"
+          ? groupPlannedTasks(tasks, today).map((group) => {
+              const label = getPlannedGroupLabel(intl, group.id);
+              return (
+                <section
+                  key={group.id}
+                  aria-label={label}
+                  className="compact:gap-2 flex flex-col gap-3"
+                  data-testid={`my-day__planned-${group.id}`}
+                >
+                  <h3
+                    className={clsx(
+                      "flex items-baseline gap-2 px-1 pt-1 text-[13px] font-semibold",
+                      group.id === "overdue" ? "text-danger" : "text-foreground/80"
+                    )}
+                  >
+                    {label}
+                    <span className="text-xs font-normal opacity-75">{group.tasks.length}</span>
+                  </h3>
+                  {group.tasks.map(renderRow)}
+                </section>
+              );
+            })
+          : tasks.map(renderRow)}
       </section>
 
       {doneTasks.length > 0 && (

@@ -85,6 +85,38 @@ test.describe("myday.quickadd", () => {
   });
 });
 
+test.describe("myday.planned", () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto("/");
+    await expect(page.getByTestId("quick-add__input")).toBeVisible();
+  });
+
+  test("a recurring task starting later waits in Planned instead of My Day", async ({ page }) => {
+    const input = page.getByTestId("quick-add__input");
+    await input.fill("water the plants *weekly @+3d");
+    await input.press("Enter");
+    await expect(input).toHaveValue("");
+
+    const row = page.getByTestId("task-row").filter({ hasText: "Water the plants" });
+    await expect(row).toHaveCount(0);
+
+    await page.getByTestId("sidebar__view-planned").click();
+    await expect(page.getByTestId("my-day__planned-week").getByTestId("task-row")).toContainText("Water the plants");
+  });
+
+  test("a task added in Planned is due today and stays out of My Day", async ({ page }) => {
+    await page.getByTestId("sidebar__view-planned").click();
+    const input = page.getByTestId("quick-add__input");
+    await input.fill("call the dentist");
+    await input.press("Enter");
+
+    await expect(page.getByTestId("my-day__planned-today").getByTestId("task-row")).toContainText("Call the dentist");
+
+    await page.getByTestId("sidebar__view-day").click();
+    await expect(page.getByTestId("task-row").filter({ hasText: "Call the dentist" })).toHaveCount(0);
+  });
+});
+
 test.describe("myday.settings", () => {
   test("creates a context in settings", async ({ page }) => {
     await page.goto("/#/settings?section=contexts");

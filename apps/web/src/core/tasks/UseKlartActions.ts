@@ -1,7 +1,7 @@
 import { useCallback, useMemo } from "react";
 import { useAtomValue, useSetAtom } from "jotai";
 import type { DayItemSource, SuggestionReason } from "./Day";
-import { currentContextAtom, klartDataAtom, todayAtom, visibleKlartDataAtom } from "./KlartAtoms";
+import { currentContextAtom, klartDataAtom, smartViewAtom, todayAtom, visibleKlartDataAtom } from "./KlartAtoms";
 import type { KlartData, TaskPatch } from "./KlartData";
 import {
   addContext,
@@ -16,15 +16,18 @@ import {
   updateContext,
   updateTask,
 } from "./KlartData";
-import { parseQuickAdd } from "./QuickAdd";
+import { parseQuickAdd, placeQuickAdd } from "./QuickAdd";
 import type { Task } from "./Task";
 import type { ContextColor, KlartContext } from "~/core/contexts/KlartContext";
 import { createContextId, toContextTag } from "~/core/contexts/KlartContext";
 import { reconcileShoppingTasks } from "~/core/shopping/ShoppingData";
 
 export interface KlartActions {
-  /** Parses a quick-add line, creates the task and puts it in today's My Day. Returns `null` for an empty title. */
-  quickAdd: (text: string) => Task | null;
+  /**
+   * Parses a quick-add line and creates the task, in today's My Day when added from there and due by today (see
+   * `placeQuickAdd`). Returns the created task and where it went, or `null` for an empty title.
+   */
+  quickAdd: (text: string) => { task: Task; inMyDay: boolean } | null;
   setDone: (taskId: string, done: boolean) => void;
   toggleImportant: (taskId: string) => void;
   updateTask: (taskId: string, patch: TaskPatch) => void;
@@ -50,6 +53,7 @@ export function useKlartActions(): KlartActions {
   const { contexts: visibleContexts } = useAtomValue(visibleKlartDataAtom);
   const currentContext = useAtomValue(currentContextAtom);
   const today = useAtomValue(todayAtom);
+  const smartView = useAtomValue(smartViewAtom);
 
   const change = useCallback(
     (fn: (current: KlartData, now: Date) => KlartData) => {
@@ -59,19 +63,25 @@ export function useKlartActions(): KlartActions {
   );
 
   const quickAdd = useCallback(
-    (text: string): Task | null => {
-      const parsed = parseQuickAdd(text, { today, contexts: visibleContexts, currentContext });
-      if (!parsed.title) {
+    (text: string): { task: Task; inMyDay: boolean } | null => {
+      const placed = placeQuickAdd(
+        parseQuickAdd(text, { today, contexts: visibleContexts, currentContext }),
+        smartView,
+        today
+      );
+      if (!placed.task.title) {
         return null;
       }
-      const task = createTask(parsed, new Date());
+      const task = createTask(placed.task, new Date());
       change((current, now) => {
         const withTask = { ...current, tasks: { ...current.tasks, [task.id]: task } };
-        return addToDay(withTask, today, [{ taskId: task.id, addedBy: "quick_add", reason: null }], now);
+        return placed.inMyDay
+          ? addToDay(withTask, today, [{ taskId: task.id, addedBy: "quick_add", reason: null }], now)
+          : withTask;
       });
-      return task;
+      return { task, inMyDay: placed.inMyDay };
     },
-    [change, currentContext, visibleContexts, today]
+    [change, currentContext, visibleContexts, smartView, today]
   );
 
   return useMemo(

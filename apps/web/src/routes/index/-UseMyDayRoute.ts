@@ -1,9 +1,11 @@
 import { useMemo, useState } from "react";
+import { toast } from "@heroui/react";
 import { useBreakpoint } from "@package/react";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { useIntl } from "react-intl";
 import type { ContextSwitcherOption } from "~/components/actions/context-switcher/ContextSwitcher";
 import type { SuggestionItem } from "~/components/display/suggestion-list/SuggestionList";
+import { formatDue } from "~/components/display/task-row/TaskDateFormat";
 import type { TaskEditorTask } from "~/components/input/task-editor/TaskEditor";
 import { useAutomations } from "~/core/automations/UseAutomations";
 import type { KlartContext } from "~/core/contexts/KlartContext";
@@ -25,7 +27,7 @@ import {
   snoozedSuggestionsAtom,
 } from "~/core/tasks/KlartAtoms";
 import type { TaskPatch } from "~/core/tasks/KlartData";
-import { parseQuickAdd } from "~/core/tasks/QuickAdd";
+import { parseQuickAdd, placeQuickAdd } from "~/core/tasks/QuickAdd";
 import { getSnoozedToday, isUrgentSuggestion, selectDueSuggestions } from "~/core/tasks/Suggestions";
 import type { Task } from "~/core/tasks/Task";
 import { useKlartActions } from "~/core/tasks/UseKlartActions";
@@ -228,7 +230,10 @@ export function useMyDayRoute(editingId: string | null, page: "day" | "shop" = "
     onClose: closeTask,
   };
 
-  const parsed = draft.trim() ? parseQuickAdd(draft, { today, contexts, currentContext }) : null;
+  // The preview shows the task as the current view will add it (Planned dates it today, Important stars it).
+  const parsed = draft.trim()
+    ? placeQuickAdd(parseQuickAdd(draft, { today, contexts, currentContext }), myDay.smartView, today).task
+    : null;
   const parsedContext = parsed ? findContext(contexts, parsed.context) : undefined;
 
   return {
@@ -308,8 +313,23 @@ export function useMyDayRoute(editingId: string | null, page: "day" | "shop" = "
       value: draft,
       onChange: setDraft,
       onSubmit: () => {
-        if (actions.quickAdd(draft)) {
-          setDraft("");
+        const added = actions.quickAdd(draft);
+        if (!added) {
+          return;
+        }
+        setDraft("");
+        if (myDay.smartView === "day" && !added.inMyDay && added.task.due) {
+          // A recurring task starting later leaves My Day's list, so say where it went.
+          toast(
+            intl.formatMessage(
+              {
+                description: "MyDayRoute - toast when a recurring task added in My Day goes to Planned instead",
+                defaultMessage: "Added to Planned, due {date}",
+                id: "ZZSERg",
+              },
+              { date: formatDue(intl, added.task.due, today) }
+            )
+          );
         }
       },
       preview: parsed

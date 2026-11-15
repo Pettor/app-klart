@@ -188,6 +188,31 @@ export const AllContexts: Story = {
   args: buildArgs(ALL_CONTEXTS),
 };
 
+/** Planned: every dated task in sections by due date, overdue first. Only the sun puts one in My Day. */
+export const Planned: Story = (() => {
+  const base = buildArgs(ALL_CONTEXTS);
+  const planned = Object.values(DEMO_DATA.tasks)
+    .filter((task) => task.status === "open" && task.due)
+    .sort((a, b) => a.due!.localeCompare(b.due!))
+    .map(toRow);
+  return {
+    args: { ...base, smartViews: { ...base.smartViews, active: "planned" }, tasks: planned, doneTasks: [] },
+    play: async ({ canvasElement }) => {
+      const tasks = within(canvasElement).getByTestId("my-day__tasks");
+      const sections = within(tasks).getAllByRole("region");
+      await expect(sections.map((section) => section.getAttribute("data-testid"))).toEqual([
+        "my-day__planned-overdue",
+        "my-day__planned-today",
+        "my-day__planned-tomorrow",
+        "my-day__planned-week",
+        "my-day__planned-later",
+      ]);
+      await expect(within(sections[0]!).getByRole("heading")).toHaveTextContent("Overdue");
+      await expect(within(sections[0]!).getByText("Find more tasks to create")).toBeVisible();
+    },
+  };
+})();
+
 /** Shopping takes My Day's place beside the sidebar; the suggestions panel goes with My Day. */
 export const ShoppingPage: Story = {
   args: {

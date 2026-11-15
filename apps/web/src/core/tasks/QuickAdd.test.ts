@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseDateToken, parseQuickAdd, parseRemindToken, parseRepeatToken } from "./QuickAdd";
+import { parseDateToken, parseQuickAdd, parseRemindToken, parseRepeatToken, placeQuickAdd } from "./QuickAdd";
 import type { KlartContext } from "~/core/contexts/KlartContext";
 
 // Wednesday
@@ -168,5 +168,36 @@ describe("parseQuickAdd with a repeat", () => {
 
   it("keeps an unknown repeat token in the title", () => {
     expect(parse("read *bold text")).toMatchObject({ title: "Read *bold text", repeat: null });
+  });
+});
+
+describe("placeQuickAdd", () => {
+  it("puts a task added from My Day in My Day, whatever its date", () => {
+    expect(placeQuickAdd(parse("Call mom"), "day", TODAY).inMyDay).toBe(true);
+    expect(placeQuickAdd(parse("Call mom @fri"), "day", TODAY).inMyDay).toBe(true);
+  });
+
+  it("puts a recurring task in My Day only when it's due today", () => {
+    expect(placeQuickAdd(parse("Standup *weekdays"), "day", TODAY).inMyDay).toBe(true);
+    // The first Monday is next week
+    expect(placeQuickAdd(parse("Gym *mon"), "day", TODAY).inMyDay).toBe(false);
+    expect(placeQuickAdd(parse("Water plants *weekly @fri"), "day", TODAY).inMyDay).toBe(false);
+  });
+
+  it("dates a Planned task for today and keeps it out of My Day", () => {
+    const placed = placeQuickAdd(parse("Call mom"), "planned", TODAY);
+    expect(placed.task.due).toBe(TODAY);
+    expect(placed.inMyDay).toBe(false);
+    expect(placeQuickAdd(parse("Call mom @fri"), "planned", TODAY).task.due).toBe("2026-10-23");
+  });
+
+  it("stars a task added from Important", () => {
+    const placed = placeQuickAdd(parse("Call mom"), "important", TODAY);
+    expect(placed.task.important).toBe(true);
+    expect(placed.inMyDay).toBe(false);
+  });
+
+  it("leaves a task added from Tasks as typed", () => {
+    expect(placeQuickAdd(parse("Call mom"), "tasks", TODAY)).toEqual({ task: parse("Call mom"), inMyDay: false });
   });
 });

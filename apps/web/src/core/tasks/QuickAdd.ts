@@ -1,3 +1,4 @@
+import type { SmartView } from "./KlartAtoms";
 import { addDays, isLocalDate, weekdayOf } from "./LocalDate";
 import { toTaskLink } from "./TaskLink";
 import type { RepeatUnit, TaskRepeat } from "./TaskRepeat";
@@ -206,4 +207,28 @@ export function parseQuickAdd(text: string, { today, contexts, currentContext }:
     repeat,
     raw: text.trim(),
   };
+}
+
+export interface PlacedQuickAdd {
+  task: ParsedQuickAdd;
+  /** Whether the new task goes into today's My Day. */
+  inMyDay: boolean;
+}
+
+/**
+ * Where a task added from a smart view lands. Only My Day puts it in today's My Day, and a recurring task whose
+ * first date is after today waits in Planned instead, so it only joins a My Day when it's due. Planned dates a
+ * task without one for today, and Important stars it, so it shows up in the view it was added from.
+ */
+export function placeQuickAdd(parsed: ParsedQuickAdd, view: SmartView, today: string): PlacedQuickAdd {
+  switch (view) {
+    case "day":
+      return { task: parsed, inMyDay: !parsed.repeat || !parsed.due || parsed.due <= today };
+    case "planned":
+      return { task: { ...parsed, due: parsed.due ?? today }, inMyDay: false };
+    case "important":
+      return { task: { ...parsed, important: true }, inMyDay: false };
+    case "tasks":
+      return { task: parsed, inMyDay: false };
+  }
 }
